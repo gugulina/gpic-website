@@ -1,8 +1,7 @@
 # ───────────────────────────────────────────────────────────────────
 #  发布「应急静态站」到 GitHub Pages
 #
-#  只发布 官网/web-standalone/ —— 那是从 官网/web/ 派生出的
-#  「零后端只读快照」：
+#  只发布 官网/web-standalone/ —— 从 官网/web/ 派生出的「零后端只读快照」：
 #    · 数据由同目录 data/content.json 提供（static-api.js 拦截 fetch）
 #    · 不含 admin.html，不含 /functions/ 接口
 #    · 404.html 已做绝对路径 → 相对路径改写，可挂在 /<repo>/ 子路径下
@@ -10,9 +9,14 @@
 #  为什么不发动态站：动态站要 Node 运行时 + 可写 SQLite + 上传目录，
 #  GitHub Pages 只能托管静态文件。后台编辑得等自持服务器上线。
 #
-#  内容更新流程：
-#    python 官网/scripts/build-standalone.py   # 由 官网/web/ + data/ 重新派生
-#    git add 官网/web-standalone && git commit && git push
+#  快照由 CI 现场派生（不依赖仓库里那份产物是否新鲜）：
+#    每次推送都会跑一遍 scripts/build-standalone.py，
+#    所以改完 官网/web/ 或 官网/data/ 直接推，线上就会同步。
+#
+#  ⚠️ 首次使用需要人工开一次 Pages（默认令牌没有开 Pages 的权限）：
+#     Settings → Pages → Build and deployment → Source 选 “GitHub Actions”
+#     然后到 Actions 页把本工作流 Re-run 一次。
+#     没开的话，本流程会在「预检」这步直接给出上面这段话作为报错。
 # ───────────────────────────────────────────────────────────────────
 
 name: 发布官网到 GitHub Pages
@@ -21,6 +25,10 @@ on:
   push:
     branches: [main]
     paths:
+      - "官网/web/**"
+      - "官网/data/content.json"
+      - "官网/assets/**"
+      - "官网/scripts/build-standalone.py"
       - "官网/web-standalone/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -36,26 +44,60 @@ concurrency:
 
 jobs:
   build:
-    name: 打包静态产物
+    name: 派生并打包静态快照
     runs-on: ubuntu-latest
     steps:
       - name: 检出仓库
         uses: actions/checkout@v4
 
-      - name: 开启 Pages（若尚未开启）
-        uses: actions/configure-pages@v5
+      # 先看 Pages 有没有就绪。不开的话后面 deploy-pages 只会甩一句
+      # 含糊的 “Get Pages site failed”，这里把它翻译成人话。
+      - name: 预检 Pages 是否已就绪
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          BODY=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+                       -H "Accept: application/vnd.github+json" \
+                       "https://api.github.com/repos/$REPO/pages" || true)
+          echo "$BODY" | head -c 400; echo
+          echo "$BODY" | node -e '
+            let b = {};
+            try { b = JSON.parse(require("fs").readFileSync(0, "utf8")); } catch {}
+            console.log("build_type =", b.build_type, "| status =", b.status, "| url =", b.html_url);
+            if (b.build_type !== "workflow") {
+              console.log("::error::本仓库的 GitHub Pages 还没开启，或构建方式不是 GitHub Actions。");
+              console.log("::error::请打开 Settings → Pages，把 Build and deployment 的 Source 选成 “GitHub Actions”，");
+              console.log("::error::保存后回到 Actions 页选中本流程点 Re-run all jobs。");
+              process.exit(1);
+            }
+            console.log("Pages 已就绪 ✓");
+          '
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
         with:
-          enablement: true
+          python-version: "3.12"
+
+      - name: 从 web/ + data/ 派生静态快照
+        run: |
+          set -e
+          OUT=$(python 官网/scripts/build-standalone.py)
+          echo "$OUT"
+          if echo "$OUT" | grep -q "断链"; then
+            echo "::error::静态快照存在断链引用，已中止发布（详见上面的引用检查）"
+            exit 1
+          fi
 
       - name: 产物自检
         run: |
           set -e
           D="官网/web-standalone"
           for f in index.html goods.html notice.html recruitment.html 404.html \
-                   style.css static-api.js data/content.json robots.txt; do
+                   style.css static-api.js data/content.json robots.txt .nojekyll; do
             test -f "$D/$f" || { echo "::error::缺少 $D/$f"; exit 1; }
           done
-          test -f "$D/.nojekyll" || echo "::warning::缺少 .nojekyll（不致命）"
           echo "产物文件数：$(find "$D" -type f | wc -l)"
           echo "产物体积：$(du -sh "$D" | cut -f1)"
 
