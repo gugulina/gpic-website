@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>新闻公告 | 幻电投企划</title>
+<meta name="description" content="幻电投文化传媒部公告中心：集团通告、周边通贩、参展信息与人员招募。">
+<meta name="theme-color" content="#0D5A38">
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="assets/images/favicon.png">
+<link rel="stylesheet" href="style.css">
+  <script src="static-api.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到主内容</a>
+
+<header class="site-header" id="siteHeader">
+  <div class="container header-inner">
+    <a class="logo" href="index.html">
+      <img src="assets/images/favicon.png" alt="" width="34" height="34">
+      <span>幻电投企划</span>
+    </a>
+    <nav class="main-nav" id="mainNav" aria-label="主导航">
+      <a href="index.html">首页</a>
+      <a href="goods.html">周边商品</a>
+      <a href="notice.html" class="is-active">新闻公告</a>
+      <a href="recruitment.html">人员招募</a>
+      <a href="index.html#about">关于社团</a>
+      <a href="index.html#shop">通贩商店</a>
+    </nav>
+    <div class="header-right">
+      <button class="nav-toggle" id="navToggle" aria-label="展开菜单" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="world-bar">
+  <div class="container">
+    <span class="wb-tag">架空设定</span>
+    <p>文中「幻想乡五大发电集团」等为东方 Project 二次创作架空设定，与现实中的任何发电集团、公司或机构无关。</p>
+  </div>
+</div>
+
+<main id="main">
+  <div class="container" style="padding-top: 48px;">
+
+    <div class="page-hero">
+      <h1>新闻公告</h1>
+      <p>幻电投文化传媒部发布 · 集团通告、周边通贩与参展信息</p>
+    </div>
+
+    <!-- 公告列表 -->
+    <div id="noticeListView">
+      <div style="display: flex; flex-direction: column; gap: 16px;" id="noticeItems">
+
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-20-a')" class="notice-item" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
+          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-09-20</span>
+          <span class="badge badge-green">招募</span>
+          <span style="flex: 1; font-size: 15px; min-width: 0;">面向社会的东方 Project 爱好者开展人员招募</span>
+          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+        </a>
+
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-17-a')" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
+          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-09-17</span>
+          <span class="badge badge-red">通贩</span>
+          <span style="flex: 1; font-size: 15px; min-width: 0;">「幻想乡电网」系列周边上架通贩</span>
+          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+        </a>
+
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-17-b')" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
+          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-09-17</span>
+          <span class="badge badge-green">社群</span>
+          <span style="flex: 1; font-size: 15px; min-width: 0;">官方 QQ 群开通</span>
+          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+        </a>
+
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-16-a')" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
+          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-09-16</span>
+          <span class="badge badge-green">通告</span>
+          <span style="flex: 1; font-size: 15px; min-width: 0;">对外联络处活动告示板</span>
+          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+        </a>
+
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-18-b')" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
+          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-10-06</span>
+          <span class="badge badge-gold">参展</span>
+          <span style="flex: 1; font-size: 15px; min-width: 0;">武汉 THO10 参展确认</span>
+          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- 公告详情（默认隐藏，JS 控制显示） -->
+    <div id="noticeDetailView" style="display: none;">
+      <div class="notice-detail" id="noticeContent"></div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="index.html">
+          <img src="assets/images/favicon.png" alt="" width="34" height="34">
+          <span>幻电投企划</span>
+        </a>
+        <p>幻想乡五大发电集团之一（东方 Project 二次创作架空设定），全乡唯一在地面部署核电装机的发电企业。</p>
+        <p class="footer-slogan">由幻想，向未来<em>From Dreams, to the Future.</em></p>
+      </div>
+      <div>
+        <h4>站点导航</h4>
+        <ul>
+          <li><a href="index.html">首页</a></li>
+          <li><a href="goods.html">周边商品</a></li>
+          <li><a href="notice.html">新闻公告</a></li>
+          <li><a href="recruitment.html">人员招募</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>社交矩阵</h4>
+        <ul>
+          <li>QQ 群 <em class="sc-sub">1046278135</em> <button type="button" class="sc-copy" data-copy="1046278135">复制</button></li>
+          <li><a href="https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM" target="_blank" rel="noopener">闲鱼 <em class="sc-sub">幻电投市场部</em></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>声明</h4>
+        <ul>
+          <li><a href="index.html#about">关于社团</a></li>
+          <li><a href="index.html#shop">通贩商店</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 幻电投企划 Gensokyo Power Investment Corporation</span>
+      <span>「幻电投企划」为东方 Project 非官方同人社团站点，与上海爱丽丝幻乐团无隶属关系</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// 导航
+var navToggle = document.getElementById('navToggle');
+var mainNav = document.getElementById('mainNav');
+navToggle.addEventListener('click', function () {
+  var open = mainNav.classList.toggle('is-open');
+  navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+var header = document.getElementById('siteHeader');
+window.addEventListener('scroll', function () {
+  header.classList.toggle('scrolled', window.scrollY > 10);
+}, { passive: true });
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest ? e.target.closest('[data-copy]') : null;
+  if (!btn) return;
+  var text = btn.getAttribute('data-copy');
+  var done = function () {
+    var old = btn.textContent;
+    btn.textContent = '已复制';
+    btn.classList.add('is-done');
+    setTimeout(function () { btn.textContent = old; btn.classList.remove('is-done'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function () { window.prompt('请手动复制：', text); });
+  } else {
+    window.prompt('请手动复制：', text);
+  }
+});
+
+var API = '/functions/v1/app';
+var notices = {};
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function renderBlock(b) {
+  if (b.kind === 'h') return '<h3>' + esc(b.text) + '</h3>';
+  if (b.kind === 'ul') return '<ul>' + (b.items||[]).map(function(t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
+  if (b.kind === 'quote') return '<blockquote>' + esc(b.text) + '</blockquote>';
+  if (b.kind === 'sign') return '<p class="nd-sign">' + esc(b.text) + '</p>';
+  return '<p>' + esc(b.text) + '</p>';
+}
+
+function renderNoticeList(items) {
+  var container = document.getElementById('noticeItems');
+  if (!items.length) { container.innerHTML = '<p style="text-align:center;color:#888;padding:40px 0">暂时还没有发布任何公告。</p>'; return; }
+  container.innerHTML = items.map(function(n) {
+    var badgeClass = 'badge-' + (n.style || 'green');
+    return '<a href="javascript:void(0)" onclick="showNotice(\'' + esc(n.id) + '\')" style="display:flex;gap:16px;align-items:center;padding:20px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);transition:.2s;box-shadow:var(--shadow-sm)">' +
+      '<span style="font-family:var(--mono);color:var(--text-2);font-size:13px;flex:none">' + esc(n.date) + '</span>' +
+      '<span class="badge ' + badgeClass + '">' + esc(n.type) + '</span>' +
+      '<span style="flex:1;font-size:15px;min-width:0">' + esc(n.summary || n.title) + '</span>' +
+      '<span style="color:#B8C2BD;font-size:13px">→</span></a>';
+  }).join('');
+
+  container.querySelectorAll(':scope > a').forEach(function(a) {
+    a.addEventListener('mouseenter', function() { this.style.boxShadow = 'var(--shadow-md)'; this.style.transform = 'translateY(-2px)'; });
+    a.addEventListener('mouseleave', function() { this.style.boxShadow = 'var(--shadow-sm)'; this.style.transform = ''; });
+  });
+}
+
+function showNotice(id) {
+  var n = notices[id];
+  if (!n) {
+    fetch(API + '?action=notice&id=' + encodeURIComponent(id))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error || !data.id) return;
+        notices[data.id] = data;
+        renderNoticeDetail(data);
+      });
+    return;
+  }
+  renderNoticeDetail(n);
+}
+
+function renderNoticeDetail(n) {
+  var html = '<a class="nd-back" href="javascript:void(0)" onclick="hideNotice()">← 返回公告列表</a>' +
+    '<div class="nd-meta"><span class="nd-date">' + esc(n.date) + '</span><span class="badge badge-' + esc(n.style) + '">' + esc(n.type) + '</span></div>' +
+    '<h1>' + esc(n.title) + '</h1>';
+  if (n.cover) html += '<div class="nd-cover"><img src="' + esc(n.cover) + '" alt="' + esc(n.title) + '"></div>';
+  html += '<div class="nd-body">' + (n.body || []).map(renderBlock).join('') + '</div>';
+  document.getElementById('noticeContent').innerHTML = html;
+  document.getElementById('noticeListView').style.display = 'none';
+  document.getElementById('noticeDetailView').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  history.replaceState(null, '', '?id=' + encodeURIComponent(n.id));
+}
+
+function hideNotice() {
+  document.getElementById('noticeListView').style.display = '';
+  document.getElementById('noticeDetailView').style.display = 'none';
+  history.replaceState(null, '', 'notice.html');
+}
+
+// 从 API 加载公告列表
+fetch(API + '?action=notices')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok && data.items) {
+      data.items.forEach(function(n) { notices[n.id] = n; });
+      renderNoticeList(data.items);
+      var params = new URLSearchParams(window.location.search);
+      var id = params.get('id');
+      if (id) showNotice(id);
+    }
+  })
+  .catch(function() { /* 静态内容作为兜底 */ });
+</script>
+</body>
+</html>

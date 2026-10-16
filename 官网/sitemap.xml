@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================
+  幻想乡电力投资集团官网 · 站点地图
+  ------------------------------------------------------------
+  ★ 这份文件里的 __SITE_URL__ 是占位符，**不能原样上传**。
+
+    正常流程不用管它：
+        python scripts/deploy.py --site-url https://你的域名
+    打包脚本会按上面的域名重新生成 dist/sitemap.xml，并且自动
+    把 data/content.json 里每一条已发布的公告详情页也补进来。
+
+    如果你手工上传而没有跑打包脚本，请自行把 __SITE_URL__ 全部
+    替换成真实域名（共 2 处），否则搜索引擎读不懂这些地址。
+
+  ★ 每条公告的详情页（notice.html?id=xxx）不在下面列，因为它们
+    随内容变动，由 deploy.py 在打包时从 content.json 生成。
+    下面只放两个固定入口，保证任何情况下都有一份可用的地图。
+  ============================================================
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>__SITE_URL__/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>__SITE_URL__/notice.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>

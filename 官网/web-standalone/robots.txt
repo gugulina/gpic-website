@@ -1,0 +1,11 @@
+# 幻想乡电力投资集团官网（静态快照版）
+#
+# 这份是「零后端」静态快照，只读，不含后台与接口。
+# 后台入口 admin.html 与 functions/ 都没随本版发布，因此无需 Disallow。
+#
+# 域名定下来、正式站上线后，需要：
+#   1) 在正式站的 robots.txt 里补 Disallow: /admin.html、Disallow: /functions/
+#   2) 在本文件补一行 Sitemap: https://你的域名/sitemap.xml
+
+User-agent: *
+Allow: /

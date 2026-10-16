@@ -1,0 +1,687 @@
+{
+  "version": 5,
+  "updatedAt": "2026-09-20T07:45:58.018Z",
+  "site": {
+    "name": "幻电投企划",
+    "nameEn": "Gensokyo Power Investment Corporation",
+    "shortName": "幻电投",
+    "slogan": "由幻想，向未来",
+    "sloganEn": "From Dreams, to the Future.",
+    "logo": "assets/images/favicon.png",
+    "themeColor": "#0D5A38",
+    "worldviewNote": "东方 Project 二次创作同人站点 · 文中「幻想乡五大发电集团」等集团、企业与机构名称均为架空设定（幻想乡世界观），与现实中的任何发电集团、公司或机构无关，请勿与现实对应。",
+    "seoTitle": "幻电投企划 | 幻想乡电力投资集团 GPIC",
+    "seoDescription": "幻电投企划 —— 东方 Project 二次创作同人社团站点。站内以架空设定「幻想乡电力投资集团」为世界观：幻想乡五大发电集团之一，全乡唯一在地面部署核电装机的发电企业。旗下文化传媒部出品：电网职务证明书、安全用电警示贴、能效贴纸、形象徽章等周边。",
+    "ogImage": "assets/images/share.jpg",
+    "footerAbout": "幻想乡五大发电集团之一（东方 Project 二次创作架空设定），全乡唯一在地面部署核电装机的发电企业。「幻电投企划」由幻电投文化传媒部维护。",
+    "copyright": "© 幻电投企划　Gensokyo Power Investment Corporation",
+    "footerNote": "「幻电投企划」为东方 Project 非官方同人社团站点，与上海爱丽丝幻乐团无隶属关系；文中机构、企业与商品均属架空设定",
+    "siteUrl": "",
+    "showAdminEntry": true
+  },
+  "hero": {
+    "banner": "assets/images/banner.webp",
+    "bannerFallback": "assets/images/banner.jpg",
+    "bannerAlt": "幻想乡电力投资集团 Gensokyo Power Investment Corporation —— 由幻想，向未来",
+    "badge": "集团通告",
+    "title": "与幻想乡电网合作，筹建文化传媒部",
+    "body": "为加强幻电投集团企业形象构建，集团现正式与幻想乡电网合作，筹建文化传媒部。文化传媒部将以开放、包容、严谨的姿态开展文化宣传工作，首批周边现已公开。",
+    "sub": "幻想乡五大发电集团之一（架空设定） · 全乡唯一在地面部署核电装机的发电企业 · 幻想乡电网重要合作伙伴",
+    "actions": [
+      {
+        "label": "查看周边商品",
+        "href": "#goods",
+        "style": "primary"
+      },
+      {
+        "label": "加入 QQ 群",
+        "href": "#shop",
+        "style": "ghost"
+      }
+    ],
+    "stats": [
+      {
+        "num": "5",
+        "label": "大发电集团（幻想乡设定）"
+      },
+      {
+        "num": "1",
+        "label": "唯一地面核电装机"
+      },
+      {
+        "num": "7",
+        "label": "款首批周边上市"
+      }
+    ]
+  },
+  "notices": {
+    "title": "最新动态",
+    "badge": "公告",
+    "moreLabel": "查看全部 →",
+    "moreHref": "notice.html",
+    "pageBadge": "公告中心",
+    "pageTitle": "新闻公告",
+    "pageSubtitle": "幻电投文化传媒部发布 · 集团通告、周边通贩与参展信息",
+    "backLabel": "返回公告列表",
+    "emptyText": "暂时还没有发布任何公告。",
+    "items": [
+      {
+        "id": "2026-09-20-a",
+        "date": "2026-09-20",
+        "type": "招募",
+        "style": "green",
+        "text": "面向本校东方 Project 爱好者公开招募画师、美工、驻场、仓库物资、宣发五类人员，报名截止 2026 年 10 月 27 日",
+        "title": "面向本校东方 Project 爱好者开展人员招募",
+        "cover": "",
+        "coverAlt": "",
+        "layout": "standard",
+        "body": [
+          {
+            "kind": "p",
+            "text": "幻想乡电力投资集团（以下简称「本社」）为立足华北电力大学的东方 Project 二创社团，以「由幻想，向未来」为宗旨，主要从事同人绘画创作、周边制品开发与展会参展事务。为充实本社创作与运营队伍，现面向本校公开招募以下岗位人员，有关事项公告如下。"
+          },
+          {
+            "kind": "h",
+            "text": "一、招募范围"
+          },
+          {
+            "kind": "p",
+            "text": "华北电力大学在读学生（本科生、研究生均可），热爱东方 Project 系列作品，认同本社宗旨，并在课余时间具备稳定投入意愿者。"
+          },
+          {
+            "kind": "h",
+            "text": "二、招募岗位、职责与要求"
+          },
+          {
+            "kind": "h",
+            "text": "（一）画师 / 画师管培生"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "岗位职责：承担本社插画、立绘、图稿等原创美术创作，参与社刊及周边制品的美术部分工作。",
+              "任职要求：具备一定绘画基础与完稿能力者优先录用；无基础而有意从零开始学习者，同等接受。",
+              "培养说明：本社对管培生实行「师带徒」制，由在社画师带教，**包教包会**；管培期满经考核合格者，转任正式画师。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "（二）美工 / 美工管培生"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "岗位职责：承担本社活动海报、宣传横幅、刊物排版、周边制品打样稿等平面设计与美术加工工作。",
+              "任职要求：与画师岗一致。具备平面设计、排版或制图软件基础者优先；无基础者可从零培养。",
+              "培养说明：与画师岗一致，师带徒，包教包会。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "（三）驻场人员"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "岗位职责：于 THO、THP 等大型东方 Project 展会期间作为本社摊位值守人员出展，承担摊位看管、制品销售、现场接待等事务。",
+              "任职要求：展会期间能够到场；性格外向、善于沟通者优先。",
+              "相关保障：出展所需**摊主证由本社统一提供**。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "（四）仓库 / 物资岗"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "岗位职责：负责本社制品的仓储保管与库存盘点；承担制品订购、发货等物流相关工作，保障展会及日常出品的物资供给。",
+              "任职要求：做事细致、有责任心，具备稳定的制品存放条件；有物流、仓储相关经验者优先。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "（五）宣发岗"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "岗位职责：对接宣发机器人，承担宣传文案的撰写与发布，跟进宣传节奏与效果。",
+              "任职要求：文字表达清晰、能按时交稿；熟悉社群传播、有文案撰写经验者优先。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "三、报名与录用"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "报名时间：即日起至 **2026 年 10 月 27 日**。",
+              "报名方式：添加本社招新联系人 QQ（**2777381538**），提交报名信息，内容包括：姓名（或常用网名）、年级专业、意向岗位、联系方式，以及可展示的作品或相关经历（选填）。",
+              "录用流程：报名 → 线上简谈 → 见习试岗（一个月）→ 正式录用。",
+              "结果反馈：无论录用与否，均于**三个工作日内**答复。"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "四、其他说明"
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "一人可报多个岗位；报名岗位仅作意向登记，不构成固定分工。",
+              "本社各岗位均由爱好者**自愿参与**相关事务；实际承担的工作不限于报名时所选岗位，由社内需要与个人意愿协商确定。",
+              "未列于本次招募范围内、但对本社创作或运营事务有兴趣者，同样欢迎联系。",
+              "本社系东方 Project 二创社团，「幻想乡电力投资集团」及其下属企业均为架空设定，与现实企业无关。"
+            ]
+          },
+          {
+            "kind": "quote",
+            "text": "由幻想，向未来。"
+          },
+          {
+            "kind": "sign",
+            "text": "幻想乡电力投资集团 · 行政部"
+          }
+        ]
+      },
+      {
+        "id": "2026-09-17-a",
+        "date": "2026-09-17",
+        "type": "通贩",
+        "style": "red",
+        "text": "幻电投市场部闲鱼号开通，首批 7 款周边正式上架通贩",
+        "title": "「幻想乡电网」系列周边上架通贩",
+        "cover": "",
+        "coverAlt": "",
+        "layout": "standard",
+        "body": [
+          {
+            "kind": "p",
+            "text": "幻电投市场部闲鱼号正式开通，首批周边商品现已上架通贩。"
+          },
+          {
+            "kind": "p",
+            "text": "首批共 **7 款** 商品，覆盖证件、警示、标识、插画、挂件与徽章六大类："
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "幻想乡电网职务证明书（7 款）—— ¥6 / 张，整册 ¥40",
+              "符卡级安全用电警示贴（6 张 / 套）—— ¥2 / 张，整套 ¥10",
+              "⑨级能效贴纸／冰箱贴 —— ¥9 / 套",
+              "本居小铃「银杏下的智慧」—— ¥35 / 件",
+              "天界输电枢纽检查记录 钥匙扣（2 款）—— ¥5 / 件，整套 ¥8",
+              "幻电投企业形象徽章（2 款）—— ¥3 / 件，一对 ¥5"
+            ]
+          },
+          {
+            "kind": "p",
+            "text": "另有摊位特典「幻电投形象大使 永江衣玖」明信片，展会现场购任意商品即赠，不在线上单独销售。"
+          },
+          {
+            "kind": "quote",
+            "text": "闲鱼搜索「幻电投市场部」即可查看在售商品；本站仅作展示与导流，不收款、不下单。"
+          },
+          {
+            "kind": "sign",
+            "text": "幻想乡电力投资集团 · 文化传媒部　　由幻想，向未来"
+          }
+        ]
+      },
+      {
+        "id": "2026-09-17-b",
+        "date": "2026-09-17",
+        "type": "社群",
+        "style": "green",
+        "text": "官方 QQ 群 1046278135 开通，欢迎同好加入交流",
+        "title": "官方 QQ 群开通",
+        "cover": "",
+        "coverAlt": "",
+        "layout": "standard",
+        "body": [
+          {
+            "kind": "p",
+            "text": "幻电投对外联络处官方 QQ 群现已开通，群号 **1046278135**，欢迎各位同好加入交流。"
+          },
+          {
+            "kind": "p",
+            "text": "群内会第一时间同步上新、参展与活动信息，也欢迎在这里提出建议与反馈。"
+          },
+          {
+            "kind": "quote",
+            "text": "加入方式：QQ 搜索群号 1046278135，或使用首页与页脚的一键复制按钮。"
+          },
+          {
+            "kind": "sign",
+            "text": "幻想乡电力投资集团 · 对外联络处　　由幻想，向未来"
+          }
+        ]
+      },
+      {
+        "id": "2026-09-16-a",
+        "date": "2026-09-16",
+        "type": "通告",
+        "style": "green",
+        "text": "对外联络处活动告示板：幻电投周年、百人纪念与特殊活动规则公示",
+        "title": "对外联络处活动告示板",
+        "cover": "assets/images/logo-simple.webp",
+        "coverAlt": "",
+        "layout": "standard",
+        "body": [
+          {
+            "kind": "p",
+            "text": "为回馈广大客户对幻电投的支持与鼓励，现将对外联络处例行活动规则公示如下。"
+          },
+          {
+            "kind": "h",
+            "text": "一、幻电投周年"
+          },
+          {
+            "kind": "p",
+            "text": "**10 月 27 日** 为幻电投成立日，每年例行活动如下："
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "fumo 抽奖",
+              "周年纪念制品推出"
+            ]
+          },
+          {
+            "kind": "h",
+            "text": "二、对外联络处百人纪念"
+          },
+          {
+            "kind": "p",
+            "text": "幻电投对外联络处每达成一个百人目标（即群员人数达到 100、200、300……以此类推），即举办一次 fumo 抽奖活动。"
+          },
+          {
+            "kind": "h",
+            "text": "三、特殊活动"
+          },
+          {
+            "kind": "p",
+            "text": "可能会有各种具有特殊意义的活动、不定期抽奖以及问卷调研等，届时会通知到广大用户，请各位用户积极参与、及时反馈。"
+          },
+          {
+            "kind": "quote",
+            "text": "有了您的支持，我们会更好！"
+          },
+          {
+            "kind": "sign",
+            "text": "幻想乡电力投资集团 · 对外联络处"
+          }
+        ]
+      },
+      {
+        "id": "2026-09-18-b",
+        "date": "2026-10-06",
+        "type": "参展",
+        "style": "gold",
+        "text": "参展计划待公布：武汉THO10",
+        "title": "参展计划",
+        "cover": "assets/images/武汉tho.webp",
+        "coverAlt": "",
+        "layout": "standard",
+        "body": [
+          {
+            "kind": "p",
+            "text": "武汉THO10参展确认"
+          },
+          {
+            "kind": "p",
+            "text": "现场首发情况以摊位公告为准，摊位特典凭购买记录现场领取。"
+          }
+        ]
+      }
+    ]
+  },
+  "about": {
+    "badge": "关于我们",
+    "title": "幻想乡电力投资集团",
+    "subtitle": "Gensokyo Power Investment Corporation",
+    "paragraphs": [
+      "幻想乡电力投资集团（以下简称「幻电投」）是**幻想乡五大发电集团之一**，也是五大集团中**唯一在地面部署核电装机**的发电企业。此处所述集团、企业与机构均为东方 Project 二次创作架空设定，与现实中的任何发电集团、公司或机构无关。",
+      "集团由原幻想乡电力投资集团公司与月宫核技术有限公司重组组建，为幻想乡特大型重要骨干企业。业务涵盖核电、火电、水电、风电、光伏发电等全发电类型，并涉及煤炭、铝业、物流、金融、氢能、储能等领域，是幻想乡境内唯一同时拥有水电、火电、核电、新能源资产的综合能源企业集团。",
+      "作为幻想乡电网的重要合作伙伴之一，幻电投长期承担全乡电力供应的重要职责，是幻想乡重要的电力供应商。"
+    ],
+    "identityTitle": "集团定位",
+    "identityTags": [
+      "幻想乡五大发电集团之一",
+      "唯一地面核电装机企业",
+      "幻想乡电网重要合作伙伴",
+      "幻想乡重要电力供应商"
+    ],
+    "bizTitle": "业务范围",
+    "bizTags": [
+      "核电",
+      "火电",
+      "水电",
+      "风电",
+      "光伏发电",
+      "煤炭",
+      "铝业",
+      "物流",
+      "金融",
+      "氢能",
+      "储能"
+    ],
+    "visual": "assets/images/logo-mascot.webp",
+    "visualAlt": "幻想乡电力投资集团立绘标识",
+    "bulletin": {
+      "badge": "集团通告",
+      "title": "关于筹建文化传媒部的通告",
+      "paragraphs": [
+        "幻想乡电力投资集团（以下称幻电投）面向全乡发布通告：为加强幻电投集团企业形象构建，现正式与幻想乡电网合作筹建文化传媒部。",
+        "当前已推出周边产品：幻想乡电网职务证明书；符卡级安全用电警示贴；⑨级能效贴纸／冰箱贴；本居小铃「银杏下的智慧」；天界输电枢纽检查记录钥匙扣；幻电投企业形象徽章；以及摊位特典「幻电投形象大使 永江衣玖」明信片。",
+        "线上通贩现已开通：闲鱼搜索「幻电投市场部」即可查看在售商品；官方 QQ 群 1046278135 同步开放。",
+        "幻电投文化传媒部将以开放、包容、严谨的姿态开展文化宣传工作。"
+      ],
+      "sign": "幻想乡电力投资集团 · 文化传媒部　　由幻想，向未来"
+    }
+  },
+  "brands": {
+    "title": "品牌集群",
+    "subtitle": "幻电投与所属成员单位 · 共同构成幻想乡电力供应体系（幻想乡世界观架空设定）",
+    "note": "※ 「幻想乡五大发电集团」为东方 Project 二次创作架空设定，与现实中的发电集团体系（无论「五大」还是「六小」）不存在任何对应或影射关系。",
+    "items": [
+      {
+        "name": "幻想乡电力投资集团",
+        "sub": "本社 · 综合能源",
+        "logo": "assets/images/logo-mark.webp",
+        "isSelf": true
+      },
+      {
+        "name": "月宫核工业集团",
+        "sub": "核电 · LPNC",
+        "logo": "assets/images/brand-lunar.webp",
+        "isSelf": false
+      },
+      {
+        "name": "河童地热水电集团",
+        "sub": "水电 · 地热",
+        "logo": "assets/images/brand-kappa.webp",
+        "isSelf": false
+      },
+      {
+        "name": "斯卡雷特能源集团",
+        "sub": "火电 · Scarlet Energy",
+        "logo": "assets/images/brand-scarlet.webp",
+        "isSelf": false
+      },
+      {
+        "name": "飞鸟集团",
+        "sub": "综合",
+        "logo": "assets/images/brand-asuka.webp",
+        "isSelf": false
+      }
+    ]
+  },
+  "goods": {
+    "title": "周边产品",
+    "subtitle": "幻电投文化传媒部首批商品 · 图片与售价均取自官方商品目录",
+    "note": "以上售价与规格以官方商品目录为准；展会现场售价可能略有调整。",
+    "poster": "assets/images/goods-poster.webp",
+    "posterLabel": "查看完整商品目录海报 →",
+    "items": [
+      {
+        "badge": "证件类",
+        "badgeStyle": "green",
+        "name": "幻想乡电网职务证明书",
+        "desc": "七款设计，把你的电网身份正式归档。",
+        "image": "assets/images/goods-proof.webp",
+        "imageAlt": "幻想乡电网职务证明书，共 7 款",
+        "tags": [
+          {
+            "text": "7 款",
+            "key": true
+          },
+          {
+            "text": "卡纸印刷",
+            "key": false
+          }
+        ],
+        "alt": "整册 7 张 ¥40",
+        "price": "6",
+        "unit": "/ 张",
+        "free": false
+      },
+      {
+        "badge": "警示类",
+        "badgeStyle": "red",
+        "name": "符卡级安全用电警示贴",
+        "desc": "当心爆炸、高压危险、当心触电、当心辐射……把现场规程贴在手边。",
+        "image": "assets/images/goods-warning.webp",
+        "imageAlt": "符卡级安全用电警示贴，含当心爆炸、高压危险等图案",
+        "tags": [
+          {
+            "text": "6 张 / 套",
+            "key": true
+          },
+          {
+            "text": "警示标识",
+            "key": false
+          }
+        ],
+        "alt": "整套 6 张 ¥10",
+        "price": "2",
+        "unit": "/ 张",
+        "free": false
+      },
+      {
+        "badge": "标识类",
+        "badgeStyle": "red",
+        "name": "⑨级能效贴纸／冰箱贴",
+        "desc": "幻想能效标识样式，贴纸与冰箱贴一次带走。",
+        "image": "assets/images/goods-energy.webp",
+        "imageAlt": "⑨级能效贴纸与冰箱贴，幻想能效标识样式",
+        "tags": [
+          {
+            "text": "贴纸 + 冰箱贴",
+            "key": true
+          }
+        ],
+        "alt": "每套含 2 件",
+        "price": "9",
+        "unit": "/ 套",
+        "free": false
+      },
+      {
+        "badge": "插画类",
+        "badgeStyle": "green",
+        "name": "本居小铃「银杏下的智慧」",
+        "desc": "银杏树下的阅读时刻，社团插画作品实体化。",
+        "image": "assets/images/goods-kosuzu.webp",
+        "imageAlt": "本居小铃主题插画「银杏下的智慧」",
+        "tags": [
+          {
+            "text": "插画",
+            "key": true
+          },
+          {
+            "text": "本居小铃",
+            "key": false
+          }
+        ],
+        "alt": "每件",
+        "price": "35",
+        "unit": "/ 件",
+        "free": false
+      },
+      {
+        "badge": "挂件类",
+        "badgeStyle": "green",
+        "name": "天界输电枢纽检查记录 钥匙扣",
+        "desc": "巡检记录随身携带，两款设计。",
+        "image": "assets/images/goods-keychain.webp",
+        "imageAlt": "天界输电枢纽检查记录钥匙扣，共 2 款",
+        "tags": [
+          {
+            "text": "2 款",
+            "key": true
+          },
+          {
+            "text": "亚克力",
+            "key": false
+          }
+        ],
+        "alt": "整套 2 件 ¥8",
+        "price": "5",
+        "unit": "/ 件",
+        "free": false
+      },
+      {
+        "badge": "徽章类",
+        "badgeStyle": "green",
+        "name": "幻电投企业形象徽章",
+        "desc": "把 GPIC 别在包上，企业形象随身展示。",
+        "image": "assets/images/goods-badge.webp",
+        "imageAlt": "幻电投企业形象徽章，共 2 款",
+        "tags": [
+          {
+            "text": "2 款",
+            "key": true
+          },
+          {
+            "text": "马口铁",
+            "key": false
+          }
+        ],
+        "alt": "一对 ¥5",
+        "price": "3",
+        "unit": "/ 件",
+        "free": false
+      },
+      {
+        "badge": "摊位特典",
+        "badgeStyle": "gold",
+        "name": "幻电投形象大使 永江衣玖 明信片",
+        "desc": "展会现场摊位专属，购任意商品即赠。",
+        "image": "assets/images/goods-postcard.webp",
+        "imageAlt": "摊位特典：幻电投形象大使永江衣玖明信片",
+        "tags": [
+          {
+            "text": "非卖品",
+            "key": true
+          },
+          {
+            "text": "明信片",
+            "key": false
+          }
+        ],
+        "alt": "摊位限定",
+        "price": "",
+        "unit": "",
+        "free": true,
+        "freeLabel": "购任意商品赠"
+      }
+    ]
+  },
+  "works": {
+    "title": "作品展示",
+    "subtitle": "画集 · 插画　—— 素材整理中，以下为占位结构",
+    "allLabel": "全部",
+    "items": [
+      {
+        "title": "画集名称占位",
+        "meta": "A5 / 24P / 全彩 · 画师待补",
+        "category": "画集",
+        "cover": "",
+        "coverAlt": "",
+        "status": "待上架",
+        "statusStyle": "gray",
+        "price": "--"
+      },
+      {
+        "title": "画集名称占位",
+        "meta": "B5 / 32P / 全彩 · 画师待补",
+        "category": "画集",
+        "cover": "",
+        "coverAlt": "",
+        "status": "待上架",
+        "statusStyle": "gray",
+        "price": "--"
+      },
+      {
+        "title": "插画集名称占位",
+        "meta": "数字版 / PDF",
+        "category": "插画",
+        "cover": "",
+        "coverAlt": "",
+        "status": "待上架",
+        "statusStyle": "gray",
+        "price": "--"
+      },
+      {
+        "title": "插画名称占位",
+        "meta": "单张 / 高清",
+        "category": "插画",
+        "cover": "",
+        "coverAlt": "",
+        "status": "待上架",
+        "statusStyle": "gray",
+        "price": "--"
+      }
+    ]
+  },
+  "event": {
+    "badge": "下一次参展",
+    "title": "武汉THO · 第10届",
+    "subtitle": "场馆与日期占位：武汉客厅会展中心　2026 年 10 月 6 日",
+    "booth": "区2 B18摊位",
+    "debut": "周边全 7 款",
+    "date": "2026-10-06T10:00",
+    "dateEnd": "2026-10-06T17:00",
+    "countdown": "",
+    "linkLabel": "查看参展详情",
+    "link": "#",
+    "visual": "assets/images/武汉tho.webp",
+    "visualAlt": "摊位图 / 展会主视觉"
+  },
+  "shop": {
+    "title": "通贩商店",
+    "desc": "本站仅作商品展示与导流，不收款、不下单；购买、库存、发货与售后均由对应平台负责。",
+    "links": [
+      {
+        "label": "闲鱼 · 幻电投市场部",
+        "href": "https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM",
+        "sub": "淘口令 CZ007"
+      }
+    ],
+    "note": "※ 关注闲鱼「幻电投市场部」，第一时间获取上新与参展信息　※ 展会现场购买请至幻电投摊位，特典明信片现场领取"
+  },
+  "social": [
+    {
+      "label": "QQ 群",
+      "href": "https://qun.qq.com/universal-share/share?ac=1&authKey=qbLpbWXt4XHzPEpilSftqwfHZM68uTPEmm1F8Afywg0zP5nm0mymRAHD7QejyTLo&busi_data=eyJncm91cENvZGUiOiIxMDQ2Mjc4MTM1IiwidG9rZW4iOiJISlFhRnd6ZmRSMUJFNE9GVzY0M3dqVmx3OXczRG1ZbjgxZEZ3d3dMN0tPYmJleElCdFV5bGx1WXoxVktOb0lVIiwidWluIjoiMjc3NzM4MTUzOCJ9&data=7sk6kg1muR1xC0QsSkA9CEZFIdJhQPOf_zSv6ivHCfnpcmnJMoV1fuYMrIhLNxLhPCG7KZC4-Iur5TnHGvVaNg&svctype=4&tempid=h5_group_info",
+      "sub": "1046278135"
+    },
+    {
+      "label": "闲鱼",
+      "href": "https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM",
+      "sub": "幻电投市场部"
+    },
+    {
+      "label": "微博",
+      "href": "",
+      "sub": ""
+    },
+    {
+      "label": "B 站",
+      "href": "",
+      "sub": ""
+    },
+    {
+      "label": "X / Twitter",
+      "href": "",
+      "sub": ""
+    },
+    {
+      "label": "Pixiv",
+      "href": "",
+      "sub": ""
+    }
+  ]
+}

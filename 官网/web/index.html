@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>幻电投企划 | 幻想乡电力投资集团 GPIC</title>
+<meta name="description" content="幻电投企划 —— 东方 Project 二次创作同人社团站点。幻想乡五大发电集团之一，全乡唯一在地面部署核电装机的发电企业。旗下文化传媒部出品：电网职务证明书、安全用电警示贴、能效贴纸、形象徽章等周边。">
+<meta name="theme-color" content="#0D5A38">
+
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="assets/images/favicon.png">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="幻电投企划 | 幻想乡电力投资集团 GPIC">
+<meta property="og:description" content="东方 Project 二次创作架空设定 · 幻想乡五大发电集团之一，全乡唯一在地面部署核电装机的发电企业。">
+<meta property="og:image" content="assets/images/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="700">
+<meta property="og:image:alt" content="幻想乡电力投资集团 · 由幻想，向未来">
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<a class="skip-link" href="#main">跳到主内容</a>
+
+<!-- ============ 顶部导航 ============ -->
+<header class="site-header" id="siteHeader">
+  <div class="container header-inner">
+    <a class="logo" href="index.html">
+      <img src="assets/images/favicon.png" alt="" width="34" height="34">
+      <span>幻电投企划</span>
+    </a>
+
+    <nav class="main-nav" id="mainNav" aria-label="主导航">
+      <a href="index.html" class="is-active">首页</a>
+      <a href="goods.html">周边商品</a>
+      <a href="notice.html">新闻公告</a>
+      <a href="recruitment.html">人员招募</a>
+      <a href="#about">关于社团</a>
+      <a href="#shop">通贩商店</a>
+    </nav>
+
+    <div class="header-right">
+      <a class="admin-entry" href="admin.html" title="进入站点管理后台（先登录）">
+        <span class="ae-dot" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M4.7 4.7l1.9 1.9M17.4 17.4l1.9 1.9M2.8 12h2.6M18.6 12h2.6M4.7 19.3l1.9-1.9M17.4 6.6l1.9-1.9"/></svg>
+        <span>站点管理</span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="展开菜单" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 世界观声明条 ============ -->
+<div class="world-bar">
+  <div class="container">
+    <span class="wb-tag">架空设定</span>
+    <p>东方 Project 二次创作同人站点 · 文中「幻想乡五大发电集团」等集团、企业与机构名称均为架空设定（幻想乡世界观），与现实中的任何发电集团、公司或机构无关。</p>
+  </div>
+</div>
+
+<main id="main">
+
+  <!-- ============ 首屏 · 品牌横幅 ============ -->
+  <section class="hero">
+    <div class="container">
+      <picture>
+        <source srcset="assets/images/banner.webp" type="image/webp">
+        <img class="hero-banner" src="assets/images/banner.jpg" width="1920" height="1120"
+             fetchpriority="high"
+             alt="幻想乡电力投资集团 Gensokyo Power Investment Corporation —— 由幻想，向未来">
+      </picture>
+      <h1 class="sr-only">幻想乡电力投资集团 Gensokyo Power Investment Corporation</h1>
+
+      <div class="hero-card">
+        <span class="badge badge-green">集团通告</span>
+        <h2>与幻想乡电网合作，筹建文化传媒部</h2>
+        <p class="hero-notice">
+          为加强幻电投集团企业形象构建，集团现正式与幻想乡电网合作，筹建文化传媒部。
+          文化传媒部将以开放、包容、严谨的姿态开展文化宣传工作，首批周边现已公开。
+        </p>
+        <p class="hero-sub">
+          幻想乡五大发电集团之一（架空设定） · 全乡唯一在地面部署核电装机的发电企业 · 幻想乡电网重要合作伙伴
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="goods.html">查看周边商品</a>
+          <a class="btn btn-ghost" href="recruitment.html">加入本社</a>
+        </div>
+      </div>
+
+      <div class="stat-strip">
+        <div><span class="stat-num">5</span><span class="stat-label">大发电集团（幻想乡设定）</span></div>
+        <div><span class="stat-num">1</span><span class="stat-label">唯一地面核电装机</span></div>
+        <div><span class="stat-num">7</span><span class="stat-label">款首批周边上市</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 最新公告 ============ -->
+  <section class="container">
+    <div class="notice-card" id="news">
+      <div class="notice-head">
+        <span class="badge badge-green">公告</span>
+        <h2>最新动态</h2>
+        <a class="more" href="notice.html">查看全部 →</a>
+      </div>
+      <ul class="notice-list" id="noticeList">
+        <li>
+          <a href="notice.html?id=2026-09-20-a">
+            <span class="notice-date">2026-09-20</span>
+            <span class="badge badge-green">招募</span>
+            <span class="nt">面向社会的东方 Project 爱好者开展人员招募</span>
+            <span class="go">→</span>
+          </a>
+        </li>
+        <li>
+          <a href="notice.html?id=2026-09-17-a">
+            <span class="notice-date">2026-09-17</span>
+            <span class="badge badge-red">通贩</span>
+            <span class="nt">「幻想乡电网」系列周边上架通贩</span>
+            <span class="go">→</span>
+          </a>
+        </li>
+        <li>
+          <a href="notice.html?id=2026-09-17-b">
+            <span class="notice-date">2026-09-17</span>
+            <span class="badge badge-green">社群</span>
+            <span class="nt">官方 QQ 群开通</span>
+            <span class="go">→</span>
+          </a>
+        </li>
+        <li>
+          <a href="notice.html?id=2026-09-16-a">
+            <span class="notice-date">2026-09-16</span>
+            <span class="badge badge-green">通告</span>
+            <span class="nt">对外联络处活动告示板</span>
+            <span class="go">→</span>
+          </a>
+        </li>
+        <li>
+          <a href="notice.html?id=2026-09-18-b">
+            <span class="notice-date">2026-10-06</span>
+            <span class="badge badge-gold">参展</span>
+            <span class="nt">武汉 THO10 参展确认</span>
+            <span class="go">→</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 关于社团 ============ -->
+  <section class="section container" id="about">
+    <div class="about-grid">
+      <div class="about-text">
+        <span class="badge badge-green">关于我们</span>
+        <h2>幻想乡电力投资集团</h2>
+        <p class="about-en">Gensokyo Power Investment Corporation</p>
+        <p>
+          幻想乡电力投资集团（以下简称「幻电投」）是<strong>幻想乡五大发电集团之一</strong>，
+          也是五大集团中<strong>唯一在地面部署核电装机</strong>的发电企业。
+          此处所述集团、企业与机构均为东方 Project 二次创作架空设定，与现实中的任何发电集团、公司或机构无关。
+        </p>
+        <p>
+          集团由原幻想乡电力投资集团公司与月宫核技术有限公司重组组建，为幻想乡特大型重要骨干企业。
+          业务涵盖核电、火电、水电、风电、光伏发电等全发电类型，并涉及煤炭、铝业、物流、金融、氢能、储能等领域，
+          是幻想乡境内唯一同时拥有水电、火电、核电、新能源资产的综合能源企业集团。
+        </p>
+        <p>
+          作为幻想乡电网的重要合作伙伴之一，幻电投长期承担全乡电力供应的重要职责，
+          是幻想乡重要的电力供应商。
+        </p>
+
+        <p class="tag-title">集团定位</p>
+        <ul class="id-tags">
+          <li>幻想乡五大发电集团之一</li>
+          <li>唯一地面核电装机企业</li>
+          <li>幻想乡电网重要合作伙伴</li>
+          <li>幻想乡重要电力供应商</li>
+        </ul>
+
+        <p class="tag-title">业务范围</p>
+        <ul class="biz-tags">
+          <li>核电</li><li>火电</li><li>水电</li><li>风电</li><li>光伏发电</li>
+          <li>煤炭</li><li>铝业</li><li>物流</li><li>金融</li><li>氢能</li><li>储能</li>
+        </ul>
+      </div>
+
+      <div class="about-visual">
+        <img src="assets/images/logo-mascot.webp" width="900" height="1080"
+             alt="幻想乡电力投资集团立绘标识">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 品牌集群 ============ -->
+  <section class="section container" id="brands">
+    <div class="section-head">
+      <h2>品牌集群</h2>
+      <p>幻电投与所属成员单位 · 共同构成幻想乡电力供应体系（幻想乡世界观架空设定）</p>
+    </div>
+
+    <ul class="brand-grid">
+      <li class="brand-card is-self">
+        <div class="brand-logo"><img src="assets/images/logo-mark.webp" alt="幻想乡电力投资集团标志" loading="lazy"></div>
+        <h3>幻想乡电力投资集团</h3>
+        <p>本社 · 综合能源</p>
+      </li>
+      <li class="brand-card">
+        <div class="brand-logo"><img src="assets/images/brand-lunar.webp" alt="月宫核工业集团有限公司标志" loading="lazy"></div>
+        <h3>月宫核工业集团</h3>
+        <p>核电 · LPNC</p>
+      </li>
+      <li class="brand-card">
+        <div class="brand-logo"><img src="assets/images/brand-kappa.webp" alt="河童地热水电集团有限公司标志" loading="lazy"></div>
+        <h3>河童地热水电集团</h3>
+        <p>水电 · 地热</p>
+      </li>
+      <li class="brand-card">
+        <div class="brand-logo"><img src="assets/images/brand-scarlet.webp" alt="斯卡雷特能源集团有限公司标志" loading="lazy"></div>
+        <h3>斯卡雷特能源集团</h3>
+        <p>火电 · Scarlet Energy</p>
+      </li>
+      <li class="brand-card">
+        <div class="brand-logo"><img src="assets/images/brand-asuka.webp" alt="飞鸟集团有限公司标志" loading="lazy"></div>
+        <h3>飞鸟集团</h3>
+        <p>综合</p>
+      </li>
+    </ul>
+
+    <p class="brand-note">※ 「幻想乡五大发电集团」为东方 Project 二次创作架空设定，与现实中的发电集团体系（无论「五大」还是「六小」）不存在任何对应或影射关系。</p>
+  </section>
+
+  <!-- ============ 周边产品精选 ============ -->
+  <section class="section container" id="goods">
+    <div class="section-head">
+      <h2>周边产品</h2>
+      <p>幻电投文化传媒部首批商品 · 图片与售价均取自官方商品目录</p>
+      <a class="more" href="goods.html">查看全部商品 →</a>
+    </div>
+
+    <div class="goods-grid">
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-proof.webp" alt="幻想乡电网职务证明书，共 7 款" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-green">证件类</span>
+          <h3>幻想乡电网职务证明书</h3>
+          <p>七款设计，把你的电网身份正式归档。</p>
+          <div class="goods-tags"><span class="is-key">7 款</span><span>卡纸印刷</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">整册 7 张 ¥40</span>
+            <span class="goods-price">¥6<em> / 张</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-warning.webp" alt="符卡级安全用电警示贴，含当心爆炸、高压危险等图案" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-red">警示类</span>
+          <h3>符卡级安全用电警示贴</h3>
+          <p>当心爆炸、高压危险、当心触电、当心辐射……把现场规程贴在手边。</p>
+          <div class="goods-tags"><span class="is-key">6 张 / 套</span><span>警示标识</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">整套 6 张 ¥10</span>
+            <span class="goods-price">¥2<em> / 张</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-kosuzu.webp" alt="本居小铃主题插画「银杏下的智慧」" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-green">插画类</span>
+          <h3>本居小铃「银杏下的智慧」</h3>
+          <p>银杏树下的阅读时刻，社团插画作品实体化。</p>
+          <div class="goods-tags"><span class="is-key">插画</span><span>本居小铃</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">每件</span>
+            <span class="goods-price">¥35<em> / 件</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-badge.webp" alt="幻电投企业形象徽章，共 2 款" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-green">徽章类</span>
+          <h3>幻电投企业形象徽章</h3>
+          <p>把 GPIC 别在包上，企业形象随身展示。</p>
+          <div class="goods-tags"><span class="is-key">2 款</span><span>马口铁</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">一对 ¥5</span>
+            <span class="goods-price">¥3<em> / 件</em></span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 参展预告 ============ -->
+  <section class="section container" id="event">
+    <div class="section-head">
+      <h2>参展活动</h2>
+      <p>线下见面的地方，欢迎来摊位翻本</p>
+    </div>
+
+    <div class="event-card">
+      <div class="event-info">
+        <span class="badge badge-gold">已参展</span>
+        <h3>武汉 THO · 第 10 届</h3>
+        <p>武汉客厅会展中心 2026 年 10 月 6 日</p>
+        <dl class="event-facts">
+          <div><dt>摊位号</dt><dd>区2 B18</dd></div>
+          <div><dt>首发内容</dt><dd>周边全 7 款</dd></div>
+          <div><dt>状态</dt><dd class="cd is-past">已结束</dd></div>
+        </dl>
+        <a class="btn btn-outline" href="notice.html?id=2026-09-18-b">查看参展公告</a>
+      </div>
+      <div class="event-visual" style="background-image:url('assets/images/武汉tho.webp')"></div>
+    </div>
+  </section>
+
+  <!-- ============ 通贩入口 ============ -->
+  <section class="section container" id="shop">
+    <div class="shop-card">
+      <h2>通贩商店</h2>
+      <p>本站仅作商品展示与导流，不收款、不下单；购买、库存、发货与售后均由对应平台负责。</p>
+      <div class="shop-links">
+        <a href="https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM" target="_blank" rel="noopener">
+          <span class="dot"></span>闲鱼 · 幻电投市场部<em class="sc-sub">淘口令 CZ007</em>
+        </a>
+      </div>
+      <p class="shop-note">※ 关注闲鱼「幻电投市场部」，第一时间获取上新与参展信息 ※ 展会现场购买请至幻电投摊位，特典明信片现场领取</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ 页脚 ============ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="index.html">
+          <img src="assets/images/favicon.png" alt="" width="34" height="34">
+          <span>幻电投企划</span>
+        </a>
+        <p>幻想乡五大发电集团之一（东方 Project 二次创作架空设定），全乡唯一在地面部署核电装机的发电企业。「幻电投企划」由幻电投文化传媒部维护。</p>
+        <p class="footer-slogan">由幻想，向未来<em>From Dreams, to the Future.</em></p>
+      </div>
+
+      <div>
+        <h4>站点导航</h4>
+        <ul>
+          <li><a href="index.html">首页</a></li>
+          <li><a href="goods.html">周边商品</a></li>
+          <li><a href="notice.html">新闻公告</a></li>
+          <li><a href="recruitment.html">人员招募</a></li>
+          <li><a href="#about">关于社团</a></li>
+          <li><a href="#brands">品牌集群</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>社交矩阵</h4>
+        <ul id="socialList">
+          <li>
+            QQ 群 <em class="sc-sub">1046278135</em>
+            <button type="button" class="sc-copy" data-copy="1046278135">复制群号</button>
+          </li>
+          <li><a href="https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM" target="_blank" rel="noopener">闲鱼 <em class="sc-sub">幻电投市场部</em></a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>通贩与声明</h4>
+        <ul>
+          <li><a href="#shop">通贩商店</a></li>
+          <li><a href="assets/images/goods-poster.webp" target="_blank" rel="noopener">商品目录海报</a></li>
+          <li><a href="notice.html">公告中心</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 幻电投企划 Gensokyo Power Investment Corporation</span>
+      <span>「幻电投企划」为东方 Project 非官方同人社团站点，与上海爱丽丝幻乐团无隶属关系；文中机构、企业与商品均属架空设定</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// 移动端菜单
+var navToggle = document.getElementById('navToggle');
+var mainNav = document.getElementById('mainNav');
+navToggle.addEventListener('click', function () {
+  var open = mainNav.classList.toggle('is-open');
+  navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+
+// 导航阴影
+var header = document.getElementById('siteHeader');
+window.addEventListener('scroll', function () {
+  header.classList.toggle('scrolled', window.scrollY > 10);
+}, { passive: true });
+
+// 一键复制
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest ? e.target.closest('[data-copy]') : null;
+  if (!btn) return;
+  var text = btn.getAttribute('data-copy');
+  var done = function () {
+    var old = btn.textContent;
+    btn.textContent = '已复制';
+    btn.classList.add('is-done');
+    setTimeout(function () { btn.textContent = old; btn.classList.remove('is-done'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function () { window.prompt('请手动复制：', text); });
+  } else {
+    window.prompt('请手动复制：', text);
+  }
+});
+
+// 滚动高亮当前栏目
+var navLinks = Array.prototype.slice.call(document.querySelectorAll('.main-nav a[href^="#"]'));
+if ('IntersectionObserver' in window) {
+  var linkMap = {};
+  navLinks.forEach(function (a) { linkMap[a.getAttribute('href').slice(1)] = a; });
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting && linkMap[entry.target.id]) {
+        navLinks.forEach(function (a) { a.classList.remove('is-active'); });
+        linkMap[entry.target.id].classList.add('is-active');
+      }
+    });
+  }, { rootMargin: '-80px 0px -70% 0px' });
+  Object.keys(linkMap).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+}
+// ─── 动态数据加载 ───
+(function() {
+  var API = '/functions/v1/app';
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  fetch(API + '?action=all')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error || !data.ok) return;
+
+      // 更新公告列表
+      if (data.notices && data.notices.length) {
+        var list = document.getElementById('noticeList');
+        if (list) {
+          list.innerHTML = data.notices.slice(0, 5).map(function(n) {
+            var badgeClass = n.style === 'red' ? 'badge-red' : n.style === 'gold' ? 'badge-gold' : 'badge-green';
+            return '<li><a href="notice.html?id=' + esc(n.id) + '">' +
+              '<span class="notice-date">' + esc(n.date) + '</span>' +
+              '<span class="badge ' + badgeClass + '">' + esc(n.type) + '</span>' +
+              '<span class="nt">' + esc(n.summary || n.title) + '</span>' +
+              '<span class="go">→</span></a></li>';
+          }).join('');
+        }
+      }
+
+      // 更新品牌
+      if (data.brands && data.brands.length) {
+        var brandGrid = document.querySelector('.brand-grid');
+        if (brandGrid) {
+          brandGrid.innerHTML = data.brands.map(function(b) {
+            return '<li class="brand-card' + (b.is_self ? ' is-self' : '') + '">' +
+              '<div class="brand-logo"><img src="' + esc(b.logo) + '" alt="' + esc(b.name) + '" loading="lazy"></div>' +
+              '<h3>' + esc(b.name) + '</h3>' +
+              '<p>' + esc(b.sub) + '</p></li>';
+          }).join('');
+        }
+      }
+
+      // 更新商品
+      if (data.goods && data.goods.length) {
+        var goodsGrid = document.querySelector('.goods-grid');
+        if (goodsGrid) {
+          goodsGrid.innerHTML = data.goods.slice(0, 4).map(function(g) {
+            var badgeClass = g.badge_style === 'red' ? 'badge-red' : g.badge_style === 'gold' ? 'badge-gold' : 'badge-green';
+            var tagsHtml = (g.tags || []).map(function(t) {
+              return '<span' + (t.key ? ' class="is-key"' : '') + '>' + esc(t.text) + '</span>';
+            }).join('');
+            var priceText = g.is_free ? esc(g.free_label || '免费') : '¥' + esc(g.price) + '<em> ' + esc(g.unit) + '</em>';
+            return '<article class="goods-card">' +
+              '<div class="goods-media"><img src="' + esc(g.image) + '" alt="' + esc(g.image_alt) + '" loading="lazy"></div>' +
+              '<div class="goods-body">' +
+              '<span class="badge ' + badgeClass + '">' + esc(g.badge) + '</span>' +
+              '<h3>' + esc(g.name) + '</h3>' +
+              '<p>' + esc(g.description) + '</p>' +
+              '<div class="goods-tags">' + tagsHtml + '</div>' +
+              '<div class="goods-foot">' +
+              '<span class="goods-alt">' + esc(g.alt_label) + '</span>' +
+              '<span class="goods-price">' + priceText + '</span>' +
+              '</div></div></article>';
+          }).join('');
+        }
+      }
+
+      // 更新通贩商店（数据来自后端 site_settings 的 shop 键）
+      // 下面这段静态 HTML 保留作兜底：接口挂了 / 没 JS 时仍是可读内容
+      if (data.shop) {
+        var shopCard = document.querySelector('#shop .shop-card');
+        if (shopCard) {
+          var shop = data.shop;
+          var shopLinks = (shop.links || []).filter(function(l) {
+            return l && l.href;
+          }).map(function(l) {
+            return '<a href="' + esc(l.href) + '" target="_blank" rel="noopener">' +
+              '<span class="dot"></span>' + esc(l.label || '') +
+              (l.sub ? '<em class="sc-sub">' + esc(l.sub) + '</em>' : '') + '</a>';
+          }).join('');
+          shopCard.innerHTML =
+            '<h2>' + esc(shop.title || '通贩商店') + '</h2>' +
+            (shop.desc ? '<p>' + esc(shop.desc) + '</p>' : '') +
+            (shopLinks ? '<div class="shop-links">' + shopLinks + '</div>' : '') +
+            (shop.note ? '<p class="shop-note">' + esc(shop.note) + '</p>' : '');
+        }
+      }
+
+      // 更新社交链接
+      if (data.social && data.social.length) {
+        var socialList = document.getElementById('socialList');
+        if (socialList) {
+          socialList.innerHTML = data.social.filter(function(s) { return s.href; }).map(function(s) {
+            return '<li><a href="' + esc(s.href) + '" target="_blank" rel="noopener">' + esc(s.label) +
+              (s.sub ? ' <em class="sc-sub">' + esc(s.sub) + '</em>' : '') + '</a></li>';
+          }).join('');
+        }
+      }
+    })
+    .catch(function() { /* 静态内容作为兜底 */ });
+})();
+</script>
+</body>
+</html>

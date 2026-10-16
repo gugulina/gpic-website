@@ -1,0 +1,15 @@
+# 幻想乡电力投资集团官网 · 爬虫规则
+#
+# admin.html 是后台入口，不该被搜索引擎抓取。它本身受登录保护，
+# 这里再禁一次是纵深防御。
+#
+# 不要 Disallow: /assets/ —— 图片被禁抓会直接影响图片搜索与分享卡片取图。
+
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /functions/
+
+# 站点还没定域名，所以这里先不给 Sitemap 行。
+# 域名定下来之后，补一行：
+#   Sitemap: https://你的域名/sitemap.xml

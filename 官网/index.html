@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>幻电投企划 | 幻想乡电力投资集团 GPIC</title>
+<meta name="description" content="幻电投企划 —— 东方 Project 二次创作同人社团站点。站内以架空设定「幻想乡电力投资集团」为世界观：幻想乡五大发电集团之一，全乡唯一在地面部署核电装机的发电企业。旗下文化传媒部出品：电网职务证明书、安全用电警示贴、能效贴纸、形象徽章等周边。">
+<meta name="theme-color" content="#0D5A38">
+
+<link rel="icon" href="assets/images/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="assets/images/favicon.png">
+<link rel="apple-touch-icon" href="assets/images/favicon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="幻电投企划 | 幻想乡电力投资集团 GPIC">
+<meta property="og:description" content="东方 Project 二次创作架空设定 · 幻想乡五大发电集团之一，全乡唯一在地面部署核电装机的发电企业。">
+<meta property="og:image" content="assets/images/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="700">
+<meta property="og:image:alt" content="幻想乡电力投资集团 · 由幻想，向未来">
+
+<!--
+  ============================================================
+  幻电投企划 · 幻想乡电力投资集团官网 v0.15
+  ------------------------------------------------------------
+  v0.15 更新（对外名二次调整）：
+    · 站点对外名称由「幻想电力企划」改为「幻电投企划」。
+      原因：个人备案的网站名称不得含行业词，「电力」有被主管部门挑出的风险；
+      改用社团自称号「幻电投」加「企划」，中性得多，备案通过率更高。
+    · 「幻想电力企划」转为备案被驳回时的备选名 —— 换回来成本极低，
+      只动 site.name 与各页静态兜底。
+    · 同步范围：content.json 的 site 段 6 个字段，index / notice / 404 /
+      admin 的静态兜底与 JS 兜底，以及 deploy.py 的打包横幅，共 46 处。
+  ------------------------------------------------------------
+  v0.14 更新（站名与架空设定分层）：
+    · 站点对外名称改为「幻想电力企划」，站内世界观仍是「幻想乡电力投资集团」。
+      两者在数据里本就是两层：site.name 是站点标识，正文里的集团名属架空设定。
+    · 影响：浏览器标题、og 分享卡片、页头页脚品牌名、页脚版权与非官方声明。
+  ------------------------------------------------------------
+  v0.13 更新（参展倒计时自动计算）：
+    · 「参展预告」的倒计时以前是一句手填的死文字（如「18 天」），
+      现在改为读 event.date 自动算，每秒刷新，切到后台标签页会暂停。
+      显示分档：> 2 天 →「N 天」（按日历日差，9/18 看 10/6 就是 18 天）；
+      ≤ 2 天 →「N 小时」；≤ 1 天 →「5 小时 23 分」；≤ 1 小时 →「23:41」。
+      到点后：有 dateEnd 就显示「进行中 / 已结束」；没填 dateEnd 则
+      开展当天显示「今天开展」，隔天显示「已结束」。
+      配色：一周内转橙、24 小时内转红、进行中转绿、已结束转灰。
+    · event.date / dateEnd 格式 2026-10-06T09:30，只写到日（2026-10-06）
+      也可以，按本地时间理解。**没填 date 时倒计时仍显示后台手填的文字**，
+      所以老数据不会变空。
+    · 内容结构升到 v5（新增两个字段），MIN_VER 4 → 5，旧草稿自动作废
+  v0.12 更新（上线基建：分享卡片图 + 404 / robots / sitemap）：
+    · 分享卡片图 og:image 由 banner.jpg（1920×1120 / 228 KB）换成专用的
+      assets/images/share.jpg（1200×700 / 113 KB，由 build-assets.py 从同一
+      张横幅生成）。**刻意不用 WebP**：这张图只被微信/QQ/微博的抓取程序
+      取用，不进首屏；而微信、QQ 的链接预览对 WebP 支持不稳，换成 WebP
+      有让预览图直接不显示的风险 —— 分享到微信正是本站主场景。
+      同时补了 og:image:width / height / alt（有助平台正确取用）。
+    · 新增 404.html、robots.txt、sitemap.xml（详见 交接说明.md 第 5 节）
+    · 内容结构未变，MIN_VER 保持 4
+  v0.11 更新（新增公告页 notice.html）：
+    · 每条公告现在都有正文与配图。内容结构升到 v4，公告条目新增
+      id（详情页的地址参数，后台自动生成且唯一）、title（详情页大标题）、
+      cover（头图）、layout（版式：标准 / 宽幅 / 海报式）、body（正文内容块）
+    · 首页「最新动态」每条变成链接 → notice.html?id=xxx；
+      「查看全部」与导航「新闻公告」→ notice.html（公告列表页）
+    · 正文内容块支持：段落 / 小标题 / 项目列表 / 有序列表 / 引用框 /
+      单图（整宽·居中·左浮·右浮 + 图注）/ 多图并排 / 分隔线 / 落款
+    · 编辑入口在后台「公告」页：展开任一条公告，即可调整排版与配图
+    · 发布新内容时记得一起上传 notice.html（deploy.py 已自动包含）
+  v0.10 更新（不再让落后的草稿盖住正式内容）：
+    · pick() 增加一道判断：若后台记下的草稿基线时间（localStorage 的
+      gpic.admin.draftbase.v1）早于 data/content.json 的 updatedAt，
+      就直接忽略草稿、改用正式内容。此前只比 updatedAt，草稿一旦被编辑
+      （时间戳刷新）就会「看起来更新」，前台于是渲染出一份少了后来新增
+      素材的旧页面，而且看不出原因。
+    · 内容结构未变，MIN_VER 保持 3
+  v0.9 更新（成员单位 logo 全量接入 + 品牌卡片改深色底）：
+    · 河童地热水电、飞鸟集团 logo 到位，5 张品牌卡片不再有占位
+    · 月宫核工改用原版 logo（此前用的是反相派生版，已废弃删除）
+    · 品牌卡片改深色底（--brand-deep），仅本社卡片保留浅绿底。原因：
+      美工交付的 4 个成员单位 logo 都是「浅色标识 + 透明底」，
+      放白底上右侧标准字完全看不见，必须配深色背景（见 8. 品牌集群）
+    · 内容结构未变，MIN_VER 保持 3
+  （v0.8 是后台侧的「上传转 WebP + 历史版本回滚」，前台无改动，故无 v0.8 条目）
+  v0.7 更新（上线环境开关）：
+    · 新增 site.siteUrl：填了正式域名后，分享卡片（og:image）自动
+      变成绝对地址，并写入 og:url 与 canonical —— 微信 / QQ / 微博
+      的爬虫不认相对路径，不填就抓不到预览图
+    · 新增 site.showAdminEntry：设为 false 时，导航右侧「站点管理」
+      与页脚「站点管理后台」入口自动隐藏（线上没有 admin.html）
+    · 内容结构版本 MIN_VER 2 → 3，旧草稿自动作废
+    · 配合后台 v0.7：发布链路已接通，改完点「发布」即写回本机文件
+  v0.6 更新（修复后台改了不生效的字段）：
+    · 公告板块角标接入渲染（此前 admin 的「板块角标」字段改了前台没反应）
+    · 语言切换控件：语种少于 2 个时整块自动隐藏，
+      不再留一个「点了没反应」的假按钮；日文版就绪后去掉 data-lang-pending 即可启用
+    · 新增全局 [hidden]{display:none !important}，保证脚本隐藏元素时不被
+      .lang 这类 display:flex 规则覆盖
+  v0.5 更新（世界观澄清 + 双向跳转 + 真实社群信息）：
+    · 新增常驻「世界观声明条」（导航下方，文案来自 site.worldviewNote）：
+      显式声明「幻想乡五大发电集团」等为架空设定，不与现实发电集团体系混淆
+    · 关于我们 / 品牌集群 / 页脚简介 / SEO 描述同步加入架空设定说明
+    · 首页导航右侧新增醒目的「站点管理」按钮 → admin.html（登录页）
+    · 页脚「站点管理后台」入口改为按钮样式
+    · 通贩平台：淘宝 → 闲鱼（幻电投市场部，含淘口令）
+    · 社交矩阵新增 QQ 群 1046278135（支持一键复制）与闲鱼官号
+    · 集团通告落款由「你用电，我用心」改为社团自有口号「由幻想，向未来」
+  v0.4 更新（内容数据化 + 后台）：
+    · 页面内容改由 data/content.json 驱动，后台 admin.html 可直接编辑
+    · 数据优先级：本地草稿(localStorage) → data/content.json → 本文件静态标记
+    · 作品展示区接入真实分类筛选
+  v0.3 更新：
+    · 接入美工页面内容：产业概览简介、四大成员单位正式名称
+    · 新增「品牌集群」板块，用真实集团 logo（幻电投 / 月宫核工 / 斯卡雷特）
+    · 「周边产品」扩充为完整 7 款商品，图与价均取自产品海报
+  待办：
+    1. 全站搜索「占位 / 待补 / 待填」逐项替换。
+    2. 参展预告的展会名/日期/摊位号仍为占位值。
+    3. 作品展示区（画集 / 插画）暂无素材，仍为占位结构。
+    4. 微博 / B站 / X / Pixiv / 微店 / Booth 链接待填。
+    5. 5 张品牌卡片 logo 已全部到位。若以后拿到成员单位 logo 的浅底版，
+       可把品牌卡片改回浅色底——改之前先读 8. 品牌集群 上方的注释。
+  ============================================================
+-->
+
+<style>
+/* ============ 1. 设计变量 ============
+   品牌色采样自社团素材：
+     深绿 #1D3C2C —— 品牌横幅主标题色，用作标题与深色底
+     标志绿 #0D5A38 —— 简化 logo 绿色块，用作主色/按钮
+     标志红 #A60402 —— 简化 logo 红色块，用作强调/警示
+     标志橙 #EB6108 —— 简化 logo 橙色块，用作点缀
+     中性灰 #404040 —— logo 标准字色
+*/
+:root{
+  --brand-deep:#1D3C2C;
+  --brand-green:#0D5A38;
+  --brand-green-soft:#3E7C5E;
+  --brand-red:#A60402;
+  --brand-orange:#EB6108;
+
+  --text-1:#1F2629;
+  --text-2:#6C757A;
+  --border:#E5E8E7;
+  --bg:#F6F8F7;
+  --surface:#FFFFFF;
+  --tint-green:#EDF3EF;
+  --tint-red:#FBEEEE;
+
+  --ok:#1E7A4E;
+  --warn:#C2761A;
+  --err:#A60402;
+
+  --r-sm:8px;
+  --r-md:12px;
+  --r-lg:16px;
+
+  --container:1200px;
+  --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+
+/* ============ 2. 基础重置 ============ */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);font-size:16px;line-height:1.7;color:var(--text-1);background:var(--bg);letter-spacing:.02em}
+h1,h2,h3,h4{margin:0;line-height:1.3;font-weight:700}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+ul{margin:0;padding:0;list-style:none}
+dl,dd,dt{margin:0}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+[hidden]{display:none !important}
+
+.container{max-width:var(--container);margin:0 auto;padding:0 20px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:absolute;left:-9999px;top:0;z-index:999;background:var(--brand-green);color:#fff;padding:10px 16px;border-radius:0 0 var(--r-sm) 0}
+.skip-link:focus{left:0}
+
+/* ============ 3. 通用组件 ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;border-radius:var(--r-sm);font-size:15px;font-weight:500;transition:.18s}
+.btn-primary{background:var(--brand-green);color:#fff}
+.btn-primary:hover{background:var(--brand-deep)}
+.btn-ghost{border:1px solid var(--border);color:var(--text-1);background:var(--surface)}
+.btn-ghost:hover{border-color:var(--brand-green);color:var(--brand-green)}
+
+.badge{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:11px;font-size:12px;font-weight:500;white-space:nowrap}
+.badge-green{background:var(--tint-green);color:var(--brand-green)}
+.badge-red{background:var(--tint-red);color:var(--brand-red)}
+.badge-gold{background:#FBF3E4;color:var(--warn)}
+.badge-gray{background:#F1F2F3;color:var(--text-2)}
+
+.section{padding:72px 0}
+.section-head{margin-bottom:32px}
+.section-head h2{font-size:26px;color:var(--brand-deep)}
+.section-head p{color:var(--text-2);font-size:14.5px;margin-top:6px}
+.section-head .more{color:var(--brand-green);font-size:14px;font-weight:500}
+
+.ph{display:flex;align-items:center;justify-content:center;text-align:center;background:repeating-linear-gradient(135deg,#EFF1F2 0 12px,#E9ECEC 12px 24px);border:1px dashed #C5CCCA;border-radius:var(--r-md);color:#8A9296;font-size:13px;letter-spacing:.04em;padding:16px}
+
+/* ============ 4. 顶部导航 ============ */
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.header-inner{display:flex;align-items:center;gap:20px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;white-space:nowrap;color:var(--brand-deep)}
+.logo img{width:34px;height:34px;flex:none;object-fit:contain}
+.main-nav{display:flex;gap:18px;font-size:14px}
+.main-nav a{color:var(--text-2);padding:4px 0;border-bottom:2px solid transparent;transition:.18s;white-space:nowrap}
+.main-nav a:hover,.main-nav a.is-active{color:var(--brand-deep);border-bottom-color:var(--brand-green)}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.lang{display:flex;gap:2px}
+.lang button{padding:2px 8px;border-radius:6px;color:var(--text-2);font-size:13px;font-family:var(--mono)}
+.lang button.is-active{background:var(--tint-green);color:var(--brand-green)}
+.nav-toggle{display:none;width:40px;height:40px;border-radius:var(--r-sm);border:1px solid var(--border)}
+.nav-toggle span{display:block;width:18px;height:2px;background:var(--text-1);margin:3px auto;border-radius:2px}
+
+/* 后台入口按钮（首页 → admin.html），刻意做得醒目一些 */
+.admin-entry{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:var(--r-sm);
+  border:1px solid var(--brand-green);background:var(--tint-green);color:var(--brand-green);
+  font-size:13.5px;font-weight:600;white-space:nowrap;transition:.18s}
+.admin-entry:hover{background:var(--brand-green);color:#fff}
+.admin-entry svg{width:15px;height:15px;flex:none}
+.admin-entry .ae-dot{width:6px;height:6px;border-radius:50%;background:var(--brand-orange);flex:none}
+.admin-entry:hover .ae-dot{background:#fff}
+
+/* 世界观声明条：紧贴导航下方，常驻可见 */
+.world-bar{background:var(--brand-deep);color:#C3D3C9;font-size:12.5px;line-height:1.55}
+.world-bar .container{display:flex;align-items:center;gap:10px;padding-top:9px;padding-bottom:9px}
+.world-bar .wb-tag{flex:none;display:inline-flex;align-items:center;height:20px;padding:0 9px;border-radius:10px;
+  background:rgba(235,97,8,.22);color:#F5BC93;font-size:11.5px;font-weight:600;letter-spacing:.05em;white-space:nowrap}
+.world-bar p{color:#C3D3C9}
+.world-bar b{color:#fff;font-weight:600}
+
+/* ============ 5. 首屏 ============ */
+.hero{padding:28px 0 0}
+.hero-banner{width:100%;height:auto;border-radius:var(--r-lg);border:1px solid var(--border)}
+.hero-card{position:relative;z-index:2;margin:-72px 40px 0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:26px 32px 28px;box-shadow:0 16px 44px rgba(29,60,44,.09)}
+.hero-card h2{font-size:30px;color:var(--brand-deep);margin:14px 0 12px;letter-spacing:.01em}
+.hero-notice{font-size:15.5px;max-width:780px}
+.hero-sub{color:var(--text-2);font-size:14.5px;margin-top:10px;max-width:780px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+
+.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:20px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
+.stat-strip div{background:var(--surface);padding:20px 24px}
+.stat-num{display:block;font-family:var(--mono);font-size:26px;font-weight:700;color:var(--brand-green);line-height:1.2}
+.stat-label{color:var(--text-2);font-size:13.5px}
+
+/* ============ 6. 公告条 ============ */
+.notice{margin-top:64px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
+.notice-head{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.notice-head h2{font-size:15px;color:var(--brand-deep)}
+.notice-head .more{margin-left:auto;font-size:13px;color:var(--brand-green)}
+.notice-list li{border-bottom:1px solid var(--border)}
+.notice-list li:last-child{border-bottom:none}
+.notice-list li > a{display:flex;gap:16px;align-items:center;padding:14px 20px;font-size:14.5px;transition:.16s}
+.notice-list li:hover{background:#FAFBFA}
+.notice-list li .nt{flex:1;min-width:0}
+.notice-list li .go{flex:none;color:#B8C2BD;font-size:13px;transition:.18s}
+.notice-list li:hover .go{color:var(--brand-green)}
+.notice-date{font-family:var(--mono);color:var(--text-2);font-size:13px;flex:none}
+
+/* ============ 7. 关于社团 ============ */
+.about-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:48px;align-items:start}
+.about-text h2{font-size:28px;color:var(--brand-deep);margin:14px 0 6px}
+.about-en{font-family:var(--mono);font-size:13px;color:var(--text-2);letter-spacing:.06em;margin-bottom:18px}
+.about-text > p{font-size:15px;margin-bottom:14px}
+.tag-title{font-size:12.5px;color:var(--text-2);margin:24px 0 10px;font-family:var(--mono);letter-spacing:.06em}
+.id-tags{display:flex;flex-wrap:wrap;gap:10px}
+.id-tags li{display:flex;align-items:center;gap:8px;background:var(--tint-green);color:var(--brand-deep);border-radius:var(--r-sm);padding:9px 14px;font-size:13.5px;font-weight:500}
+.id-tags li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--brand-green);flex:none}
+.biz-tags{display:flex;flex-wrap:wrap;gap:8px}
+.biz-tags li{border:1px solid var(--border);background:var(--surface);color:var(--text-2);border-radius:var(--r-sm);padding:6px 12px;font-size:13px}
+.about-visual{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px}
+.about-visual img{width:100%;height:auto;border-radius:var(--r-md)}
+
+.notice-block{margin-top:56px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--brand-green);border-radius:var(--r-md);padding:28px 32px}
+.notice-block h3{font-size:17px;color:var(--brand-deep);margin:12px 0 10px}
+.notice-block p{font-size:15px;margin-bottom:10px}
+.notice-block .sign{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);font-family:var(--mono);font-size:12.5px;color:var(--text-2);letter-spacing:.04em}
+
+/* ============ 8. 品牌集群 ============
+   底色约定：成员单位卡片用深色底，本社卡片用浅绿底。
+   这不是审美偏好，是素材决定的——美工交付的 4 个成员单位 logo 均为
+   「浅色标识 + 透明底」（月宫核工浅灰字、河童水电白字、飞鸟纯白、
+   斯卡雷特白字 + 深红章），放白底上右侧标准字会完全看不见、只剩左边的章。
+   而幻电投的标志是彩色（深绿 + 红 + 橙），只在浅底上才好看。
+   以后拿到成员单位 logo 的浅底版，才能把这里改回 --surface。 */
+.brand-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.brand-card{background:var(--brand-deep);border:1px solid var(--brand-deep);border-radius:var(--r-md);padding:18px 14px;text-align:center;transition:.2s;display:flex;flex-direction:column}
+.brand-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(29,60,44,.26)}
+.brand-logo{height:74px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.brand-logo img{max-height:100%;max-width:100%;width:auto;object-fit:contain}
+.brand-logo.is-empty{border:1px dashed rgba(255,255,255,.28);border-radius:var(--r-sm);color:rgba(255,255,255,.55);font-size:11.5px;font-family:var(--mono);letter-spacing:.04em}
+.brand-card h3{font-size:14.5px;color:#fff;margin-bottom:5px}
+.brand-card p{font-size:12px;color:#9FB8AB;margin-top:auto}
+.brand-card.is-self{border-color:var(--brand-green-soft);background:var(--tint-green)}
+.brand-card.is-self h3{color:var(--brand-deep)}
+.brand-card.is-self p{color:var(--text-2)}
+.brand-card.is-self .brand-logo.is-empty{border-color:var(--border);color:var(--text-2)}
+.brand-note{margin-top:16px;font-size:12.5px;color:var(--text-2)}
+
+/* ============ 9. 周边产品 ============ */
+.goods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
+.goods-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column;transition:.2s}
+.goods-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(29,60,44,.09)}
+.goods-media{aspect-ratio:4/3;background:#E7F3ED;display:flex;align-items:center;justify-content:center;padding:10px;border-bottom:1px solid var(--border)}
+.goods-media img{max-width:100%;max-height:100%;width:auto;height:auto;border-radius:6px}
+.goods-body{padding:18px 20px 20px;flex:1;display:flex;flex-direction:column}
+.goods-body h3{font-size:16px;color:var(--brand-deep);margin:10px 0 8px}
+.goods-body > p{color:var(--text-2);font-size:13.5px;flex:1}
+.goods-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.goods-tags span{font-size:12px;padding:3px 10px;border-radius:10px;background:#F1F2F3;color:var(--text-2)}
+.goods-tags span.is-key{background:var(--tint-green);color:var(--brand-green);font-weight:500}
+.goods-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.goods-price{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--brand-red);line-height:1.1}
+.goods-price em{font-style:normal;font-size:12px;color:var(--text-2);font-weight:400}
+.goods-alt{font-size:12px;color:var(--text-2);font-family:var(--mono)}
+.goods-free{font-size:13.5px;font-weight:700;color:var(--brand-green)}
+.goods-note{margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:18px 22px}
+.goods-note p{font-size:13.5px;color:var(--text-2)}
+.goods-note a{font-size:14px;font-weight:500;color:var(--brand-green)}
+
+/* ============ 10. 作品展示 ============ */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.tabs button{height:36px;padding:0 18px;border-radius:18px;font-size:14px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);transition:.18s}
+.tabs button.is-active{background:var(--brand-green);border-color:var(--brand-green);color:#fff}
+.works-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:24px}
+.work-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;transition:.2s}
+.work-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(29,60,44,.09)}
+.work-thumb{aspect-ratio:3/4;border-radius:0;border:none;border-bottom:1px dashed #C5CCCA}
+.work-body{padding:14px 16px 18px}
+.work-body h3{font-size:15px;margin-bottom:6px}
+.work-meta{color:var(--text-2);font-size:12.5px;margin-bottom:10px}
+.work-row{display:flex;align-items:center;justify-content:space-between}
+.work-price{font-family:var(--mono);font-size:14px;font-weight:700}
+
+/* ============ 11. 参展预告 ============ */
+.event-card{display:grid;grid-template-columns:1.2fr 1fr;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.event-info{padding:34px 36px}
+.event-info h3{font-size:22px;color:var(--brand-deep);margin:12px 0 8px}
+.event-info > p{color:var(--text-2);font-size:14.5px;margin-bottom:22px}
+.event-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px}
+.event-facts div{background:var(--bg);border-radius:var(--r-sm);padding:14px}
+.event-facts dt{font-size:12px;color:var(--text-2);margin-bottom:4px}
+.event-facts dd{font-size:15px;font-weight:700;font-family:var(--mono)}
+/* 倒计时：数字等宽，免得每秒跳秒时整块左右抖动 */
+.event-facts dd.cd{font-variant-numeric:tabular-nums}
+.event-facts dd.cd.is-soon{color:var(--brand-orange)}   /* 已进入一周之内 */
+.event-facts dd.cd.is-urgent{color:var(--brand-red)}    /* 24 小时之内 */
+.event-facts dd.cd.is-live{color:var(--brand-green)}    /* 正在展期 */
+.event-facts dd.cd.is-past{color:var(--text-2)}         /* 已经结束 */
+.event-visual{min-height:280px;border-radius:0;border:none;border-left:1px dashed #C5CCCA}
+
+/* ============ 12. 通贩入口 ============ */
+.shop{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:44px 36px;text-align:center}
+.shop h2{font-size:24px;color:var(--brand-deep);margin-bottom:10px}
+.shop > p{color:var(--text-2);font-size:14.5px;max-width:640px;margin:0 auto 28px}
+.shop-links{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.shop-links a{display:flex;align-items:center;gap:10px;height:52px;padding:0 26px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:15px;font-weight:500;background:var(--surface);transition:.18s}
+.shop-links a:hover{border-color:var(--brand-green);color:var(--brand-green)}
+.shop-links .dot{width:8px;height:8px;border-radius:50%;background:var(--brand-orange)}
+.shop-note{margin-top:24px;font-size:12.5px;color:var(--text-2)}
+
+/* ============ 13. 页脚 ============ */
+.site-footer{margin-top:72px;background:var(--surface);border-top:1px solid var(--border);padding:56px 0 0}
+.footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
+.footer-brand p{color:var(--text-2);font-size:14px;margin-top:14px;max-width:360px}
+.footer-slogan{margin-top:16px;color:var(--brand-green);font-size:14px;font-weight:500}
+.footer-slogan em{display:block;font-style:normal;font-family:var(--mono);font-size:11.5px;color:var(--text-2);letter-spacing:.06em;margin-top:4px}
+.footer-grid h4{font-size:14px;color:var(--brand-deep);margin-bottom:16px}
+.footer-grid li{margin-bottom:10px}
+.footer-grid li a{color:var(--text-2);font-size:14px}
+.footer-grid li a:hover{color:var(--brand-green)}
+.footer-bottom{margin-top:48px;padding:20px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--text-2);font-size:12.5px}
+.footer-admin{margin-left:auto}
+.footer-admin a{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px;border-radius:var(--r-sm);
+  border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:12.5px;font-weight:500;transition:.18s}
+.footer-admin a:hover{border-color:var(--brand-green);background:var(--tint-green);color:var(--brand-green)}
+.footer-admin svg{width:14px;height:14px;flex:none}
+
+/* 社交矩阵 / 通贩：账号名 + 附加信息（群号、淘口令等）/ 复制 */
+.sc-sub{font-style:normal;font-family:var(--mono);color:var(--brand-green);font-size:12.5px;margin-left:2px}
+.shop-links a .sc-sub{color:var(--text-2);font-size:12px}
+.shop-links a:hover .sc-sub{color:var(--brand-green)}
+.footer-grid li .sc-static{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;color:var(--text-2);font-size:14px;margin-right:8px}
+.footer-grid li .sc-copy{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;
+  border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:11px;transition:.18s;vertical-align:middle}
+.footer-grid li .sc-copy:hover{border-color:var(--brand-green);color:var(--brand-green);background:var(--tint-green)}
+.footer-grid li .sc-copy.is-done{border-color:var(--brand-green);background:var(--tint-green);color:var(--brand-green)}
+.work-thumb img,.event-visual img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ============ 14. 响应式 ============ */
+@media (max-width:1080px){
+  .main-nav{gap:13px;font-size:13.5px}
+  .brand-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:1024px){
+  .about-grid{grid-template-columns:1fr;gap:32px}
+  .about-visual{max-width:420px}
+  .event-card{grid-template-columns:1fr}
+  .event-visual{min-height:200px;border-left:none;border-top:1px dashed #C5CCCA}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
+}
+@media (max-width:900px){
+  /* 导航提前折叠成汉堡菜单：避免七项导航 + 语言切换 + 后台入口在窄屏互相挤压 */
+  .lang{display:none}
+  .main-nav{display:none;position:absolute;left:0;right:0;top:64px;flex-direction:column;gap:0;background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px 16px;box-shadow:0 12px 20px rgba(29,60,44,.07)}
+  .main-nav.is-open{display:flex}
+  .main-nav a{padding:12px 0;border-bottom:1px solid var(--border)}
+  .nav-toggle{display:block}
+}
+@media (max-width:640px){
+  .admin-entry{height:34px;padding:0 10px;font-size:13px}
+  .world-bar{font-size:12px}
+  .world-bar .container{flex-direction:column;align-items:flex-start;gap:5px}
+  .hero-card{margin:-40px 0 0;padding:22px 20px}
+  .hero-card h2{font-size:22px}
+  .stat-strip{grid-template-columns:1fr}
+  .brand-grid{grid-template-columns:1fr 1fr}
+  .section{padding:48px 0}
+  .event-info{padding:24px 20px}
+  .event-facts{grid-template-columns:1fr}
+  .shop{padding:28px 20px}
+  .footer-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#main">跳到主内容</a>
+
+<!-- ============ 顶部导航 ============ -->
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="#">
+      <img src="assets/images/favicon.png" alt="" width="34" height="34">
+      <span>幻电投企划</span>
+    </a>
+
+    <nav class="main-nav" id="mainNav" aria-label="主导航">
+      <a href="#about">关于社团</a>
+      <a href="#brands">品牌集群</a>
+      <a href="#goods">周边产品</a>
+      <a href="#works">作品展示</a>
+      <a href="notice.html">新闻公告</a>
+      <a href="#event">参展活动</a>
+      <a href="#shop">通贩商店</a>
+    </nav>
+
+    <div class="header-right">
+      <!-- 语言切换：目前只有中文版。未上线的语种用 data-lang-pending 标记，
+           下方脚本在「可用语种少于 2 个」时会自动隐藏整块，避免留下点了没反应的假控件。
+           日文版就绪后：去掉 data-lang-pending，再在渲染模块里补语言包即可。 -->
+      <div class="lang" role="group" aria-label="语言切换" id="langSwitch">
+        <button class="is-active" data-lang="zh">中</button>
+        <button data-lang="ja" data-lang-pending>日</button>
+      </div>
+      <!-- 后台入口：跳转到 admin.html（登录页）。不需要公开这个入口时可整块删除 -->
+      <a class="admin-entry" href="admin.html" title="进入站点管理后台（先登录）">
+        <span class="ae-dot" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M4.7 4.7l1.9 1.9M17.4 17.4l1.9 1.9M2.8 12h2.6M18.6 12h2.6M4.7 19.3l1.9-1.9M17.4 6.6l1.9-1.9"/></svg>
+        <span class="ae-txt">站点管理</span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="展开菜单" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 世界观声明条 ============
+     显式声明本站为东方 Project 二创架空设定，避免与现实中的发电集团体系混淆。
+     文案由 data/content.json 的 site.worldviewNote 驱动。 -->
+<div class="world-bar" id="worldBar">
+  <div class="container">
+    <span class="wb-tag">架空设定</span>
+    <p id="worldBarText">东方 Project 二次创作同人站点 · 文中「幻想乡五大发电集团」等集团、企业与机构名称均为架空设定（幻想乡世界观），与现实中的任何发电集团、公司或机构无关，请勿与现实对应。</p>
+  </div>
+</div>
+
+<main id="main">
+
+  <!-- ============ 首屏 · 品牌横幅 ============ -->
+  <section class="hero">
+    <div class="container">
+      <!-- 品牌横幅已含社团名与口号，故 h1 采用视觉隐藏形式供搜索引擎与读屏软件识别 -->
+      <picture>
+        <source srcset="assets/images/banner.webp" type="image/webp">
+        <img class="hero-banner" src="assets/images/banner.jpg" width="1920" height="1120"
+             fetchpriority="high"
+             alt="幻想乡电力投资集团 Gensokyo Power Investment Corporation —— 由幻想，向未来">
+      </picture>
+      <h1 class="sr-only">幻想乡电力投资集团 Gensokyo Power Investment Corporation</h1>
+
+      <div class="hero-card" id="heroCard">
+        <span class="badge badge-green">集团通告</span>
+        <h2>与幻想乡电网合作，筹建文化传媒部</h2>
+        <p class="hero-notice">
+          为加强幻电投集团企业形象构建，集团现正式与幻想乡电网合作，筹建文化传媒部。
+          文化传媒部将以开放、包容、严谨的姿态开展文化宣传工作，首批周边现已公开。
+        </p>
+        <p class="hero-sub">
+          幻想乡五大发电集团之一（架空设定） · 全乡唯一在地面部署核电装机的发电企业 · 幻想乡电网重要合作伙伴
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#goods">查看周边商品</a>
+          <a class="btn btn-ghost" href="#shop">加入 QQ 群</a>
+        </div>
+      </div>
+
+      <div class="stat-strip" id="heroStats">
+        <div><span class="stat-num">5</span><span class="stat-label">大发电集团（幻想乡设定）</span></div>
+        <div><span class="stat-num">1</span><span class="stat-label">唯一地面核电装机</span></div>
+        <div><span class="stat-num">7</span><span class="stat-label">款首批周边上市</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 最新公告 ============
+       每条都是通往 notice.html?id=xxx 的链接（公告详情页）。
+       下面的静态标记只是兜底：content.json 读不到时才会露出，
+       所以这里的 id 需要与 data/content.json 里对应公告的 id 保持一致。 -->
+  <section class="container notice" id="news">
+    <div class="notice-head">
+      <span class="badge badge-green" id="noticeBadge">公告</span>
+      <h2 id="noticeTitle">最新动态</h2>
+      <a class="more" id="noticeMore" href="notice.html">查看全部 →</a>
+    </div>
+    <ul class="notice-list" id="noticeList">
+      <li>
+        <a href="notice.html?id=2026-09-20-a">
+          <span class="notice-date">2026-09-20</span>
+          <span class="badge badge-green">招募</span>
+          <span class="nt">面向本校东方 Project 爱好者开展人员招募</span>
+          <span class="go">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="notice.html?id=2026-09-17-a">
+          <span class="notice-date">2026-09-17</span>
+          <span class="badge badge-red">通贩</span>
+          <span class="nt">「幻想乡电网」系列周边上架通贩</span>
+          <span class="go">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="notice.html?id=2026-09-17-b">
+          <span class="notice-date">2026-09-17</span>
+          <span class="badge badge-green">社群</span>
+          <span class="nt">官方 QQ 群开通</span>
+          <span class="go">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="notice.html?id=2026-09-16-a">
+          <span class="notice-date">2026-09-16</span>
+          <span class="badge badge-green">通告</span>
+          <span class="nt">对外联络处活动告示板</span>
+          <span class="go">→</span>
+        </a>
+      </li>
+      <li>
+        <a href="notice.html?id=2026-09-18-b">
+          <span class="notice-date">待定</span>
+          <span class="badge badge-gold">参展</span>
+          <span class="nt">参展计划（待公布）</span>
+          <span class="go">→</span>
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ 关于社团 ============ -->
+  <section class="section container" id="about">
+    <div class="about-grid">
+      <div class="about-text" id="aboutText">
+        <span class="badge badge-green">关于我们</span>
+        <h2>幻想乡电力投资集团</h2>
+        <p class="about-en">Gensokyo Power Investment Corporation</p>
+        <p>
+          幻想乡电力投资集团（以下简称「幻电投」）是<strong>幻想乡五大发电集团之一</strong>，
+          也是五大集团中<strong>唯一在地面部署核电装机</strong>的发电企业。
+          此处所述集团、企业与机构均为东方 Project 二次创作架空设定，与现实中的任何发电集团、公司或机构无关。
+        </p>
+        <p>
+          集团由原幻想乡电力投资集团公司与月宫核技术有限公司重组组建，为幻想乡特大型重要骨干企业。
+          业务涵盖核电、火电、水电、风电、光伏发电等全发电类型，并涉及煤炭、铝业、物流、金融、氢能、储能等领域，
+          是幻想乡境内唯一同时拥有水电、火电、核电、新能源资产的综合能源企业集团。
+        </p>
+        <p>
+          作为幻想乡电网的重要合作伙伴之一，幻电投长期承担全乡电力供应的重要职责，
+          是幻想乡重要的电力供应商。
+        </p>
+
+        <p class="tag-title">集团定位</p>
+        <ul class="id-tags">
+          <li>幻想乡五大发电集团之一</li>
+          <li>唯一地面核电装机企业</li>
+          <li>幻想乡电网重要合作伙伴</li>
+          <li>幻想乡重要电力供应商</li>
+        </ul>
+
+        <p class="tag-title">业务范围</p>
+        <ul class="biz-tags">
+          <li>核电</li><li>火电</li><li>水电</li><li>风电</li><li>光伏发电</li>
+          <li>煤炭</li><li>铝业</li><li>物流</li><li>金融</li><li>氢能</li><li>储能</li>
+        </ul>
+      </div>
+
+      <div class="about-visual" id="aboutVisual">
+        <!-- 立绘 logo（白底）：如需放置在深色背景上，请替换为透明底版本 -->
+        <img src="assets/images/logo-mascot.webp" width="900" height="1080"
+             alt="幻想乡电力投资集团立绘标识">
+      </div>
+    </div>
+
+    <!-- 集团通告全文 -->
+    <div class="notice-block" id="bulletin">
+      <span class="badge badge-red">集团通告</span>
+      <h3>关于筹建文化传媒部的通告</h3>
+      <p>
+        幻想乡电力投资集团（以下称幻电投）面向全乡发布通告：
+        为加强幻电投集团企业形象构建，现正式与幻想乡电网合作筹建文化传媒部。
+      </p>
+      <p>
+        当前已推出周边产品：幻想乡电网职务证明书；符卡级安全用电警示贴；⑨级能效贴纸／冰箱贴；
+        本居小铃「银杏下的智慧」；天界输电枢纽检查记录钥匙扣；幻电投企业形象徽章；
+        以及摊位特典「幻电投形象大使 永江衣玖」明信片。
+      </p>
+      <p>
+        线上通贩现已开通：闲鱼搜索「幻电投市场部」即可查看在售商品；官方 QQ 群 1046278135 同步开放。
+      </p>
+      <p>幻电投文化传媒部将以开放、包容、严谨的姿态开展文化宣传工作。</p>
+      <p class="sign">幻想乡电力投资集团 · 文化传媒部　　由幻想，向未来</p>
+    </div>
+  </section>
+
+  <!-- ============ 品牌集群 ============ -->
+  <section class="section container" id="brands">
+    <div class="section-head">
+      <h2 id="brandsTitle">品牌集群</h2>
+      <p id="brandsSub">幻电投与所属成员单位 · 共同构成幻想乡电力供应体系（幻想乡世界观架空设定）</p>
+    </div>
+
+    <ul class="brand-grid" id="brandGrid">
+      <li class="brand-card is-self">
+        <div class="brand-logo"><img src="assets/images/logo-mark.webp" alt="幻想乡电力投资集团标志" loading="lazy"></div>
+        <h3>幻想乡电力投资集团</h3>
+        <p>本社 · 综合能源</p>
+      </li>
+
+      <li class="brand-card">
+        <div class="brand-logo"><img src="assets/images/brand-lunar.webp" alt="月宫核工业集团有限公司标志" loading="lazy"></div>
+        <h3>月宫核工业集团</h3>
+        <p>核电 · LPNC</p>
+      </li>
+
+      <li class="brand-card">
+        <div class="brand-logo"><img src="assets/images/brand-kappa.webp" alt="河童地热水电集团有限公司标志" loading="lazy"></div>
+        <h3>河童地热水电集团</h3>
+        <p>水电 · 地热</p>
+      </li>
+
+      <li class="brand-card">
+        <div class="brand-logo"><img src="assets/images/brand-scarlet.webp" alt="斯卡雷特能源集团有限公司标志" loading="lazy"></div>
+        <h3>斯卡雷特能源集团</h3>
+        <p>火电 · Scarlet Energy</p>
+      </li>
+
+      <li class="brand-card">
+        <div class="brand-logo"><img src="assets/images/brand-asuka.webp" alt="飞鸟集团有限公司标志" loading="lazy"></div>
+        <h3>飞鸟集团</h3>
+        <p>综合</p>
+      </li>
+    </ul>
+
+    <p class="brand-note" id="brandNote">※ 「幻想乡五大发电集团」为东方 Project 二次创作架空设定，与现实中的发电集团体系（无论「五大」还是「六小」）不存在任何对应或影射关系。</p>
+  </section>
+
+  <!-- ============ 周边产品 ============ -->
+  <section class="section container" id="goods">
+    <div class="section-head">
+      <h2 id="goodsTitle">周边产品</h2>
+      <p id="goodsSub">幻电投文化传媒部首批商品 · 图片与售价均取自官方商品目录</p>
+    </div>
+
+    <div class="goods-grid" id="goodsGrid">
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-proof.webp" alt="幻想乡电网职务证明书，共 7 款" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-green">证件类</span>
+          <h3>幻想乡电网职务证明书</h3>
+          <p>七款设计，把你的电网身份正式归档。</p>
+          <div class="goods-tags"><span class="is-key">7 款</span><span>卡纸印刷</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">整册 7 张 ¥40</span>
+            <span class="goods-price">¥6<em> / 张</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-warning.webp" alt="符卡级安全用电警示贴，含当心爆炸、高压危险等图案" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-red">警示类</span>
+          <h3>符卡级安全用电警示贴</h3>
+          <p>当心爆炸、高压危险、当心触电、当心辐射……把现场规程贴在手边。</p>
+          <div class="goods-tags"><span class="is-key">6 张 / 套</span><span>警示标识</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">整套 6 张 ¥10</span>
+            <span class="goods-price">¥2<em> / 张</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-energy.webp" alt="⑨级能效贴纸与冰箱贴，幻想能效标识样式" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-red">标识类</span>
+          <h3>⑨级能效贴纸／冰箱贴</h3>
+          <p>幻想能效标识样式，贴纸与冰箱贴一次带走。</p>
+          <div class="goods-tags"><span class="is-key">贴纸 + 冰箱贴</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">每套含 2 件</span>
+            <span class="goods-price">¥9<em> / 套</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-kosuzu.webp" alt="本居小铃主题插画「银杏下的智慧」" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-green">插画类</span>
+          <h3>本居小铃「银杏下的智慧」</h3>
+          <p>银杏树下的阅读时刻，社团插画作品实体化。</p>
+          <div class="goods-tags"><span class="is-key">插画</span><span>本居小铃</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">每件</span>
+            <span class="goods-price">¥35<em> / 件</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-keychain.webp" alt="天界输电枢纽检查记录钥匙扣，共 2 款" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-green">挂件类</span>
+          <h3>天界输电枢纽检查记录 钥匙扣</h3>
+          <p>巡检记录随身携带，两款设计。</p>
+          <div class="goods-tags"><span class="is-key">2 款</span><span>亚克力</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">整套 2 件 ¥8</span>
+            <span class="goods-price">¥5<em> / 件</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-badge.webp" alt="幻电投企业形象徽章，共 2 款" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-green">徽章类</span>
+          <h3>幻电投企业形象徽章</h3>
+          <p>把 GPIC 别在包上，企业形象随身展示。</p>
+          <div class="goods-tags"><span class="is-key">2 款</span><span>马口铁</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">一对 ¥5</span>
+            <span class="goods-price">¥3<em> / 件</em></span>
+          </div>
+        </div>
+      </article>
+
+      <article class="goods-card">
+        <div class="goods-media"><img src="assets/images/goods-postcard.webp" alt="摊位特典：幻电投形象大使永江衣玖明信片" loading="lazy"></div>
+        <div class="goods-body">
+          <span class="badge badge-gold">摊位特典</span>
+          <h3>幻电投形象大使 永江衣玖 明信片</h3>
+          <p>展会现场摊位专属，购任意商品即赠。</p>
+          <div class="goods-tags"><span class="is-key">非卖品</span><span>明信片</span></div>
+          <div class="goods-foot">
+            <span class="goods-alt">摊位限定</span>
+            <span class="goods-free">购任意商品赠</span>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="goods-note" id="goodsNote">
+      <p id="goodsNoteText">以上售价与规格以官方商品目录为准；展会现场售价可能略有调整。</p>
+      <a id="goodsPoster" href="assets/images/goods-poster.webp" target="_blank" rel="noopener">查看完整商品目录海报 →</a>
+    </div>
+  </section>
+
+  <!-- ============ 作品展示 ============ -->
+  <section class="section container" id="works">
+    <div class="section-head">
+      <h2 id="worksTitle">作品展示</h2>
+      <p id="worksSub">画集 · 插画　—— 素材整理中，以下为占位结构</p>
+    </div>
+
+    <div class="tabs" id="workTabs" role="tablist">
+      <button class="is-active">全部</button>
+      <button>画集</button>
+      <button>插画</button>
+    </div>
+
+    <div class="works-grid" id="worksGrid">
+      <!-- 卡片 ×4：替换封面图与文案即可，封面建议 3:4 -->
+      <article class="work-card">
+        <div class="work-thumb ph">封面　3:4</div>
+        <div class="work-body">
+          <h3>画集名称占位</h3>
+          <p class="work-meta">A5 / 24P / 全彩 · 画师待补</p>
+          <div class="work-row">
+            <span class="badge badge-gray">待上架</span>
+            <span class="work-price">¥ --</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="work-card">
+        <div class="work-thumb ph">封面　3:4</div>
+        <div class="work-body">
+          <h3>画集名称占位</h3>
+          <p class="work-meta">B5 / 32P / 全彩 · 画师待补</p>
+          <div class="work-row">
+            <span class="badge badge-gray">待上架</span>
+            <span class="work-price">¥ --</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="work-card">
+        <div class="work-thumb ph">封面　3:4</div>
+        <div class="work-body">
+          <h3>插画集名称占位</h3>
+          <p class="work-meta">数字版 / PDF</p>
+          <div class="work-row">
+            <span class="badge badge-gray">待上架</span>
+            <span class="work-price">¥ --</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="work-card">
+        <div class="work-thumb ph">封面　3:4</div>
+        <div class="work-body">
+          <h3>插画名称占位</h3>
+          <p class="work-meta">单张 / 高清</p>
+          <div class="work-row">
+            <span class="badge badge-gray">待上架</span>
+            <span class="work-price">¥ --</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 参展预告 ============ -->
+  <section class="section container" id="event">
+    <div class="section-head">
+      <h2 id="eventTitle">参展预告</h2>
+      <p id="eventSub">线下见面的地方，欢迎来摊位翻本</p>
+    </div>
+
+    <div class="event-card" id="eventCard">
+      <div class="event-info">
+        <span class="badge badge-gold">下一次参展</span>
+        <h3>展会名称占位 · 第〇〇届</h3>
+        <p>场馆与日期占位：〇〇会展中心　---- 年 -- 月 -- 日</p>
+        <dl class="event-facts">
+          <div><dt>摊位号</dt><dd>待定</dd></div>
+          <div><dt>首发内容</dt><dd>周边全 7 款</dd></div>
+          <div><dt>倒计时</dt><dd>-- 天</dd></div>
+        </dl>
+        <a class="btn btn-primary" href="#">查看参展详情</a>
+      </div>
+      <div class="event-visual ph">摊位图 / 展会主视觉　（待补）</div>
+    </div>
+  </section>
+
+  <!-- ============ 通贩入口 ============ -->
+  <section class="section container" id="shop">
+    <div class="shop" id="shopBox">
+      <h2>通贩商店</h2>
+      <p>本站仅作商品展示与导流，不收款、不下单；购买、库存、发货与售后均由对应平台负责。</p>
+      <div class="shop-links">
+        <a href="https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM" target="_blank" rel="noopener"><span class="dot"></span>闲鱼 · 幻电投市场部<em class="sc-sub">淘口令 CZ007</em></a>
+        <a href="#"><span class="dot"></span>微店　（链接待填）</a>
+        <a href="#"><span class="dot"></span>Booth　（链接待填）</a>
+      </div>
+      <p class="shop-note">※ 关注闲鱼「幻电投市场部」，第一时间获取上新与参展信息　※ 展会现场购买请至幻电投摊位，特典明信片现场领取</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ 页脚 ============ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand" id="footerBrand">
+        <a class="logo" href="#">
+          <img src="assets/images/favicon.png" alt="" width="34" height="34">
+          <span>幻电投企划</span>
+        </a>
+        <p>幻想乡五大发电集团之一（东方 Project 二次创作架空设定），全乡唯一在地面部署核电装机的发电企业。「幻电投企划」由幻电投文化传媒部维护。</p>
+        <p class="footer-slogan">由幻想，向未来<em>From Dreams, to the Future.</em></p>
+      </div>
+
+      <div>
+        <h4>站点导航</h4>
+        <ul>
+          <li><a href="#about">关于社团</a></li>
+          <li><a href="#brands">品牌集群</a></li>
+          <li><a href="#goods">周边产品</a></li>
+          <li><a href="#works">作品展示</a></li>
+          <li><a href="notice.html">新闻公告</a></li>
+          <li><a href="#event">参展活动</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>社交矩阵</h4>
+        <ul id="socialList">
+          <li>
+            <span class="sc-static">QQ 群　<em class="sc-sub">1046278135</em></span>
+            <button type="button" class="sc-copy" data-copy="1046278135">复制群号</button>
+          </li>
+          <li><a href="https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM" target="_blank" rel="noopener">闲鱼　<em class="sc-sub">幻电投市场部</em></a></li>
+          <li><a href="#">微博　（待填）</a></li>
+          <li><a href="#">B 站　（待填）</a></li>
+          <li><a href="#">X / Twitter　（待填）</a></li>
+          <li><a href="#">Pixiv　（待填）</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>通贩与声明</h4>
+        <ul>
+          <li><a href="#shop">通贩商店</a></li>
+          <li><a href="assets/images/goods-poster.webp" target="_blank" rel="noopener">商品目录海报</a></li>
+          <li><a href="#">二创声明 / 使用条款</a></li>
+          <li><a href="#">联系方式</a></li>
+          <li><a href="#">友情链接</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span id="copyright">© 幻电投企划　Gensokyo Power Investment Corporation</span>
+      <span id="footerNote">「幻电投企划」为东方 Project 非官方同人社团站点，与上海爱丽丝幻乐团无隶属关系；文中机构、企业与商品均属架空设定</span>
+      <span class="footer-admin">
+        <a href="admin.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M4.7 4.7l1.9 1.9M17.4 17.4l1.9 1.9M2.8 12h2.6M18.6 12h2.6M4.7 19.3l1.9-1.9M17.4 6.6l1.9-1.9"/></svg>
+          站点管理后台
+        </a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// 移动端菜单开合
+var navToggle = document.getElementById('navToggle');
+var mainNav = document.getElementById('mainNav');
+navToggle.addEventListener('click', function () {
+  var open = mainNav.classList.toggle('is-open');
+  navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+
+// 一键复制（QQ 群号等静态信息）。用事件委托，兼容内容渲染后重新生成的按钮
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest ? e.target.closest('[data-copy]') : null;
+  if (!btn) { return; }
+  var text = btn.getAttribute('data-copy');
+  var done = function () {
+    var old = btn.textContent;
+    btn.textContent = '已复制';
+    btn.classList.add('is-done');
+    setTimeout(function () { btn.textContent = old; btn.classList.remove('is-done'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function () { window.prompt('请手动复制：', text); });
+  } else {
+    window.prompt('请手动复制：', text);
+  }
+});
+
+// 作品分类切换由内容渲染模块负责（见下方 B 段），此处不再重复绑定
+
+// 语言切换：可用语种少于 2 个时整块隐藏，不留下"点了没反应"的假控件
+(function () {
+  var box = document.getElementById('langSwitch');
+  if (!box) { return; }
+  var all = Array.prototype.slice.call(box.querySelectorAll('button'));
+  var ready = all.filter(function (b) { return !b.hasAttribute('data-lang-pending'); });
+  if (ready.length < 2) { box.hidden = true; return; }
+  ready.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      ready.forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      // TODO: 语言包就绪后在此切换文案（内容层可加 site.i18n 字段）
+    });
+  });
+})();
+
+// 滚动时高亮当前栏目
+var navLinks = Array.prototype.slice.call(document.querySelectorAll('.main-nav a[href^="#"]'));
+if ('IntersectionObserver' in window) {
+  var linkMap = {};
+  navLinks.forEach(function (a) { linkMap[a.getAttribute('href').slice(1)] = a; });
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting && linkMap[entry.target.id]) {
+        navLinks.forEach(function (a) { a.classList.remove('is-active'); });
+        linkMap[entry.target.id].classList.add('is-active');
+      }
+    });
+  }, { rootMargin: '-80px 0px -70% 0px' });
+  Object.keys(linkMap).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) { observer.observe(el); }
+  });
+}
+</script>
+
+<!--
+  ============================================================
+  B. 内容渲染模块
+  ------------------------------------------------------------
+  数据来源优先级：
+    1) 浏览器本地草稿 localStorage['gpic.site.content.v1']（后台保存的草稿）
+    2) data/content.json（后台「发布」写出的正式内容）
+    取 updatedAt 较新的一方。
+  两者都读不到时（例如直接用 file:// 打开且后台尚未发布），
+  页面保留本文件内写好的静态标记作为兜底，不会白屏。
+  ============================================================
+-->
+<script>
+(function () {
+  'use strict';
+  var KEY = 'gpic.site.content.v1';
+
+  function $(id) { return document.getElementById(id); }
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  // 富文本：支持 **加粗** 与换行
+  function rich(v) {
+    return esc(v).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  }
+  function badge(style, text) {
+    if (!text) { return ''; }
+    return '<span class="badge badge-' + (style || 'gray') + '">' + esc(text) + '</span>';
+  }
+  function setText(id, v) { var e = $(id); if (e && v != null && v !== '') { e.textContent = v; } }
+  function setHTML(id, v) { var e = $(id); if (e && v != null) { e.innerHTML = v; } }
+  function meta(attr, key, val) {
+    if (!val) { return; }
+    var m = document.querySelector('meta[' + attr + '="' + key + '"]');
+    if (!m) {
+      /* 静态标记里没有的就新建。原先只改不建，导致只在运行时才产生的
+         标签（og:url）被静默丢掉 —— 填了域名也一直没写出去。 */
+      m = document.createElement('meta');
+      m.setAttribute(attr, key);
+      document.head.appendChild(m);
+    }
+    m.setAttribute('content', val);
+  }
+  /* 相对资源路径 → 绝对地址；没填域名就原样返回 */
+  function absUrl(base, p) {
+    if (!p) { return ''; }
+    if (/^https?:\/\//i.test(p) || p.indexOf('//') === 0) { return p; }
+    return base ? base + '/' + String(p).replace(/^\.?\//, '') : p;
+  }
+  /* canonical 只在填了正式域名后才写入 */
+  function setCanonical(href) {
+    var l = document.querySelector('link[rel="canonical"]');
+    if (!href) { if (l && l.parentNode) { l.parentNode.removeChild(l); } return; }
+    if (!l) {
+      l = document.createElement('link');
+      l.setAttribute('rel', 'canonical');
+      document.head.appendChild(l);
+    }
+    l.setAttribute('href', href);
+  }
+  function ts(c) { var t = Date.parse((c && c.updatedAt) || ''); return isNaN(t) ? 0 : t; }
+
+  var current = null;
+
+  function renderWorks(cat) {
+    var w = (current && current.works) || {};
+    var allLabel = w.allLabel || '全部';
+    var items = (w.items || []).filter(function (it) {
+      return !cat || cat === allLabel || it.category === cat;
+    });
+    if (!items.length) {
+      setHTML('worksGrid', '<p style="color:var(--text-2);font-size:14px">该分类下暂无作品。</p>');
+      return;
+    }
+    setHTML('worksGrid', items.map(function (it) {
+      var thumb = it.cover
+        ? '<div class="work-thumb"><img src="' + esc(it.cover) + '" alt="' + esc(it.coverAlt || it.title) + '" loading="lazy"></div>'
+        : '<div class="work-thumb ph">封面　3:4</div>';
+      return '<article class="work-card">' + thumb +
+        '<div class="work-body"><h3>' + esc(it.title) + '</h3>' +
+        '<p class="work-meta">' + esc(it.meta) + '</p>' +
+        '<div class="work-row">' + badge(it.statusStyle || 'gray', it.status) +
+        '<span class="work-price">¥ ' + esc(it.price || '--') + '</span></div></div></article>';
+    }).join(''));
+  }
+
+  function apply(c) {
+    current = c;
+    var s = c.site || {};
+    var h = c.hero || {};
+
+    /* ---- SEO / 主题色 ---- */
+    if (s.seoTitle) { document.title = s.seoTitle; }
+    meta('name', 'description', s.seoDescription);
+    meta('property', 'og:title', s.seoTitle);
+    meta('property', 'og:description', s.seoDescription);
+    /* 分享卡片必须用绝对地址：微信 / QQ / 微博的爬虫不认相对路径。
+       在后台「站点设置」填了正式域名（site.siteUrl）就自动拼绝对地址；
+       留空则保持相对路径 —— 本机预览没问题，但转发出去抓不到图。 */
+    var siteUrl = String(s.siteUrl || '').replace(/\/+$/, '');
+    meta('property', 'og:image', absUrl(siteUrl, s.ogImage));
+    meta('property', 'og:url', siteUrl ? siteUrl + '/' : '');
+    setCanonical(siteUrl ? siteUrl + '/' : '');
+    if (s.themeColor) {
+      var mt = document.querySelector('meta[name="theme-color"]');
+      if (mt) { mt.setAttribute('content', s.themeColor); }
+      document.documentElement.style.setProperty('--brand-green', s.themeColor);
+    }
+
+    /* ---- 站名 / logo ---- */
+    if (s.name) {
+      Array.prototype.forEach.call(document.querySelectorAll('.logo span'), function (n) { n.textContent = s.name; });
+    }
+    if (s.logo) {
+      Array.prototype.forEach.call(document.querySelectorAll('.logo img'), function (im) { im.src = s.logo; });
+    }
+
+    /* ---- 后台入口开关：上线时关掉，线上就不会点出 404 ---- */
+    var showAdmin = !(s.showAdminEntry === false || s.showAdminEntry === 'false');
+    Array.prototype.forEach.call(document.querySelectorAll('.admin-entry, .footer-admin'), function (n) {
+      n.hidden = !showAdmin;
+    });
+
+    /* ---- 首屏 ---- */
+    setHTML('heroCard',
+      badge('green', h.badge) +
+      (h.title ? '<h2>' + esc(h.title) + '</h2>' : '') +
+      (h.body ? '<p class="hero-notice">' + rich(h.body) + '</p>' : '') +
+      (h.sub ? '<p class="hero-sub">' + esc(h.sub) + '</p>' : '') +
+      '<div class="hero-actions">' + (h.actions || []).map(function (a) {
+        return '<a class="btn ' + (a.style === 'ghost' ? 'btn-ghost' : 'btn-primary') + '" href="' + esc(a.href || '#') + '">' + esc(a.label) + '</a>';
+      }).join('') + '</div>');
+
+    var heroImg = document.querySelector('.hero-banner');
+    var heroSource = document.querySelector('picture source');
+    if (heroImg) {
+      if (h.bannerFallback) { heroImg.src = h.bannerFallback; }
+      if (h.bannerAlt) { heroImg.alt = h.bannerAlt; }
+    }
+    if (heroSource) {
+      if (h.banner && /\.webp(\?|$)/i.test(h.banner)) {
+        heroSource.srcset = h.banner;
+      } else if (h.banner || h.bannerFallback) {
+        // 非 WebP：移除 <source>，直接让 <img> 加载原图，避免解码失败
+        heroSource.parentNode.removeChild(heroSource);
+        if (heroImg) { heroImg.src = h.banner || h.bannerFallback; }
+      }
+    }
+
+    setHTML('heroStats', (h.stats || []).map(function (d) {
+      return '<div><span class="stat-num">' + esc(d.num) + '</span><span class="stat-label">' + esc(d.label) + '</span></div>';
+    }).join(''));
+
+    /* ---- 公告（每条都链到 notice.html 的详情页） ----
+       id 是详情页的地址参数。旧数据里没有 id 时用「adv-序号」兜底，
+       链接仍是唯一的，不会两条指向同一页。
+       标题与摘要都是空白的公告不在这里显示（多半是刚新建还没填），
+       但它仍然出现在公告页与后台里，方便继续编辑。 */
+    var n = c.notices || {};
+    setText('noticeBadge', n.badge);
+    setText('noticeTitle', n.title);
+    var more = $('noticeMore');
+    if (more) {
+      if (n.moreLabel) { more.textContent = n.moreLabel; }
+      more.setAttribute('href', n.moreHref || 'notice.html');
+    }
+    var noticeRows = [];
+    (n.items || []).forEach(function (it, i) {
+      var hasTitle = String(it.title || '').trim() !== '';
+      var hasText = String(it.text || '').trim() !== '';
+      if (!hasTitle && !hasText) { return; }
+      var href = 'notice.html?id=' + encodeURIComponent(it.id || ('adv-' + i));
+      noticeRows.push('<li><a href="' + esc(href) + '">' +
+        '<span class="notice-date">' + esc(it.date) + '</span>' + badge(it.style, it.type) +
+        '<span class="nt">' + esc(it.title || it.text) + '</span>' +
+        '<span class="go">→</span></a></li>');
+    });
+    setHTML('noticeList', noticeRows.join(''));
+
+    /* ---- 关于社团 ---- */
+    var a = c.about || {};
+    setHTML('aboutText',
+      badge('green', a.badge) +
+      (a.title ? '<h2>' + esc(a.title) + '</h2>' : '') +
+      (a.subtitle ? '<p class="about-en">' + esc(a.subtitle) + '</p>' : '') +
+      (a.paragraphs || []).map(function (p) { return '<p>' + rich(p) + '</p>'; }).join('') +
+      (a.identityTitle ? '<p class="tag-title">' + esc(a.identityTitle) + '</p>' : '') +
+      '<ul class="id-tags">' + (a.identityTags || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
+      (a.bizTitle ? '<p class="tag-title">' + esc(a.bizTitle) + '</p>' : '') +
+      '<ul class="biz-tags">' + (a.bizTags || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>');
+
+    if (a.visual) {
+      setHTML('aboutVisual', '<img src="' + esc(a.visual) + '" alt="' + esc(a.visualAlt || '') + '">');
+    }
+
+    var b = a.bulletin || {};
+    setHTML('bulletin',
+      badge('red', b.badge) +
+      (b.title ? '<h3>' + esc(b.title) + '</h3>' : '') +
+      (b.paragraphs || []).map(function (p) { return '<p>' + rich(p) + '</p>'; }).join('') +
+      (b.sign ? '<p class="sign">' + esc(b.sign) + '</p>' : ''));
+
+    /* ---- 品牌集群 ---- */
+    var br = c.brands || {};
+    setText('brandsTitle', br.title);
+    setText('brandsSub', br.subtitle);
+    setText('brandNote', br.note);
+    setHTML('brandGrid', (br.items || []).map(function (it) {
+      var logo = it.logo
+        ? '<div class="brand-logo"><img src="' + esc(it.logo) + '" alt="' + esc(it.name) + '标志" loading="lazy"></div>'
+        : '<div class="brand-logo is-empty">LOGO 待补</div>';
+      return '<li class="brand-card' + (it.isSelf ? ' is-self' : '') + '">' + logo +
+             '<h3>' + esc(it.name) + '</h3><p>' + esc(it.sub) + '</p></li>';
+    }).join(''));
+
+    /* ---- 周边产品 ---- */
+    var g = c.goods || {};
+    setText('goodsTitle', g.title);
+    setText('goodsSub', g.subtitle);
+    setText('goodsNoteText', g.note);
+    var poster = $('goodsPoster');
+    if (poster) {
+      if (g.poster) { poster.setAttribute('href', g.poster); }
+      if (g.posterLabel) { poster.textContent = g.posterLabel; }
+      poster.hidden = !g.poster;
+    }
+    setHTML('goodsGrid', (g.items || []).map(function (it) {
+      var tags = (it.tags || []).map(function (t) {
+        return '<span' + (t.key ? ' class="is-key"' : '') + '>' + esc(t.text) + '</span>';
+      }).join('');
+      var right = it.free
+        ? '<span class="goods-free">' + esc(it.freeLabel || '赠品') + '</span>'
+        : '<span class="goods-price">¥' + esc(it.price) + '<em> ' + esc(it.unit || '') + '</em></span>';
+      var media = it.image
+        ? '<img src="' + esc(it.image) + '" alt="' + esc(it.imageAlt || it.name) + '" loading="lazy">'
+        : '<div class="ph" style="width:100%;height:100%">商品图　（待补）</div>';
+      return '<article class="goods-card"><div class="goods-media">' + media + '</div>' +
+        '<div class="goods-body">' + badge(it.badgeStyle, it.badge) +
+        '<h3>' + esc(it.name) + '</h3><p>' + esc(it.desc) + '</p>' +
+        '<div class="goods-tags">' + tags + '</div>' +
+        '<div class="goods-foot"><span class="goods-alt">' + esc(it.alt) + '</span>' + right + '</div>' +
+        '</div></article>';
+    }).join(''));
+
+    /* ---- 作品展示 ---- */
+    var w = c.works || {};
+    setText('worksTitle', w.title);
+    setText('worksSub', w.subtitle);
+    var allLabel = w.allLabel || '全部';
+    var cats = [allLabel];
+    (w.items || []).forEach(function (it) {
+      if (it.category && cats.indexOf(it.category) < 0) { cats.push(it.category); }
+    });
+    setHTML('workTabs', cats.map(function (cn, i) {
+      return '<button class="' + (i === 0 ? 'is-active' : '') + '" data-cat="' + esc(cn) + '">' + esc(cn) + '</button>';
+    }).join(''));
+    renderWorks(allLabel);
+    var tabs = $('workTabs');
+    if (tabs) {
+      tabs.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('button') : null;
+        if (!btn) { return; }
+        Array.prototype.forEach.call(tabs.querySelectorAll('button'), function (x) { x.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        renderWorks(btn.getAttribute('data-cat'));
+      });
+    }
+
+    /* ---- 参展倒计时 ----------------------------------------------------
+       展会时间按「本地时间」理解：填 2026-10-06T09:30 就是当天 9:30 开展。
+       故意不用 new Date(字符串) —— 没有时区后缀时，各环境对它的解析并不统一
+       （有的按 UTC，会整体差 8 小时），自己拆数字最稳。只写到日也行。
+       下面几个都是纯函数，便于单独断言。 */
+    function cdParse(s) {
+      if (!s) { return NaN; }
+      var m = String(s).trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?/);
+      if (!m) { return NaN; }
+      var mo = +m[2], d = +m[3], h = m[4] ? +m[4] : 0, mi = m[5] ? +m[5] : 0;
+      if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) { return NaN; }
+      var dt = new Date(+m[1], mo - 1, d, h, mi, 0, 0);
+      /* 回读校验：挡住 2026-02-30 这种会被 Date 悄悄进位成 3 月 2 日的写法 */
+      if (dt.getMonth() !== mo - 1 || dt.getDate() !== d) { return NaN; }
+      return dt.getTime();
+    }
+    function cdPad(n) { return (n < 10 ? '0' : '') + n; }
+    /* 天数按「日历日」算：9 月 18 日看 10 月 6 日，就是「还有 18 天」。
+       若按时长取整，同一天下午就会变成 17 天，和人的说法对不上。 */
+    function cdDaysBetween(nowMs, startMs) {
+      var a = new Date(nowMs), b = new Date(startMs);
+      return Math.round((new Date(b.getFullYear(), b.getMonth(), b.getDate()) -
+                         new Date(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000);
+    }
+    /* 算出该显示什么。返回 { text, state }；没有有效开展时间时返回 null，
+       交给调用方回落到后台手填的倒计时文字。 */
+    function cdCalc(startMs, endMs, nowMs) {
+      /* 归一化：没填的字段可能是空串 / null / undefined。
+         坑：isFinite(null) 是 true（null 会被转成 0），所以不能只靠它判空。 */
+      startMs = Number(startMs); endMs = Number(endMs); nowMs = Number(nowMs);
+      if (!isFinite(startMs) || startMs <= 0) { return null; }
+      if (!isFinite(endMs) || endMs <= 0) { endMs = NaN; }
+      if (!isFinite(nowMs) || nowMs <= 0) { nowMs = Date.now(); }
+
+      var diff = startMs - nowMs;
+      if (diff > 0) {
+        if (diff > 2 * 86400000) {
+          return { text: cdDaysBetween(nowMs, startMs) + ' 天', state: diff > 7 * 86400000 ? 'far' : 'soon' };
+        }
+        if (diff > 86400000) { return { text: Math.floor(diff / 3600000) + ' 小时', state: 'soon' }; }
+        if (diff > 3600000) {
+          return { text: Math.floor(diff / 3600000) + ' 小时 ' + cdPad(Math.floor(diff % 3600000 / 60000)) + ' 分',
+                   state: 'urgent' };
+        }
+        return { text: cdPad(Math.floor(diff / 60000)) + ':' + cdPad(Math.floor(diff % 60000 / 1000)),
+                 state: 'urgent' };
+      }
+      /* 已经到点（或过点）*/
+      if (isFinite(endMs)) {
+        return nowMs < endMs ? { text: '进行中', state: 'live' } : { text: '已结束', state: 'past' };
+      }
+      /* 没填结束时间：开展当天算「今天开展」，之后就算过去了 */
+      var a = new Date(startMs), b = new Date(nowMs);
+      if (a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()) {
+        return { text: '今天开展', state: 'live' };
+      }
+      return { text: '已结束', state: 'past' };
+    }
+    /* 「倒计时」那一格。有开展时间就交给脚本算（并留下 data-cd-start 供定时刷新），
+       没有就显示后台手填的文字 —— 老数据不必填日期也不会变空。 */
+    function cdCell(ev) {
+      var start = cdParse(ev.date);
+      var manual = String(ev.countdown || '').trim();
+      if (!isFinite(start)) {
+        return '<div><dt>倒计时</dt><dd class="cd">' + esc(manual || '—') + '</dd></div>';
+      }
+      var r = cdCalc(start, cdParse(ev.dateEnd), Date.now()) || { text: manual || '—', state: 'far' };
+      return '<div><dt>倒计时</dt><dd class="cd is-' + r.state + '" data-cd-start="' + esc(ev.date) + '"' +
+             (ev.dateEnd ? ' data-cd-end="' + esc(ev.dateEnd) + '"' : '') + '>' + esc(r.text) + '</dd></div>';
+    }
+    var cdTimer = null;
+    function cdTick() {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-cd-start]'), function (el) {
+        var r = cdCalc(cdParse(el.getAttribute('data-cd-start')),
+                       cdParse(el.getAttribute('data-cd-end')), Date.now());
+        if (!r) { return; }
+        /* 只在真的变了才写 DOM，避免每秒无谓重排 */
+        if (el.textContent !== r.text) { el.textContent = r.text; }
+        var cls = 'cd is-' + r.state;
+        if (el.className !== cls) { el.className = cls; }
+      });
+    }
+    function cdStart() {
+      if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+      if (document.hidden || !document.querySelector('[data-cd-start]')) { return; }
+      cdTick();
+      cdTimer = setInterval(cdTick, 1000);
+    }
+    /* 标签页切到后台就停，省电；切回来立刻重算并续上 */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { if (cdTimer) { clearInterval(cdTimer); cdTimer = null; } }
+      else { cdStart(); }
+    });
+
+    /* ---- 参展预告 ---- */
+    var ev = c.event || {};
+    setHTML('eventCard',
+      '<div class="event-info">' + badge('gold', ev.badge) +
+      (ev.title ? '<h3>' + esc(ev.title) + '</h3>' : '') +
+      (ev.subtitle ? '<p>' + esc(ev.subtitle) + '</p>' : '') +
+      '<dl class="event-facts">' +
+        '<div><dt>摊位号</dt><dd>' + esc(ev.booth) + '</dd></div>' +
+        '<div><dt>首发内容</dt><dd>' + esc(ev.debut) + '</dd></div>' +
+        cdCell(ev) +
+      '</dl>' +
+      '<a class="btn btn-primary" href="' + esc(ev.link || '#') + '">' + esc(ev.linkLabel || '查看详情') + '</a></div>' +
+      (ev.visual
+        ? '<div class="event-visual"><img src="' + esc(ev.visual) + '" alt="' + esc(ev.visualAlt || '') + '"></div>'
+        : '<div class="event-visual ph">' + esc(ev.visualAlt || '摊位图 / 展会主视觉') + '　（待补）</div>'));
+
+    /* ---- 通贩入口 ---- */
+    var sp = c.shop || {};
+    setHTML('shopBox',
+      (sp.title ? '<h2>' + esc(sp.title) + '</h2>' : '') +
+      (sp.desc ? '<p>' + rich(sp.desc) + '</p>' : '') +
+      '<div class="shop-links">' + (sp.links || []).map(function (l) {
+        return '<a href="' + esc(l.href || '#') + '"' + (l.href ? ' target="_blank" rel="noopener"' : '') + '>' +
+               '<span class="dot"></span>' + esc(l.label) +
+               (l.sub ? '<em class="sc-sub">' + esc(l.sub) + '</em>' : '') +
+               (l.href ? '' : '　（链接待填）') + '</a>';
+      }).join('') + '</div>' +
+      (sp.note ? '<p class="shop-note">' + esc(sp.note) + '</p>' : ''));
+
+    /* ---- 页脚 ---- */
+    setHTML('footerBrand',
+      '<a class="logo" href="#"><img src="' + esc(s.logo || 'assets/images/favicon.png') + '" alt="" width="34" height="34">' +
+      '<span>' + esc(s.name) + '</span></a>' +
+      (s.footerAbout ? '<p>' + rich(s.footerAbout) + '</p>' : '') +
+      '<p class="footer-slogan">' + esc(s.slogan) + '<em>' + esc(s.sloganEn) + '</em></p>');
+    setHTML('socialList', (c.social || []).map(function (l) {
+      var sub = l.sub ? '<em class="sc-sub">' + esc(l.sub) + '</em>' : '';
+      if (l.href) {
+        return '<li><a href="' + esc(l.href) + '" target="_blank" rel="noopener">' + esc(l.label) + sub + '</a></li>';
+      }
+      if (l.sub) {
+        /* 没有链接但有内容（如 QQ 群号）：显示为静态文本 + 一键复制 */
+        return '<li><span class="sc-static">' + esc(l.label) + '　' + sub + '</span>' +
+               '<button type="button" class="sc-copy" data-copy="' + esc(l.sub) + '">复制</button></li>';
+      }
+      return '<li><span class="sc-static">' + esc(l.label) + '　（待填）</span></li>';
+    }).join(''));
+    setText('copyright', s.copyright);
+    setText('footerNote', s.footerNote);
+    setText('worldBarText', s.worldviewNote);
+
+    /* 上面重建过 DOM，倒计时的定时器要重新挂（并清掉上一轮的） */
+    cdStart();
+  }
+
+  /* 后台记下的「这份草稿基于哪个已发布版本」（同源 localStorage，admin.html 写入）。
+     草稿建立在旧版本之上时，即便后来被编辑过（updatedAt 变新），也不该盖住文件里
+     较新的内容 —— 否则这里是显示一份「少了后来新增素材」的旧页面，而且看不出原因。
+     2026-09-18 真实踩到过：一份旧草稿把刚接入的 4 个成员单位 logo 弄没了。 */
+  var BASE_KEY = 'gpic.admin.draftbase.v1';
+  function draftBaseAt() {
+    try {
+      var o = JSON.parse(localStorage.getItem(BASE_KEY) || 'null');
+      return (o && o.at) ? (Date.parse(o.at) || 0) : 0;
+    } catch (e) { return 0; }
+  }
+  /* 草稿是否已经落后于正式内容 */
+  function draftStale(local, remote) {
+    if (!local || !remote) { return false; }
+    var at = draftBaseAt();
+    return !!(at && ts(remote) && ts(remote) > at);
+  }
+
+  function pick(local, remote) {
+    var c = null;
+    if (local && remote) { c = draftStale(local, remote) ? remote : (ts(local) >= ts(remote) ? local : remote); }
+    else { c = local || remote; }
+    if (c) {
+      try { apply(c); } catch (err) {
+        if (window.console) { console.warn('[GPIC] 内容渲染失败，已回退到页面内置默认内容：', err); }
+      }
+    }
+  }
+
+  /* 内容结构版本号：结构升级后，低于该版本的旧草稿直接作废，避免旧内容盖住新文案。
+     v4：公告条目增加 id / title / cover / layout / body（正文内容块），
+         首页列表因此能链到 notice.html 的详情页。
+     v5：参展板块增加 date / dateEnd（开展与结束时间），倒计时改为按它自动计算。 */
+  var MIN_VER = 5;
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { local = null; }
+  if (local && !(Number(local.version) >= MIN_VER)) { local = null; }
+
+  if (window.fetch) {
+    fetch('data/content.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (remote) { pick(local, remote); })
+      .catch(function () { pick(local, null); });
+  } else {
+    pick(local, null);
+  }
+})();
+</script>
+</body>
+</html>

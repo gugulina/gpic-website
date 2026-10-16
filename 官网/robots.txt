@@ -1,0 +1,25 @@
+# 幻想乡电力投资集团官网 · 爬虫规则（模板）
+# ============================================================
+# 这份文件是一份**带内部说明的模板**。scripts/deploy.py 打包时会用它生成
+# 上线版本：把下面所有以 # 开头的注释行去掉，只留规则本身，
+# 并按 --site-url 给的域名重写最后那行 Sitemap。
+#
+#   python scripts/deploy.py --site-url https://你的域名
+#        → 发布包里的 robots.txt 只留规则 + 一行正确的 Sitemap
+#   不带 --site-url
+#        → 发布包里不会出现 Sitemap 行（指不过去，不如不给）
+#
+# 所以：下面这行的 __SITE_URL__ **不用手工改**，改了也会被忽略。
+# 只有当你绕过打包脚本、手工上传文件时，才需要自己把这行改成真实域名。
+#
+# 关于 Disallow：admin.html 与 scripts/ 本来就不会被上传（deploy.py 已剔除）。
+# 这里再禁一次，是防止将来有人手工上传时被搜索引擎抓到后台页面。
+#
+# 注意不要 Disallow: /assets/ —— 图片被禁抓会直接影响图片搜索与分享卡片的取图。
+
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /scripts/
+
+Sitemap: __SITE_URL__/sitemap.xml

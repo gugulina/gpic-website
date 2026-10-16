@@ -1,0 +1,77 @@
+# ───────────────────────────────────────────────────────────────────
+#  发布「应急静态站」到 GitHub Pages
+#
+#  只发布 官网/web-standalone/ —— 那是从 官网/web/ 派生出的
+#  「零后端只读快照」：
+#    · 数据由同目录 data/content.json 提供（static-api.js 拦截 fetch）
+#    · 不含 admin.html，不含 /functions/ 接口
+#    · 404.html 已做绝对路径 → 相对路径改写，可挂在 /<repo>/ 子路径下
+#
+#  为什么不发动态站：动态站要 Node 运行时 + 可写 SQLite + 上传目录，
+#  GitHub Pages 只能托管静态文件。后台编辑得等自持服务器上线。
+#
+#  内容更新流程：
+#    python 官网/scripts/build-standalone.py   # 由 官网/web/ + data/ 重新派生
+#    git add 官网/web-standalone && git commit && git push
+# ───────────────────────────────────────────────────────────────────
+
+name: 发布官网到 GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "官网/web-standalone/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 打包静态产物
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 开启 Pages（若尚未开启）
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: 产物自检
+        run: |
+          set -e
+          D="官网/web-standalone"
+          for f in index.html goods.html notice.html recruitment.html 404.html \
+                   style.css static-api.js data/content.json robots.txt; do
+            test -f "$D/$f" || { echo "::error::缺少 $D/$f"; exit 1; }
+          done
+          test -f "$D/.nojekyll" || echo "::warning::缺少 .nojekyll（不致命）"
+          echo "产物文件数：$(find "$D" -type f | wc -l)"
+          echo "产物体积：$(du -sh "$D" | cut -f1)"
+
+      - name: 上传 Pages 产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 官网/web-standalone
+
+  deploy:
+    name: 发布
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署到 Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

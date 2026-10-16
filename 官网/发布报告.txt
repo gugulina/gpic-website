@@ -1,0 +1,49 @@
+============================================================
+ 幻电投企划 · 官网打包
+ 时间：2026-09-20 15:48:52
+============================================================
+
+【已复制】
+  index.html            79 KB
+  notice.html           43 KB
+  robots.txt             0 KB
+  404.html               6 KB
+  assets/                  29 个文件
+  data/content.json     26 KB
+  （admin.html 与 scripts/ 已按惯例剔除）
+
+【体检】
+  内容与页面里引用到的资源：21 个
+  √ 引用的资源全都在，没有裂图风险
+  √ 没有超过 300 KB 的单张图片
+
+【上线基建】
+  √ robots.txt    0 KB
+  – sitemap.xml   本次未包含（域名定了之后加 --site-url 重新打包）
+  √ 404.html      6 KB
+
+【首屏体积】（首屏只算首页 + 横幅 + 图标；.webp 与 .jpg 兜底不会同时下载）
+  index.html                                 79 KB
+  assets/images/banner.webp                  116 KB
+  assets/images/banner.jpg                   228 KB
+  assets/images/favicon.ico                  5 KB
+  assets/images/favicon.png                  23 KB
+  ————————————————————————————————————————
+  首页首屏估算（webp 生效时）：222 KB / 预算 500 KB　√ 在预算内
+  首屏这几张里最大的一张（含 jpg 兜底）：228 KB
+
+【说明】
+  · 部署副本的 site.showAdminEntry 已置为 false：线上没有 admin.html，导航与页脚的后台入口留着会让访客点出 404。
+  · site.siteUrl 还是空的：转发到微信 / QQ / 微博时抓不到预览图。下次可以用 --site-url 你的域名 补上。
+  · 因为没给 --site-url，发布包里的 sitemap.xml 已删除 —— 站点地图必须写绝对地址，留一份填着占位域名的上去只会让搜索引擎反复抓失败。域名定了之后加 --site-url 重新打包即可自动生成。
+  · robots.txt 里的 Sitemap 行已去掉（没有正式域名，指不过去）。
+
+【接下来】
+  1. 把 dist/ 里的全部内容上传到你的静态托管（别只传一半）
+  2. 上传后打开首页确认；再往微信里发一次链接，看预览图是否正常
+  3. 随手输一个不存在的地址（例如 /abc），确认出现本站自己的 404 页面；
+     再访问 你的域名/robots.txt 与 /sitemap.xml，确认两个文件都能打开
+  4. data/content.json 在线上是只读的 —— 以后改内容仍然在本机后台发布，
+     然后重新跑一次本脚本、重传这一个文件即可
+
+发布包总计：1.93 MB，共 34 个文件
