@@ -17,7 +17,7 @@
 //    node server/index.mjs --port 4399 --db server/data/test.sqlite
 //    node server/e2e-test.mjs --base http://127.0.0.1:4399 --password test123456
 //
-//  ⚠️ 请对「刚 seed 过」的库运行。测试会改写内容表（hero/about/settings/shop/social），
+//  ⚠️ 请对「刚 seed 过」的库运行。测试会改写内容表（hero/about/settings/shop/recruit/social），
 //      A 段落里的行数断言依赖 content.json 的原始条目数；连跑两次会因为内容已被
 //      上一次改写而失败。重跑前先 `node server/seed.mjs --reset`。
 // ═══════════════════════════════════════════════════════════════════
@@ -105,6 +105,11 @@ check("all.event 单行对象", !!all.event && all.event.booth?.length > 0);
 check("all.social 是数组", Array.isArray(all.social) && all.social.length === 6);
 check("all.about 单行对象", !!all.about && all.about.title?.length > 0);
 check("all.shop 已从 site 里摘出", !!all.shop && !("shop" in all.site), `shop.title=${all.shop?.title}`);
+check("all.recruit 已从 site 里摘出", !!all.recruit && !("recruit" in all.site), `recruit.title=${all.recruit?.title}`);
+check("all.recruit 结构与 seed 一致", all.recruit?.jobs?.length === 4 &&
+  all.recruit.jobs.reduce((n, j) => n + j.rows.length, 0) === 11 &&
+  all.recruit.how_items?.length === 4 && all.recruit.notes?.length === 4,
+  `岗位=${all.recruit?.jobs?.length} 说明=${all.recruit?.how_items?.length}`);
 
 const notices = await api("notices");
 check("notices 带 body", notices.ok === true && Array.isArray(notices.items) && "body" in notices.items[0]);
@@ -117,7 +122,7 @@ const one = await api("notice", { query: "&id=2026-09-20-a" });
 check("notice 单篇详情", one.ok === true && one.id === "2026-09-20-a");
 check("notice.body 是 20 个区块", Array.isArray(one.body) && one.body.length === 20);
 
-for (const [action, expectKey] of [["settings", "name"], ["hero", "title"], ["brands", "items"], ["goods", "items"], ["events", "items"], ["social", "items"], ["about", "title"], ["shop", "title"]]) {
+for (const [action, expectKey] of [["settings", "name"], ["hero", "title"], ["brands", "items"], ["goods", "items"], ["events", "items"], ["social", "items"], ["about", "title"], ["shop", "title"], ["recruit", "recruit"]]) {
   const r = await api(action);
   check(`${action} 可用`, r.ok === true && expectKey in r, `HTTP ${r.__status}`);
 }
@@ -187,6 +192,28 @@ const shopBack = await api("shop");
 check("save_shop 读回一致", shopBack.title === "通贩商店（测试）" && shopBack.links?.length === 1, `links=${shopBack.links?.length}`);
 const shopBad = await api("save_shop", { method: "POST", auth: true, body: { title: 123, links: [] } });
 check("save_shop 非法 title → 400", shopBad.__status === 400, `HTTP ${shopBad.__status}`);
+
+const rRecruit = await api("save_recruit", { method: "POST", auth: true, body: {
+  badge: "测试字号", title: "人员招募（测试）", intro: "i", deadline: "2099 年 1 月 1 日",
+  contact_qq: "123456", contact_url: "https://example.com/q",
+  jobs: [{ title: "测试岗位", rows: [{ label: "岗位职责", value: "做**测试**" }] }],
+  how_items: ["**报名时间**：现在"], notes: ["备注一"],
+  cta_slogan: "s", cta_text: "t", cta_button: "b",
+} });
+check("save_recruit", rRecruit.ok === true, JSON.stringify(rRecruit));
+const recBack = await api("recruit");
+check("save_recruit 读回一致", recBack.recruit?.title === "人员招募（测试）" &&
+  recBack.recruit.jobs?.length === 1 && recBack.recruit.jobs[0].rows[0].value === "做**测试**" &&
+  recBack.recruit.how_items?.length === 1 && recBack.recruit.notes?.length === 1,
+  `job=${recBack.recruit?.jobs?.[0]?.title} how=${recBack.recruit?.how_items?.length}`);
+const recBadTitle = await api("save_recruit", { method: "POST", auth: true, body: { title: 1, jobs: [], how_items: [], notes: [] } });
+check("save_recruit 非法 title → 400", recBadTitle.__status === 400, `HTTP ${recBadTitle.__status}`);
+const recBadJobs = await api("save_recruit", { method: "POST", auth: true, body: { title: "x", jobs: "not-array", how_items: [], notes: [] } });
+check("save_recruit jobs 非数组 → 400", recBadJobs.__status === 400, `HTTP ${recBadJobs.__status}`);
+const recBadRow = await api("save_recruit", { method: "POST", auth: true, body: { title: "x", jobs: [{ title: "j", rows: [{ label: "l" }] }], how_items: [], notes: [] } });
+check("save_recruit 行缺 value → 400", recBadRow.__status === 400, `HTTP ${recBadRow.__status}`);
+const recUnauth = await api("save_recruit", { method: "POST", body: { title: "x", jobs: [], how_items: [], notes: [] } });
+check("save_recruit 未登录 → 401", recUnauth.__status === 401, `HTTP ${recUnauth.__status}`);
 
 const rHero = await api("save_hero", { method: "POST", auth: true, body: { banner: "/assets/images/hero.webp", badge: "测试", title: "横幅标题（测试）", body: "b", sub: "s", actions: [{ label: "L", href: "#a", style: "primary" }], stats: [{ num: "1", label: "x" }] } });
 check("save_hero", rHero.ok === true, JSON.stringify(rHero));

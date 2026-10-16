@@ -79,16 +79,16 @@ async function main() {
   try {
     const out = clone(base);
 
-    // ── 站点设置（shop 以 JSON 存在同一个表里，拆出来单独放）──
+    // ── 站点设置（shop / recruit 以 JSON 存在同一个表里，拆出来单独放）──
     const settingRows = (await client.from("site_settings").select("key,value")).data || [];
     const site = {};
-    let shop = base.shop || null;
+    const blobs = { shop: base.shop || null, recruit: base.recruit || null };
     for (const row of settingRows) {
-      if (row.key === "shop") {
+      if (row.key === "shop" || row.key === "recruit") {
         try {
-          shop = JSON.parse(row.value);
+          blobs[row.key] = JSON.parse(row.value);
         } catch {
-          /* 解析不了就保留原有的 shop */
+          /* 解析不了就保留原有的值 */
         }
         continue;
       }
@@ -237,9 +237,15 @@ async function main() {
     }
 
     // ── 通贩商店 ──
-    if (shop) {
-      out.shop = shop;
-      stats.push(["通贩商店", (shop.links || []).length]);
+    if (blobs.shop) {
+      out.shop = blobs.shop;
+      stats.push(["通贩商店", (blobs.shop.links || []).length]);
+    }
+
+    // ── 人员招募 ──
+    if (blobs.recruit) {
+      out.recruit = blobs.recruit;
+      stats.push(["人员招募", (blobs.recruit.jobs || []).length]);
     }
 
     // ── 差异判定：version / updatedAt 不参与比较 ──

@@ -395,6 +395,7 @@
   </div>
 </footer>
 
+<script src="assets/site.js"></script>
 <script>
 // 移动端菜单
 var navToggle = document.getElementById('navToggle');
@@ -456,59 +457,8 @@ if ('IntersectionObserver' in window) {
     .then(function(data) {
       if (data.error || !data.ok) return;
 
-      // ─── 站点设置：SEO / 顶栏 / 页脚 / 后台入口 ───
-      // 用精确选择器钩住 DOM，不依赖新增 id/class；数据没来时静态 HTML 就是兜底
-      if (data.site) {
-        var st = data.site;
-        var pick = function(sel) { return document.querySelector(sel); };
-        if (st.seo_title) document.title = st.seo_title;
-        var metaDesc = pick('meta[name="description"]');
-        if (metaDesc && st.seo_description) metaDesc.setAttribute('content', st.seo_description);
-        var metaTheme = pick('meta[name="theme-color"]');
-        if (metaTheme && st.theme_color) metaTheme.setAttribute('content', st.theme_color);
-        var metaOgImg = pick('meta[property="og:image"]');
-        if (metaOgImg && st.og_image) metaOgImg.setAttribute('content', st.og_image);
-        if (st.name) {
-          var navName = pick('.site-header .logo span');
-          if (navName) navName.textContent = st.name;
-          var footName = pick('.footer-brand .logo span');
-          if (footName) footName.textContent = st.name;
-        }
-        if (st.logo) {
-          var navLogo = pick('.site-header .logo img');
-          if (navLogo) navLogo.src = st.logo;
-        }
-        if (st.worldview_note) {
-          var worldBar = pick('.world-bar p');
-          if (worldBar) worldBar.textContent = st.worldview_note;
-        }
-        if (st.footer_about) {
-          var footAbout = pick('.footer-brand > p:not(.footer-slogan)');
-          if (footAbout) footAbout.textContent = st.footer_about;
-        }
-        if (st.slogan || st.slogan_en) {
-          var footSlogan = pick('.footer-slogan');
-          if (footSlogan) {
-            footSlogan.innerHTML = esc(st.slogan || '') +
-              (st.slogan_en ? '<em>' + esc(st.slogan_en) + '</em>' : '');
-          }
-        }
-        if (st.copyright) {
-          var footCopy = pick('.footer-bottom span:first-child');
-          if (footCopy) footCopy.textContent = st.copyright;
-        }
-        if (st.footer_note) {
-          var footNote = pick('.footer-bottom span:last-child');
-          if (footNote) footNote.textContent = st.footer_note;
-        }
-        // 后台入口开关（库里是字符串 "true"/"false"，content.json 里是布尔，两种都认）
-        var adminEntry = pick('.admin-entry');
-        if (adminEntry) {
-          var hideEntry = st.show_admin_entry === false ||
-            String(st.show_admin_entry).toLowerCase() === 'false';
-          adminEntry.style.display = hideEntry ? 'none' : '';
-        }
-      }
+      // 站点设置（SEO / 顶栏 / 页脚 / 后台入口）由共用的 assets/site.js 处理，
+      // 四页同一份实现，这里不再重复。
 
       // ─── 首页横幅 ───
       if (data.hero) {

@@ -52,6 +52,7 @@ function mockApi(action, url) {
       social: (content.social || []).filter(s => s.href).map((s, i) => ({ id: 'social-' + i, label: s.label, href: s.href, sub: s.sub })),
       about: content.about ? { ...content.about, identity_title: content.about.identityTitle, identity_tags: content.about.identityTags, biz_title: content.about.bizTitle, biz_tags: content.about.bizTags, visual: content.about.visual, visual_alt: content.about.visualAlt } : null,
       shop: content.shop || null,
+      recruit: content.recruit || null,
     };
   }
 
@@ -79,8 +80,20 @@ function mockApi(action, url) {
     return { ok: true, ...(content.shop || {}) };
   }
 
+  // recruit 在 content.json 里本就是后端的 snake_case 形状
+  if (action === 'recruit') {
+    return { ok: true, recruit: content.recruit || null };
+  }
+
   if (action === 'settings') {
-    return { ok: true, ...(content.site || {}) };
+    // 真后端把 site_settings 的键原样返回（snake_case），kebab/驼峰都不对，
+    // 所以这里要转换 —— 否则 assets/site.js 在 mock 上会「改了没反应」。
+    const st = {};
+    for (const [k, v] of Object.entries(content.site || {})) {
+      const key = k.replace(/[A-Z]/g, (c) => '_' + c.toLowerCase());
+      st[key] = key === 'show_admin_entry' ? String(v) : v;
+    }
+    return { ok: true, ...st };
   }
 
   if (action === 'hero') {

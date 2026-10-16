@@ -43,6 +43,28 @@ r = await post('save_shop', {
 });
 results.push(['通贩商店', r.ok ? 'ok' : JSON.stringify(r)]);
 
+// 1c. 人员招募 —— 同样存在 site_settings 的 recruit 键里
+console.log('导入人员招募…');
+const recSrc = content.recruit || {};
+r = await post('save_recruit', {
+  badge: recSrc.badge || '',
+  title: recSrc.title || '',
+  intro: recSrc.intro || '',
+  deadline: recSrc.deadline || '',
+  contact_qq: recSrc.contact_qq || recSrc.contactQq || '',
+  contact_url: recSrc.contact_url || recSrc.contactUrl || '',
+  jobs: (recSrc.jobs || []).map(j => ({
+    title: j.title || '',
+    rows: (j.rows || []).map(x => ({ label: x.label || '', value: x.value || '' })),
+  })),
+  how_items: recSrc.how_items || recSrc.howItems || [],
+  notes: recSrc.notes || [],
+  cta_slogan: recSrc.cta_slogan || recSrc.ctaSlogan || '',
+  cta_text: recSrc.cta_text || recSrc.ctaText || '',
+  cta_button: recSrc.cta_button || recSrc.ctaButton || '',
+});
+results.push(['人员招募', r.ok ? 'ok' : JSON.stringify(r)]);
+
 // 2. 首页横幅
 console.log('导入首页横幅…');
 r = await post('save_hero', {

@@ -150,7 +150,8 @@
           event: mapEvent(content.event),
           social: social.map(mapSocial),
           about: mapAbout(content.about),
-          shop: content.shop || null
+          shop: content.shop || null,
+          recruit: content.recruit || null
         };
 
       case 'settings':
@@ -164,6 +165,10 @@
 
       case 'shop':
         return { ok: true, ...(content.shop || {}) };
+
+      // recruit 在 content.json 里本就是后端的 snake_case 形状，无需映射
+      case 'recruit':
+        return { ok: true, recruit: content.recruit || null };
 
       case 'notices':
         return { ok: true, items: notices.map(mapNotice) };

@@ -171,6 +171,32 @@ if (RESET_USERS) {
   else step("通贩商店", `${(shop.links || []).length} 个渠道`);
 }
 
+// ── 2b. 人员招募（同样存成 site_settings 的一条 recruit JSON）────────
+{
+  const r = content.recruit || {};
+  const howItems = r.how_items || r.howItems || [];
+  const payload = JSON.stringify({
+    badge: r.badge || "",
+    title: r.title || "",
+    intro: r.intro || "",
+    deadline: r.deadline || "",
+    contact_qq: r.contact_qq || r.contactQq || "",
+    contact_url: r.contact_url || r.contactUrl || "",
+    jobs: (r.jobs || []).map((j) => ({
+      title: j.title || "",
+      rows: (j.rows || []).map((x) => ({ label: x.label || "", value: x.value || "" })),
+    })),
+    how_items: howItems.filter((x) => typeof x === "string"),
+    notes: (r.notes || []).filter((x) => typeof x === "string"),
+    cta_slogan: r.cta_slogan || r.ctaSlogan || "",
+    cta_text: r.cta_text || r.ctaText || "",
+    cta_button: r.cta_button || r.ctaButton || "",
+  });
+  const { error } = await client.from("site_settings").upsert({ key: "recruit", value: payload, updated_at: nowIso() });
+  if (error) fail("人员招募", error.message);
+  else step("人员招募", `${(r.jobs || []).length} 个岗位 / ${howItems.length} 条报名说明`);
+}
+
 // ── 3. 首页横幅 ─────────────────────────────────────────────────────
 {
   const hero = content.hero || {};

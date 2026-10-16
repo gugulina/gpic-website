@@ -170,6 +170,7 @@
   </div>
 </footer>
 
+<script src="assets/site.js"></script>
 <script>
 var navToggle = document.getElementById('navToggle');
 var mainNav = document.getElementById('mainNav');
@@ -197,6 +198,98 @@ document.addEventListener('click', function (e) {
     window.prompt('请手动复制：', text);
   }
 });
+
+// ─── 动态加载招募数据（后端 action=recruit）───
+// 全部用精确选择器钩住现有 DOM，不新增 id/class；
+// 接口挂了 / 没数据时，上面那段静态 HTML 就是兜底内容。
+(function () {
+  var API = '/functions/v1/app';
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
+  }
+  // 正文里的 **…** 转 <strong>（与「关于我们」段落同一约定）
+  function md(s) {
+    return esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  }
+
+  fetch(API + '?action=recruit')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var d = data && data.recruit;
+      if (!data || !data.ok || !d) return;
+
+      // ── 招募 Hero ──
+      var hero = document.querySelector('.recruit-hero');
+      if (hero) {
+        var badge = hero.querySelector('.badge');
+        if (badge && d.badge) badge.textContent = d.badge;
+        var h1 = hero.querySelector('h1');
+        if (h1 && d.title) h1.textContent = d.title;
+        var intro = hero.querySelector('p');
+        if (intro && d.intro) intro.textContent = d.intro;
+        var meta = hero.querySelector('.hero-meta');
+        if (meta && (d.deadline || d.contact_qq)) {
+          var html = '';
+          if (d.deadline) html += '<span>报名截止 <strong>' + esc(d.deadline) + '</strong></span>';
+          if (d.contact_qq) html += '<span>联系 QQ <strong>' + esc(d.contact_qq) + '</strong></span>';
+          meta.innerHTML = html;
+        }
+      }
+
+      // 三个 .recruit-section 依次是：招募岗位 / 报名与录用 / 其他说明
+      var sections = document.querySelectorAll('main .container .recruit-section');
+
+      // ── 岗位卡片 ──
+      if (sections[0] && Array.isArray(d.jobs) && d.jobs.length) {
+        var sec = sections[0];
+        Array.prototype.slice.call(sec.querySelectorAll('.job-card')).forEach(function (n) {
+          n.parentNode.removeChild(n);
+        });
+        d.jobs.forEach(function (j) {
+          var card = document.createElement('div');
+          card.className = 'job-card';
+          card.innerHTML = '<h3>' + esc(j.title) + '</h3>' +
+            (j.rows || []).map(function (row) {
+              return '<div class="job-row"><span class="job-label">' + esc(row.label) +
+                '</span><span class="job-value">' + md(row.value) + '</span></div>';
+            }).join('');
+          sec.appendChild(card);
+        });
+      }
+
+      // ── 如何报名 ──
+      if (sections[1] && Array.isArray(d.how_items) && d.how_items.length) {
+        var ul = sections[1].querySelector('ul');
+        if (ul) ul.innerHTML = d.how_items.map(function (t) { return '<li>' + md(t) + '</li>'; }).join('');
+      }
+
+      // ── 其他说明 ──
+      if (sections[2] && Array.isArray(d.notes) && d.notes.length) {
+        var ul2 = sections[2].querySelector('ul');
+        if (ul2) {
+          ul2.innerHTML = d.notes.map(function (t) {
+            return '<li style="margin-bottom: 12px; font-size: 15px;">' + md(t) + '</li>';
+          }).join('');
+        }
+      }
+
+      // ── 底部报名 CTA ──
+      var cta = document.querySelector('main .container > div:last-child');
+      if (cta) {
+        var ps = cta.querySelectorAll('p');
+        if (ps[0] && d.cta_slogan) ps[0].textContent = d.cta_slogan;
+        if (ps[1] && d.cta_text) ps[1].textContent = d.cta_text;
+        var a = cta.querySelector('a');
+        if (a) {
+          if (d.contact_url) a.href = d.contact_url;
+          if (d.cta_button) a.textContent = d.cta_button;
+        }
+      }
+    })
+    .catch(function () { /* 静态内容兜底 */ });
+})();
 </script>
 </body>
 </html>

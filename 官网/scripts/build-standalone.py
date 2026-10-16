@@ -35,7 +35,8 @@ SRC_WEB = ROOT / "web"
 OUT = ROOT / "web-standalone"
 
 PAGES = ["index.html", "goods.html", "notice.html", "recruitment.html"]
-EXTRA = ["style.css"]
+# 四页共用的站点设置应用层，跟 style.css 一样是纯静态资源
+EXTRA = ["style.css", "assets/site.js"]
 # 404 页：需要把绝对路径相对化，单独走 copy_404()
 PAGES_RELATIVE = ["404.html"]
 SHIM_TAG = '<script src="static-api.js"></script>'

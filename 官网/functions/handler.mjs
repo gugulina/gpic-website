@@ -114,11 +114,12 @@ async function getAll({ supabase }) {
   ]);
 
   const settings = {};
-  let shop = null;
+  const blobs = {};
   if (settingsR.data) {
     for (const r of settingsR.data) {
-      // shop 单独取出来，别把一坨 JSON 字符串混进 site 里
-      if (r.key === SHOP_KEY) { shop = parseShopValue(r.value); continue; }
+      // shop / recruit 这类「整块 JSON」的设置单独取出来，
+      // 别把一坨 JSON 字符串混进 site 里
+      if (BLOB_KEYS.has(r.key)) { blobs[r.key] = parseJsonObject(r.value); continue; }
       settings[r.key] = r.value;
     }
   }
@@ -133,7 +134,8 @@ async function getAll({ supabase }) {
     event: eventsR.data || null,
     social: socialR.data || [],
     about: aboutR.data || null,
-    shop,
+    shop: blobs.shop || null,
+    recruit: blobs.recruit || null,
   };
 }
 
@@ -207,13 +209,15 @@ async function getSettings({ supabase }) {
   return { ok: true, ...settings };
 }
 
-// ─── 通贩商店（shop）────────────────────────────────────────────
+// ─── 整块 JSON 设置（shop / recruit）──────────────────────────────
 // 刻意不建新表：Qoder Sites 的数据库只经过 /rest/v1（PostgREST）代理，平台侧
 // 没有执行 DDL 的入口，新建表在线上根本跑不通。所以复用已有的 site_settings，
-// 把整个 shop 对象（title/desc/links/note）存成一条 JSON，零迁移。
+// 把一整个对象存成一条 JSON，零迁移。
 const SHOP_KEY = "shop";
+const RECRUIT_KEY = "recruit";
+const BLOB_KEYS = new Set([SHOP_KEY, RECRUIT_KEY]);
 
-function parseShopValue(value) {
+function parseJsonObject(value) {
   if (typeof value !== "string" || !value) return null;
   try {
     const v = JSON.parse(value);
@@ -227,7 +231,7 @@ async function getShop({ supabase }) {
   const { data, error } = await supabase.from("site_settings")
     .select("value").eq("key", SHOP_KEY).maybeSingle();
   if (error) return { error: "database_request_failed" };
-  return { ok: true, ...(parseShopValue(data && data.value) || {}) };
+  return { ok: true, ...(parseJsonObject(data && data.value) || {}) };
 }
 
 async function saveShop({ supabase, body }) {
@@ -251,6 +255,62 @@ async function saveShop({ supabase, body }) {
   });
   const { error } = await supabase.from("site_settings")
     .upsert({ key: SHOP_KEY, value: payload, updated_at: now() });
+  if (error) return { error: "database_request_failed" };
+  return { ok: true };
+}
+
+// ─── 人员招募（recruit）───────────────────────────────────────────
+// 与 shop 同一套路：整块 JSON 存在 site_settings 里，不建新表。
+// 正文里的 **…** 由前端转 <strong>（与 about.paragraphs 的约定一致）。
+async function getRecruit({ supabase }) {
+  const { data, error } = await supabase.from("site_settings")
+    .select("value").eq("key", RECRUIT_KEY).maybeSingle();
+  if (error) return { error: "database_request_failed" };
+  return { ok: true, recruit: parseJsonObject(data && data.value) };
+}
+
+async function saveRecruit({ supabase, body }) {
+  if (!body || typeof body !== "object") return { error: "invalid_body" };
+  const s = (v) => (typeof v === "string" ? v : "");
+  const { title, jobs, how_items, notes } = body;
+  if (typeof title !== "string") return { error: "invalid_fields" };
+  if (!Array.isArray(jobs) || !Array.isArray(how_items) || !Array.isArray(notes)) {
+    return { error: "invalid_jsonb" };
+  }
+  if (jobs.length > 30 || how_items.length > 50 || notes.length > 50) {
+    return { error: "too_many_items" };
+  }
+  for (const j of jobs) {
+    if (!j || typeof j !== "object" || typeof j.title !== "string" || !Array.isArray(j.rows)) {
+      return { error: "invalid_fields" };
+    }
+    if (j.rows.length > 20) return { error: "too_many_items" };
+    for (const r of j.rows) {
+      if (!r || typeof r !== "object" || typeof r.label !== "string" || typeof r.value !== "string") {
+        return { error: "invalid_fields" };
+      }
+    }
+  }
+  const strings = (a) => a.filter((x) => typeof x === "string");
+  const payload = JSON.stringify({
+    badge: s(body.badge),
+    title,
+    intro: s(body.intro),
+    deadline: s(body.deadline),
+    contact_qq: s(body.contact_qq),
+    contact_url: s(body.contact_url),
+    jobs: jobs.map((j) => ({
+      title: j.title,
+      rows: j.rows.map((r) => ({ label: r.label, value: r.value })),
+    })),
+    how_items: strings(how_items),
+    notes: strings(notes),
+    cta_slogan: s(body.cta_slogan),
+    cta_text: s(body.cta_text),
+    cta_button: s(body.cta_button),
+  });
+  const { error } = await supabase.from("site_settings")
+    .upsert({ key: RECRUIT_KEY, value: payload, updated_at: now() });
   if (error) return { error: "database_request_failed" };
   return { ok: true };
 }
@@ -555,6 +615,7 @@ const getActions = {
   social: getSocial,
   about: getAbout,
   shop: getShop,
+  recruit: getRecruit,
   list_images: listImages,
 };
 
@@ -571,6 +632,7 @@ const postActions = {
   save_social: saveSocial,
   save_about: saveAbout,
   save_shop: saveShop,
+  save_recruit: saveRecruit,
   upload_image: uploadImage,
   login: doLogin,
   logout: doLogout,
@@ -584,7 +646,7 @@ const postActions = {
 const authRequired = new Set([
   "save_settings", "save_hero", "save_notice", "delete_notice",
   "save_brand", "delete_brand", "save_good", "delete_good",
-  "save_event", "save_social", "save_about", "save_shop", "upload_image",
+  "save_event", "save_social", "save_about", "save_shop", "save_recruit", "upload_image",
   "logout", "change_password", "list_users", "create_user", "delete_user",
 ]);
 
