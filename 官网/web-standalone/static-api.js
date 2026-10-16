@@ -116,13 +116,34 @@
     function mapSocial(s, i) {
       return { id: 'social-' + i, label: s.label, href: s.href, sub: s.sub };
     }
+    // content.json 的 site / hero 是 camelCase，而真后端（Supabase 表）返回 snake_case。
+    // 页面渲染代码只认后端那套命名，所以这里必须转，否则静态版与动态站行为分叉。
+    function mapSite(s) {
+      if (!s) return {};
+      return {
+        name: s.name, name_en: s.nameEn, short_name: s.shortName,
+        slogan: s.slogan, slogan_en: s.sloganEn, logo: s.logo,
+        theme_color: s.themeColor, worldview_note: s.worldviewNote,
+        seo_title: s.seoTitle, seo_description: s.seoDescription, og_image: s.ogImage,
+        footer_about: s.footerAbout, copyright: s.copyright, footer_note: s.footerNote,
+        site_url: s.siteUrl || '', show_admin_entry: s.showAdminEntry
+      };
+    }
+    function mapHero(h) {
+      if (!h) return null;
+      return {
+        banner: h.banner, banner_fallback: h.bannerFallback, banner_alt: h.bannerAlt,
+        badge: h.badge, title: h.title, body: h.body, sub: h.sub,
+        actions: h.actions || [], stats: h.stats || []
+      };
+    }
 
     switch (action) {
       case 'all':
         return {
           ok: true,
-          site: content.site || {},
-          hero: content.hero || null,
+          site: mapSite(content.site),
+          hero: mapHero(content.hero),
           notices: notices.map(mapNotice),
           brands: brands.map(mapBrand),
           goods: goods.map(mapGood),
@@ -133,10 +154,10 @@
         };
 
       case 'settings':
-        return { ok: true, ...(content.site || {}) };
+        return { ok: true, ...mapSite(content.site) };
 
       case 'hero':
-        return { ok: true, ...(content.hero || {}) };
+        return { ok: true, ...(mapHero(content.hero) || {}) };
 
       case 'about':
         return { ok: true, ...(mapAbout(content.about) || {}) };

@@ -456,6 +456,167 @@ if ('IntersectionObserver' in window) {
     .then(function(data) {
       if (data.error || !data.ok) return;
 
+      // ─── 站点设置：SEO / 顶栏 / 页脚 / 后台入口 ───
+      // 用精确选择器钩住 DOM，不依赖新增 id/class；数据没来时静态 HTML 就是兜底
+      if (data.site) {
+        var st = data.site;
+        var pick = function(sel) { return document.querySelector(sel); };
+        if (st.seo_title) document.title = st.seo_title;
+        var metaDesc = pick('meta[name="description"]');
+        if (metaDesc && st.seo_description) metaDesc.setAttribute('content', st.seo_description);
+        var metaTheme = pick('meta[name="theme-color"]');
+        if (metaTheme && st.theme_color) metaTheme.setAttribute('content', st.theme_color);
+        var metaOgImg = pick('meta[property="og:image"]');
+        if (metaOgImg && st.og_image) metaOgImg.setAttribute('content', st.og_image);
+        if (st.name) {
+          var navName = pick('.site-header .logo span');
+          if (navName) navName.textContent = st.name;
+          var footName = pick('.footer-brand .logo span');
+          if (footName) footName.textContent = st.name;
+        }
+        if (st.logo) {
+          var navLogo = pick('.site-header .logo img');
+          if (navLogo) navLogo.src = st.logo;
+        }
+        if (st.worldview_note) {
+          var worldBar = pick('.world-bar p');
+          if (worldBar) worldBar.textContent = st.worldview_note;
+        }
+        if (st.footer_about) {
+          var footAbout = pick('.footer-brand > p:not(.footer-slogan)');
+          if (footAbout) footAbout.textContent = st.footer_about;
+        }
+        if (st.slogan || st.slogan_en) {
+          var footSlogan = pick('.footer-slogan');
+          if (footSlogan) {
+            footSlogan.innerHTML = esc(st.slogan || '') +
+              (st.slogan_en ? '<em>' + esc(st.slogan_en) + '</em>' : '');
+          }
+        }
+        if (st.copyright) {
+          var footCopy = pick('.footer-bottom span:first-child');
+          if (footCopy) footCopy.textContent = st.copyright;
+        }
+        if (st.footer_note) {
+          var footNote = pick('.footer-bottom span:last-child');
+          if (footNote) footNote.textContent = st.footer_note;
+        }
+        // 后台入口开关（库里是字符串 "true"/"false"，content.json 里是布尔，两种都认）
+        var adminEntry = pick('.admin-entry');
+        if (adminEntry) {
+          var hideEntry = st.show_admin_entry === false ||
+            String(st.show_admin_entry).toLowerCase() === 'false';
+          adminEntry.style.display = hideEntry ? 'none' : '';
+        }
+      }
+
+      // ─── 首页横幅 ───
+      if (data.hero) {
+        var hero = data.hero;
+        var heroPic = document.querySelector('.hero picture');
+        if (heroPic && (hero.banner || hero.banner_fallback)) {
+          var picSource = heroPic.querySelector('source');
+          var picImg = heroPic.querySelector('img');
+          if (picSource && hero.banner) picSource.setAttribute('srcset', hero.banner);
+          if (picImg) {
+            if (hero.banner_fallback) picImg.src = hero.banner_fallback;
+            else if (hero.banner) picImg.src = hero.banner;
+            if (hero.banner_alt) picImg.alt = hero.banner_alt;
+          }
+        }
+        var heroCard = document.querySelector('.hero-card');
+        if (heroCard && hero.title) {
+          var heroBtns = (hero.actions || []).filter(function(a) {
+            return a && a.label;
+          }).map(function(a) {
+            var btnCls = a.style === 'ghost' ? 'btn btn-ghost' : 'btn btn-primary';
+            return '<a class="' + btnCls + '" href="' + esc(a.href || '#') + '">' + esc(a.label) + '</a>';
+          }).join('');
+          heroCard.innerHTML =
+            (hero.badge ? '<span class="badge badge-green">' + esc(hero.badge) + '</span>' : '') +
+            '<h2>' + esc(hero.title) + '</h2>' +
+            (hero.body ? '<p class="hero-notice">' + esc(hero.body) + '</p>' : '') +
+            (hero.sub ? '<p class="hero-sub">' + esc(hero.sub) + '</p>' : '') +
+            (heroBtns ? '<div class="hero-actions">' + heroBtns + '</div>' : '');
+        }
+        var statStrip = document.querySelector('.stat-strip');
+        if (statStrip && hero.stats && hero.stats.length) {
+          statStrip.innerHTML = hero.stats.map(function(s) {
+            return '<div><span class="stat-num">' + esc(s.num) + '</span>' +
+              '<span class="stat-label">' + esc(s.label) + '</span></div>';
+          }).join('');
+        }
+      }
+
+      // ─── 关于我们 ───
+      if (data.about) {
+        var about = data.about;
+        var aboutText = document.querySelector('.about-text');
+        if (aboutText && about.title) {
+          // 正文里带 Markdown 粗体（**…**），先转义再还原成 <strong>
+          var aboutParas = (about.paragraphs || []).filter(Boolean).map(function(p) {
+            return '<p>' + esc(p).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') + '</p>';
+          }).join('');
+          var idTags = (about.identity_tags || []).filter(Boolean);
+          var bizTags = (about.biz_tags || []).filter(Boolean);
+          aboutText.innerHTML =
+            (about.badge ? '<span class="badge badge-green">' + esc(about.badge) + '</span>' : '') +
+            '<h2>' + esc(about.title) + '</h2>' +
+            (about.subtitle ? '<p class="about-en">' + esc(about.subtitle) + '</p>' : '') +
+            aboutParas +
+            (idTags.length
+              ? '<p class="tag-title">' + esc(about.identity_title || '集团定位') + '</p>' +
+                '<ul class="id-tags">' + idTags.map(function(t) {
+                  return '<li>' + esc(t) + '</li>';
+                }).join('') + '</ul>'
+              : '') +
+            (bizTags.length
+              ? '<p class="tag-title">' + esc(about.biz_title || '业务范围') + '</p>' +
+                '<ul class="biz-tags">' + bizTags.map(function(t) {
+                  return '<li>' + esc(t) + '</li>';
+                }).join('') + '</ul>'
+              : '');
+        }
+        var aboutImg = document.querySelector('.about-visual img');
+        if (aboutImg && about.visual) {
+          aboutImg.src = about.visual;
+          if (about.visual_alt) aboutImg.alt = about.visual_alt;
+        }
+      }
+
+      // ─── 参展活动 ───
+      if (data.event) {
+        var ev = data.event;
+        var eventCard = document.querySelector('.event-card');
+        if (eventCard && ev.title) {
+          // 用起止时间算状态，别让「已结束」写死在页面上
+          var nowTs = Date.now();
+          var startTs = ev.date_start ? Date.parse(ev.date_start) : NaN;
+          var endTs = ev.date_end ? Date.parse(ev.date_end) : NaN;
+          var evState = { cls: '', text: '' };
+          if (!isNaN(endTs) && nowTs > endTs) evState = { cls: 'is-past', text: '已结束' };
+          else if (!isNaN(startTs) && nowTs < startTs) evState = { cls: '', text: '即将开始' };
+          else if (!isNaN(startTs)) evState = { cls: 'is-live', text: '进行中' };
+          eventCard.innerHTML =
+            '<div class="event-info">' +
+              (ev.badge ? '<span class="badge badge-gold">' + esc(ev.badge) + '</span>' : '') +
+              '<h3>' + esc(ev.title) + '</h3>' +
+              (ev.subtitle ? '<p>' + esc(ev.subtitle) + '</p>' : '') +
+              '<dl class="event-facts">' +
+                (ev.booth ? '<div><dt>摊位号</dt><dd>' + esc(ev.booth) + '</dd></div>' : '') +
+                (ev.debut ? '<div><dt>首发内容</dt><dd>' + esc(ev.debut) + '</dd></div>' : '') +
+                (evState.text ? '<div><dt>状态</dt><dd class="cd ' + evState.cls + '">' +
+                  evState.text + '</dd></div>' : '') +
+              '</dl>' +
+              (ev.link_label ? '<a class="btn btn-outline" href="' + esc(ev.link_href || '#') + '">' +
+                esc(ev.link_label) + '</a>' : '') +
+            '</div>' +
+            (ev.visual
+              ? '<div class="event-visual" style="background-image:url(\'' + esc(ev.visual) + '\')"></div>'
+              : '');
+        }
+      }
+
       // 更新公告列表
       if (data.notices && data.notices.length) {
         var list = document.getElementById('noticeList');
