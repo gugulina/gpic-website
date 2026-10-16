@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "updatedAt": "2026-09-20T07:45:58.018Z",
+  "updatedAt": "2026-10-16T09:27:09.327Z",
   "site": {
     "name": "幻电投企划",
     "nameEn": "Gensokyo Power Investment Corporation",
@@ -552,6 +552,50 @@
         "alt": "一对 ¥5",
         "price": "3",
         "unit": "/ 件",
+        "free": false
+      },
+      {
+        "badge": "界桩系列",
+        "badgeStyle": "green",
+        "name": "「幻想乡电网界桩便携款」杯套",
+        "desc": "界桩造型帆布杯套，把现场规程拎在手上。",
+        "image": "assets/images/goods-sleeve.webp",
+        "imageAlt": "幻想乡电网界桩便携款 杯套",
+        "tags": [
+          {
+            "text": "帆布",
+            "key": true
+          },
+          {
+            "text": "便携款",
+            "key": false
+          }
+        ],
+        "alt": "每件",
+        "price": "25",
+        "unit": "/ 个",
+        "free": false
+      },
+      {
+        "badge": "界桩系列",
+        "badgeStyle": "green",
+        "name": "「幻想乡电网界桩桌面款」储物筒",
+        "desc": "界桩造型桌面储物筒，文具小物一并收纳。",
+        "image": "assets/images/goods-container.webp",
+        "imageAlt": "幻想乡电网界桩桌面款 储物筒",
+        "tags": [
+          {
+            "text": "桌面款",
+            "key": true
+          },
+          {
+            "text": "收纳",
+            "key": false
+          }
+        ],
+        "alt": "每件",
+        "price": "10",
+        "unit": "/ 个",
         "free": false
       },
       {

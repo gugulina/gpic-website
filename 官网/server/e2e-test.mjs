@@ -100,7 +100,7 @@ check("all.hero 单行对象", !!all.hero && all.hero.title?.length > 0);
 check("all.hero.actions 是数组", Array.isArray(all.hero?.actions) && all.hero.actions.length > 0);
 check("all.notices 是数组且不含 body", Array.isArray(all.notices) && !("body" in (all.notices[0] || {})));
 check("all.brands 有序", Array.isArray(all.brands) && all.brands.length === 5);
-check("all.goods 有序", Array.isArray(all.goods) && all.goods.length === 7);
+check("all.goods 有序", Array.isArray(all.goods) && all.goods.length === 9);
 check("all.event 单行对象", !!all.event && all.event.booth?.length > 0);
 check("all.social 是数组", Array.isArray(all.social) && all.social.length === 6);
 check("all.about 单行对象", !!all.about && all.about.title?.length > 0);
