@@ -16,3 +16,9 @@
 # 工作区若被转成 LF，每次「同步到公网」都会产生整文件 diff。
 官网/data/content.json text eol=crlf
 官网/web-standalone/data/content.json text eol=crlf
+
+# 站点版本真源（web/version.json）由 scripts/version.mjs 按 LF 写。
+# 锁成 LF：Windows 编辑器存一次就可能变 CRLF，白白产生一行 diff，
+# 而这一行会跟着静态快照一起发布出去。web-standalone 那份是复制品，同步锁。
+官网/web/version.json text eol=lf
+官网/web-standalone/version.json text eol=lf

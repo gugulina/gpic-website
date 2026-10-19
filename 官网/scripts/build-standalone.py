@@ -36,7 +36,9 @@ OUT = ROOT / "web-standalone"
 
 PAGES = ["index.html", "goods.html", "notice.html", "recruitment.html"]
 # 四页共用的站点设置应用层，跟 style.css 一样是纯静态资源
-EXTRA = ["style.css", "assets/site.js"]
+# version.json：站点版本单一真源（web/version.json），页脚靠它显示版本号。
+# 静态快照必须原样带上一份，否则静态站页脚永远不显示版本。
+EXTRA = ["style.css", "assets/site.js", "version.json"]
 # 404 页：需要把绝对路径相对化，单独走 copy_404()
 PAGES_RELATIVE = ["404.html"]
 SHIM_TAG = '<script src="static-api.js"></script>'

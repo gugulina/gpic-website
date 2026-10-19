@@ -18,6 +18,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
 import { readFile, stat, mkdir } from "node:fs/promises";
 import { join, extname, dirname, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,6 +45,20 @@ function argValue(flag, fallback) {
 const PORT = Number(argValue("--port", process.env.GPIC_PORT || 4321));
 const HOST = argValue("--host", process.env.GPIC_HOST || "127.0.0.1");
 const DB_FILE = argValue("--db", process.env.GPIC_DB || join(__dirname, "data", "gpic.sqlite"));
+
+// ── 站点版本 ────────────────────────────────────────────────────────
+// 真源只有一份：web/version.json（它本身也作为 /version.json 对外可读）。
+// 这里读它只为两件事：给每个响应盖一个 X-GPIC-Version 头（curl -I 就能
+// 看出线上跑的是哪版），以及启动时在控制台报一句。
+// 读不到不算致命：版本号只是排障线索，不该拦住站点启动。
+const VERSION_FILE = join(WEB_ROOT, "version.json");
+let SITE_VERSION = null;
+try {
+  SITE_VERSION = JSON.parse(readFileSync(VERSION_FILE, "utf8"));
+} catch {
+  SITE_VERSION = null;
+}
+const VERSION_TAG = SITE_VERSION ? "v" + SITE_VERSION.version : "";
 
 // ── MIME ────────────────────────────────────────────────────────────
 const MIME = {
@@ -210,6 +225,10 @@ const server = createServer(async (req, res) => {
   const { pathname } = url;
   const headOnly = req.method === "HEAD";
 
+  // 每个响应都盖版本号：线上排障时 curl -I 一眼看出跑的是哪一版，
+  // 不用登机器翻文件。writeHead 只合并同名键，这条不会被覆盖掉。
+  if (VERSION_TAG) res.setHeader("X-GPIC-Version", VERSION_TAG);
+
   try {
     // ── 后端 API ──
     if (pathname === API_PATH) {
@@ -247,6 +266,11 @@ server.listen(PORT, HOST, () => {
   const base = `http://${HOST}:${PORT}`;
   console.log("");
   console.log("  幻想乡电力投资集团 官网 · 自持动态站已启动");
+  if (SITE_VERSION) {
+    console.log("  版本 " + VERSION_TAG + "  (" + SITE_VERSION.released + " · " + SITE_VERSION.name + ")");
+  } else {
+    console.log("  版本  未读到 web/version.json");
+  }
   console.log("  ─────────────────────────────────────────────");
   console.log(`  站点首页    ${base}/`);
   console.log(`  公告        ${base}/notice.html`);

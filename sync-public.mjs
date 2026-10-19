@@ -31,7 +31,7 @@
  *   node sync-public.mjs
  *   node sync-public.mjs --dry-run    # 只做到第 2 步，不提交不推送
  */
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -258,7 +258,19 @@ if (!hasStaged) {
 const changedFiles = (capture(GITBIN, ["-c", "core.quotepath=false", "diff", "--cached", "--name-only"], GIT) || "")
   .split(/\r?\n/).filter(Boolean);
 
-const msg = "内容同步：后台改动上线（" + changedFiles.length + " 个文件）";
+// 版本号写进提交信息：翻 git log 时一眼看出这条是哪个版本发的。
+// 真源是 官网/web/version.json，读不到就不带，不让版本号拦住同步。
+const SITE_VERSION = (() => {
+  try {
+    return String(JSON.parse(readFileSync(join(SITE, "web", "version.json"), "utf8")).version || "");
+  } catch {
+    return "";
+  }
+})();
+
+const msg = "内容同步" + (SITE_VERSION ? " v" + SITE_VERSION : "") +
+  "：后台改动上线（" + changedFiles.length + " 个文件）";
+
 const commit = spawnSync(GITBIN, ["commit", "-m", msg], { ...GIT, encoding: "utf8" });
 if (commit.status !== 0) {
   const err = String(commit.stderr || "").trim();

@@ -54,6 +54,27 @@ async function readJson(request) {
 
 function now() { return new Date().toISOString(); }
 
+// ─── 站点版本 ───────────────────────────────────────────────────────
+// getAll 顺手带一份，前端和 e2e 一次请求就能对上版本。
+// 用动态 import 而不是顶层静态 import：这个 handler 也可能被部署到没有
+// node:fs 的运行时（Qoder / Deno 边缘函数），那里读不到就当没有，
+// 不能让「版本号取不到」把整个内容接口拖挂。
+// 真源是 web/version.json，与页脚、响应头、静态快照共用同一份。
+let siteVersionCache;
+async function readSiteVersion() {
+  if (siteVersionCache !== undefined) return siteVersionCache;
+  siteVersionCache = null;
+  try {
+    const [{ readFileSync }, { fileURLToPath }, { dirname, join }] = await Promise.all([
+      import("node:fs"), import("node:url"), import("node:path"),
+    ]);
+    const here = dirname(fileURLToPath(import.meta.url));
+    const v = JSON.parse(readFileSync(join(here, "..", "web", "version.json"), "utf8"));
+    if (v && v.version) siteVersionCache = v;
+  } catch { /* 读不到就不带，接口照常返回 */ }
+  return siteVersionCache;
+}
+
 // ─── Password hashing (PBKDF2-SHA256) ──
 
 function randomSalt() {
@@ -147,6 +168,8 @@ async function getAll({ supabase }) {
 
   return {
     ok: true,
+    // 站点版本（v1.0.0 这类），与页脚、X-GPIC-Version 头同源
+    version: await readSiteVersion(),
     site: settings,
     hero: heroR.data || null,
     notices: noticesR.data || [],

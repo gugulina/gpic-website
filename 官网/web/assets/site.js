@@ -19,6 +19,37 @@
   function setText(sel, val) { var el = q(sel); if (el && val) el.textContent = val; }
   function setAttr(sel, attr, val) { var el = q(sel); if (el && val) el.setAttribute(attr, val); }
 
+  /* ── 页脚版本号 ──
+   * 为什么要单独一个请求：版本号属于「站点本身」而不是「站点内容」，
+   * 塞进 settings 会让「接口挂了就看不见版本」——而运维最需要看版本的时候
+   * 恰恰是接口挂掉的时候。version.json 是纯静态文件，两条发布通道都能取到。
+   *
+   * 为什么必须幂等：下面 setText('.footer-bottom span:first-child', ...)
+   * 用的是 textContent，会把整个 span 连同版本 <em> 一起清掉。所以
+   * settings 成功回来之后要再画一次。两次都调、谁后到谁生效。
+   */
+  function paintVersion(v) {
+    if (v === undefined) { v = null; }
+    var host = q('.footer-bottom span:first-child');
+    if (!host) return;
+    if (!v || !v.version) return;
+    var em = host.querySelector('[data-site-version]');
+    if (!em) {
+      em = document.createElement('em');
+      em.className = 'site-version';
+      em.setAttribute('data-site-version', '');
+      host.appendChild(em);
+    }
+    em.textContent = 'v' + v.version;
+    em.title = (v.name || '') + (v.released ? ' · ' + v.released : '');
+  }
+
+  var siteVersion = null;
+  fetch('version.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (v) { siteVersion = v; paintVersion(v); })
+    .catch(function () { /* 取不到就不显示，页脚保持原样 */ });
+
   fetch(API + '?action=settings', { credentials: 'same-origin' })
     .then(function (r) { return r.json(); })
     .then(function (st) {
@@ -48,6 +79,8 @@
       }
       setText('.footer-bottom span:first-child', st.copyright);
       setText('.footer-bottom span:last-child', st.footer_note);
+      // 上面的 textContent 把版本号顺带清掉了，这里补回来
+      paintVersion(siteVersion);
 
       // ── 后台入口开关 ──
       // 库里存的是字符串 "true"/"false"，content.json 里是布尔，两种都认

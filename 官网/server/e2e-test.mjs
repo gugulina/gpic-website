@@ -502,6 +502,40 @@ const leak = await fetch(`${BASE}/../functions/handler.mjs`.replace("/../", "/%2
 const leakBody = await leak.text().catch(() => "");
 check("服务端源码不可通过静态路径读取", !leakBody.includes("handleRequest"), `HTTP ${leak.status}`);
 
+// ─────────────────────────────────────────────────────────────────
+section("J. 版本号");
+
+// 真源只有 web/version.json 一份，这几条就是在证明「一处改、处处一致」没有漏。
+// 漏掉任何一处，线上就会出现「页脚是 v1.1.0、响应头还是 v1.0.0」这种鬼故事。
+const verRes = await fetch(`${BASE}/version.json`);
+const verJson = verRes.status === 200 ? await verRes.json().catch(() => null) : null;
+const semverOk = !!verJson && /^\d+\.\d+\.\d+$/.test(String(verJson.version));
+check("GET /version.json", verRes.status === 200 && semverOk,
+  `HTTP ${verRes.status} version=${verJson && verJson.version}`);
+
+const expectedTag = verJson ? "v" + verJson.version : "(无)";
+for (const path of ["/", "/goods.html", "/notice.html", "/recruitment.html"]) {
+  const r = await fetch(`${BASE}${path}`);
+  const tag = r.headers.get("x-gpic-version");
+  check(`X-GPIC-Version ${path}`, !!verJson && tag === expectedTag, `头=${tag || "(缺)"} 期望=${expectedTag}`);
+}
+
+const allForVer = await (await fetch(`${BASE}/functions/v1/app?action=all`)).json();
+const allVer = allForVer && allForVer.version;
+check("all 里的 version 与真源一致",
+  !!verJson && !!allVer && allVer.version === verJson.version,
+  `接口=${allVer && allVer.version}`);
+
+// 页脚那颗版本胶囊是 JS 填的，HTML 里只该有空占位。
+// 一旦有人在 HTML 里写死 vX.Y.Z，就等于出现了第二份真源 —— 这里直接拦下。
+for (const p of ["index", "goods", "notice", "recruitment"]) {
+  const html = await (await fetch(`${BASE}/${p}.html`)).text();
+  const hasSlot = /data-site-version/.test(html);
+  const hardcoded = /data-site-version[^>]*>\s*v\d+\.\d+\.\d+/.test(html);
+  check(`${p}.html 版本占位`, hasSlot && !hardcoded,
+    !hasSlot ? "缺 data-site-version" : hardcoded ? "版本号被写死在 HTML 里" : "空占位");
+}
+
 // ── 汇总 ───────────────────────────────────────────────────────────
 console.log("");
 console.log("  ═══════════════════════════════════════════════════════");
