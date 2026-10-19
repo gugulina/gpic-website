@@ -100,8 +100,10 @@ git remote set-url origin https://github.com/gugulina/gpic-website.git
 
 ## 四、几条硬提醒
 
-1. **`backup/` 已在 `.gitignore` 里**，不会被提交，也不会被推上 GitHub。
-   但它**在项目目录内**——如果以后要打包整个项目发给别人，记得先剔除。
+1. **快照数据不入库**：`gpic-*` 目录、`db/`、`*.bundle` 都被 `.gitignore` 挡着。
+   入库的只有三样——`backup/_tools/gpic-backup.mjs`、这份说明、根目录的 `备份.bat`，
+   这样换机器还能照着重做一遍。
+   但 `backup/` **在项目目录内**——打包整个项目发给别人时，记得先剔除。
 2. **备份里有敏感数据**（账目表、仓储清单、口令哈希）。
    不要上传网盘共享链接、不要发群、不要进任何公开仓库。
 3. **bundle 不包含未提交的工作区改动**，只包含已提交的历史。
