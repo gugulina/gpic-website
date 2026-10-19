@@ -54,39 +54,39 @@
     <div id="noticeListView">
       <div style="display: flex; flex-direction: column; gap: 16px;" id="noticeItems">
 
-        <a href="javascript:void(0)" onclick="showNotice('2026-09-20-a')" class="notice-item" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
-          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-09-20</span>
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-20-a')" class="notice-item" >
+          <span class="ni-date">2026-09-20</span>
           <span class="badge badge-green">招募</span>
-          <span style="flex: 1; font-size: 15px; min-width: 0;">面向社会的东方 Project 爱好者开展人员招募</span>
-          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+          <span class="ni-title">面向社会的东方 Project 爱好者开展人员招募</span>
+          <span class="ni-go">→</span>
         </a>
 
-        <a href="javascript:void(0)" onclick="showNotice('2026-09-17-a')" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
-          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-09-17</span>
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-17-a')" class="notice-item" >
+          <span class="ni-date">2026-09-17</span>
           <span class="badge badge-red">通贩</span>
-          <span style="flex: 1; font-size: 15px; min-width: 0;">「幻想乡电网」系列周边上架通贩</span>
-          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+          <span class="ni-title">「幻想乡电网」系列周边上架通贩</span>
+          <span class="ni-go">→</span>
         </a>
 
-        <a href="javascript:void(0)" onclick="showNotice('2026-09-17-b')" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
-          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-09-17</span>
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-17-b')" class="notice-item" >
+          <span class="ni-date">2026-09-17</span>
           <span class="badge badge-green">社群</span>
-          <span style="flex: 1; font-size: 15px; min-width: 0;">官方 QQ 群开通</span>
-          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+          <span class="ni-title">官方 QQ 群开通</span>
+          <span class="ni-go">→</span>
         </a>
 
-        <a href="javascript:void(0)" onclick="showNotice('2026-09-16-a')" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
-          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-09-16</span>
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-16-a')" class="notice-item" >
+          <span class="ni-date">2026-09-16</span>
           <span class="badge badge-green">通告</span>
-          <span style="flex: 1; font-size: 15px; min-width: 0;">对外联络处活动告示板</span>
-          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+          <span class="ni-title">对外联络处活动告示板</span>
+          <span class="ni-go">→</span>
         </a>
 
-        <a href="javascript:void(0)" onclick="showNotice('2026-09-18-b')" style="display: flex; gap: 16px; align-items: center; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); transition: .2s; box-shadow: var(--shadow-sm);">
-          <span style="font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none;">2026-10-06</span>
+        <a href="javascript:void(0)" onclick="showNotice('2026-09-18-b')" class="notice-item" >
+          <span class="ni-date">2026-10-06</span>
           <span class="badge badge-gold">参展</span>
-          <span style="flex: 1; font-size: 15px; min-width: 0;">武汉 THO10 参展确认</span>
-          <span style="color: #B8C2BD; font-size: 13px;">→</span>
+          <span class="ni-title">武汉 THO10 参展确认</span>
+          <span class="ni-go">→</span>
         </a>
 
       </div>
@@ -195,17 +195,14 @@ function renderNoticeList(items) {
   if (!items.length) { container.innerHTML = '<p style="text-align:center;color:#888;padding:40px 0">暂时还没有发布任何公告。</p>'; return; }
   container.innerHTML = items.map(function(n) {
     var badgeClass = 'badge-' + (n.style || 'green');
-    return '<a href="javascript:void(0)" onclick="showNotice(\'' + esc(n.id) + '\')" style="display:flex;gap:16px;align-items:center;padding:20px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);transition:.2s;box-shadow:var(--shadow-sm)">' +
-      '<span style="font-family:var(--mono);color:var(--text-2);font-size:13px;flex:none">' + esc(n.date) + '</span>' +
+    return '<a href="javascript:void(0)" class="notice-item" onclick="showNotice(\'' + esc(n.id) + '\')">' +
+      '<span class="ni-date">' + esc(n.date) + '</span>' +
       '<span class="badge ' + badgeClass + '">' + esc(n.type) + '</span>' +
-      '<span style="flex:1;font-size:15px;min-width:0">' + esc(n.summary || n.title) + '</span>' +
-      '<span style="color:#B8C2BD;font-size:13px">→</span></a>';
+      '<span class="ni-title">' + esc(n.summary || n.title) + '</span>' +
+      '<span class="ni-go">→</span></a>';
   }).join('');
-
-  container.querySelectorAll(':scope > a').forEach(function(a) {
-    a.addEventListener('mouseenter', function() { this.style.boxShadow = 'var(--shadow-md)'; this.style.transform = 'translateY(-2px)'; });
-    a.addEventListener('mouseleave', function() { this.style.boxShadow = 'var(--shadow-sm)'; this.style.transform = ''; });
-  });
+  // hover 效果交给 .notice-item:hover，不再逐个绑事件 —— 原来用内联 style
+  // 覆盖，和媒体查询打架。
 }
 
 function showNotice(id) {

@@ -82,7 +82,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   height: 46px; padding: 0 24px; border-radius: var(--r-sm);
   font-size: 15px; font-weight: 500; transition: all .2s ease;
-  white-space: nowrap;
+  white-space: nowrap; max-width: 100%;
 }
 .btn-primary { background: var(--brand-green); color: #fff; }
 .btn-primary:hover { background: var(--brand-deep); transform: translateY(-1px); box-shadow: var(--shadow-md); }
@@ -250,6 +250,19 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .notice-list li:hover .go { color: var(--brand-green); }
 .notice-date { font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none; }
 
+/* 公告页的列表项。原来是逐条内联样式（静态兜底一份、JS 渲染再写一份），
+   媒体查询完全够不着，窄屏怎么调都改不动 —— 2026-10-19 抽成 class。 */
+.notice-item {
+  display: flex; gap: 16px; align-items: center;
+  padding: 20px 24px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  transition: .2s; box-shadow: var(--shadow-sm);
+}
+.notice-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.notice-item .ni-date { font-family: var(--mono); color: var(--text-2); font-size: 13px; flex: none; }
+.notice-item .ni-title { flex: 1; font-size: 15px; min-width: 0; }
+.notice-item .ni-go { color: #B8C2BD; font-size: 13px; flex: none; }
+
 /* ============ 8. 关于社团 ============ */
 .about-grid {
   display: grid; grid-template-columns: 1.45fr 1fr; gap: 56px; align-items: start;
@@ -311,6 +324,22 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .goods-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px;
 }
+
+/* 商品页底部两张工具卡（海报 / 通贩）。
+   原来是内联的 grid-template-columns: 1fr 1fr —— 内联样式媒体查询改不动，
+   375px 下每列只剩 150px，卡片里 18px 的标题被挤成两行、按钮压到边框上。
+   改 auto-fit：宽屏自动两列，窄屏自动落成一列。
+   min(280px, 100%) 是为了 320px 屏也不溢出（固定 280 会比可用宽度还宽）。 */
+.goods-tools {
+  margin-top: 48px; display: grid; gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+}
+.goods-tool-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-sm);
+}
+.goods-tool-card h3 { font-size: 18px; color: var(--brand-deep); margin-bottom: 12px; }
+.goods-tool-card p { color: var(--text-2); font-size: 14px; margin-bottom: 20px; }
 .goods-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-lg); overflow: hidden;
@@ -438,7 +467,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   font-size: 18px; color: var(--brand-deep); margin: 32px 0 16px;
   padding-left: 14px; border-left: 3px solid var(--brand-green);
 }
-.nd-body ul, .nd-body ol { margin: 0 0 16px 20px; }
+/* 长链接 / 连写英文不许把版面撑宽 */
+.nd-body { overflow-wrap: break-word; }
+/* 全局 ul 是 list-style:none（导航、标签都在用），正文里必须显式恢复，
+   否则公告的 ul 类型正文一个项目符号都没有 —— 之前一直是这个状态。 */
+.nd-body ul, .nd-body ol { margin: 0 0 16px; padding-left: 22px; }
+.nd-body ul { list-style: disc; }
+.nd-body ol { list-style: decimal; }
 .nd-body li { margin-bottom: 8px; font-size: 15px; line-height: 1.7; }
 .nd-body blockquote {
   background: var(--tint-green); border-left: 3px solid var(--brand-green);
@@ -487,11 +522,15 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   border-radius: var(--r-lg); padding: 28px 32px;
 }
 .recruit-info h3 { font-size: 18px; color: var(--brand-deep); margin-bottom: 16px; }
-.recruit-info ul { margin-left: 20px; }
+.recruit-info ul { margin-left: 20px; padding-left: 4px; list-style: disc; }
 .recruit-info li { margin-bottom: 10px; font-size: 15px; }
 .recruit-info a { color: var(--brand-green); font-weight: 600; }
 
 /* ============ 16. 页面通用 ============ */
+/* 顶栏是 sticky 的，锚点跳过来会把标题压在 64px 的栏下面。
+   留出 header 高度 + 一点呼吸空间。 */
+section[id] { scroll-margin-top: calc(var(--header-h) + 16px); }
+
 .page-hero {
   background: linear-gradient(135deg, var(--brand-deep) 0%, #2A5E40 100%);
   color: #fff; padding: 56px 0; border-radius: var(--r-xl); margin-bottom: 48px;
@@ -524,13 +563,17 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .nav-toggle { display: block; }
 }
 @media (max-width: 640px) {
+  /* 窄屏左右留白从 24 收到 18，375 屏能多出 12px 正文宽度 */
+  .container { padding: 0 18px; }
+
   .world-bar { font-size: 12px; }
   .world-bar .container { flex-direction: column; align-items: flex-start; gap: 6px; }
   .hero-card { margin: -48px 0 0; padding: 24px 20px; }
   .hero-card h2 { font-size: 22px; }
   .stat-strip { grid-template-columns: 1fr; }
   .brand-grid { grid-template-columns: 1fr 1fr; }
-  .section { padding: 56px 0; }
+  .section { padding: 48px 0; }
+  .section-head { margin-bottom: 28px; }
   .section-head h2 { font-size: 22px; }
   .event-info { padding: 28px 20px; }
   .event-facts { grid-template-columns: 1fr; }
@@ -541,4 +584,46 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .job-card { padding: 20px; }
   .job-card .job-row { grid-template-columns: 1fr; }
   .notice-detail h1 { font-size: 22px; }
+
+  /* 首屏与页脚在手机上不需要桌面那么大的呼吸空间 */
+  .page-hero { padding: 40px 0; }
+  .page-hero h1 { font-size: 24px; }
+  .hero-notice { font-size: 15px; }
+  .notice-card { margin-top: 40px; }
+  .notice-head { padding: 14px 18px; }
+  .site-footer { margin-top: 48px; padding: 44px 0 0; }
+  .footer-bottom { margin-top: 36px; }
+  .recruit-info { padding: 20px; }
+
+  /* ── 移动端：公告列表改两行 ──
+     原来 日期(约85) + badge(约56) + 两个 gap(32) + 左右 padding(48)
+     就吃掉 221px，375 屏只剩 140px 给标题，一条公告要折三四行。
+     改成「日期 + badge + 箭头」占第一行，标题整行独占。 */
+  .notice-item,
+  .notice-list li > a { flex-wrap: wrap; gap: 8px 10px; padding: 14px 16px; }
+  .notice-item .ni-title,
+  .notice-list li .nt {
+    flex: 1 1 100%; order: 3;
+    font-size: 14.5px; line-height: 1.5;
+  }
+  .notice-item .ni-go,
+  .notice-list li .go { order: 2; margin-left: auto; }
+
+  /* 商品页底部工具卡：一列已由 auto-fit 自动完成，这里只收内边距 */
+  .goods-tool-card { padding: 22px 20px; }
+  .goods-tool-card h3 { font-size: 17px; }
+
+  /* ── 触摸目标：手指不是鼠标，最小 40px 起 ── */
+  /* 复制按钮原来只有 24px 高，很难点中 */
+  .sc-copy { height: 30px; padding: 0 12px; font-size: 11.5px; }
+  /* 页脚链接行高约 26px，加纵向 padding 撑到 40px 左右 */
+  .footer-grid li { margin-bottom: 2px; }
+  .footer-grid li a { display: inline-block; padding: 7px 0; }
+  /* 主按钮统一加高一档 */
+  .btn { height: 48px; }
+
+  .notice-detail { padding: 40px 20px; }
+  .nd-body p { font-size: 15px; }
+  .nd-body li { font-size: 14.5px; }
+  .nd-body h3 { font-size: 17px; margin: 26px 0 12px; }
 }

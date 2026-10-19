@@ -60,3 +60,40 @@
     })
     .catch(function () { /* 静态内容兜底 */ });
 })();
+
+/* 移动端菜单的收尾行为（四页共用，别往单页里再抄一份）
+ *
+ * 各页原本只绑了 navToggle 的开关。手机上展开菜单后，点页面任何地方
+ * 都不会收起，菜单一直盖着内容，得再去找右上角那个按钮 —— 这是
+ * 「手机上不好用」里最直接的一条。
+ *
+ * 这里只补「点外面 / 按 Esc 就收起」，不碰展开逻辑，
+ * 避免和每页已有的 toggle 处理打架。
+ */
+(function () {
+  var toggle = document.getElementById('navToggle');
+  var nav = document.getElementById('mainNav');
+  if (!toggle || !nav) return;
+
+  function close() {
+    if (!nav.classList.contains('is-open')) return;
+    nav.classList.remove('is-open');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  // 点导航里的链接：同页锚点不会刷新页面，得手动收
+  nav.addEventListener('click', function (e) {
+    if (e.target.closest('a')) close();
+  });
+
+  // 点菜单以外的任何地方
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('#navToggle') || e.target.closest('#mainNav')) return;
+    close();
+  });
+
+  // 手机上接外接键盘 / 平板带键盘的情况
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') close();
+  });
+})();
