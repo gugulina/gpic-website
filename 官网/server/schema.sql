@@ -169,7 +169,14 @@ CREATE TABLE IF NOT EXISTS users (
   username      TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   password_salt TEXT NOT NULL,
+  -- organizer：主催，全权且可管账号；admin：管理员，能改什么完全看 perms
   role          TEXT NOT NULL DEFAULT 'admin',
+  -- 可编辑的内容域，JSON 对象：{"notices":"write","goods":"write"}
+  --   NULL / {} = 登录后只能看仪表盘、改自己的名字与密码
+  --   organizer 忽略本字段，永远全权
+  -- 存对象而不是数组：将来想加「只读」档，把 write 换成 read 即可，
+  -- 不用改表结构，也不用迁移已在用的权限配置。
+  perms         TEXT,
   created_at    TEXT,
   updated_at    TEXT
 );

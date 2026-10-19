@@ -400,6 +400,14 @@ if (RESET_USERS) {
 // ── 10. 主催账号 ────────────────────────────────────────────────────
 let issuedPassword = null;
 {
+  // seed 只建「主账号」，不管什么角色都给满权限：
+  // 一个刚灌完数据的空站，如果连主账号都改不了内容，那这个账号就没意义。
+  // 细粒度授权从后台「账户管理」里给后来建的人配。
+  const ALL_PERMS = JSON.stringify({
+    settings: "write", hero: "write", notices: "write", brands: "write", goods: "write",
+    shop: "write", event: "write", recruit: "write", social: "write", about: "write",
+    images: "write",
+  });
   const existing = await client.from("users").select("id,username,role").eq("username", USERNAME).maybeSingle();
   if (existing.error) {
     fail("主催账号", existing.error.message);
@@ -416,7 +424,7 @@ let issuedPassword = null;
 
     if (existing.data) {
       const { error } = await client.from("users")
-        .update({ password_hash: hash, password_salt: salt, role: ROLE, updated_at: t })
+        .update({ password_hash: hash, password_salt: salt, role: ROLE, perms: ALL_PERMS, updated_at: t })
         .eq("id", existing.data.id);
       if (error) fail("主催账号", error.message);
       else step("主催账号", `${USERNAME} 口令已重置`);
@@ -427,6 +435,7 @@ let issuedPassword = null;
         password_hash: hash,
         password_salt: salt,
         role: ROLE,
+        perms: ALL_PERMS,
         created_at: t,
         updated_at: t,
       });

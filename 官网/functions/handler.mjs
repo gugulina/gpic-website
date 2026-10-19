@@ -25,6 +25,68 @@ const IMAGE_BUCKET = "images";
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const SESSION_EXPIRY_HOURS = 24;
 
+// ─── 权限域 ─────────────────────────────────────────────────────────
+// 授权粒度 = 后台一个页面（内容域）。一个账号能改哪几页，看 perms 里有没有那一项。
+// ⚠️ 这份清单与 web/admin.html 侧栏的 data-perm 必须一一对应：
+//    少一个 → 侧栏看得见、点进去保存 403；多一个 → 永远点不到。
+//    「账户管理」「数据迁移」不在这里：它们只归主催。
+const PERM_DOMAINS = [
+  "settings", "hero", "notices", "brands", "goods",
+  "shop", "event", "recruit", "social", "about", "images",
+];
+
+/**
+ * 把客户端传来的权限整理成 {"notices":"write"}。
+ * 只留白名单里的域，值统一归一到 "write" —— 前端传 true、传数组都认，
+ * 但库里永远只会有这一种形态，读的时候不用猜。
+ */
+function cleanPerms(input) {
+  const out = {};
+  if (!input || typeof input !== "object") return out;
+  const isArr = Array.isArray(input);
+  for (const domain of PERM_DOMAINS) {
+    const v = isArr ? (input.includes(domain) ? true : false) : input[domain];
+    if (v === "write" || v === true) out[domain] = "write";
+  }
+  return out;
+}
+
+/** 库里的 perms 文本 → 对象。坏数据一律当成「没有任何权限」，不给意外提权 */
+function parsePerms(raw) {
+  if (!raw) return {};
+  if (typeof raw === "object") return raw;
+  try {
+    const v = JSON.parse(raw);
+    return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  } catch {
+    return {};
+  }
+}
+
+/** 主催的权限永远全开；登录返回给前端时也用它，免得前端到处 if */
+function allPerms() {
+  const out = {};
+  for (const d of PERM_DOMAINS) out[d] = "write";
+  return out;
+}
+
+/** 这个账号能不能编辑某个内容域。主催直接放行，其余看 perms 里有没有 write */
+function canWrite(user, domain) {
+  if (!user) return false;
+  if (user.role === "organizer") return true;
+  return parsePerms(user.perms)[domain] === "write";
+}
+
+/** 发给前端 / 列表接口时用的权限视图 */
+function permsView(user) {
+  return user && user.role === "organizer" ? allPerms() : parsePerms(user && user.perms);
+}
+
+/** 用户名规则：建号、改名共用。改这里记得同步后台输入框的提示文案 */
+function validUsername(name) {
+  return typeof name === "string" && name.length >= 2 && name.length <= 32 && /^[a-zA-Z0-9_]+$/.test(name);
+}
+
 // 存储模块探测顺序：
 //   1. ./_qoder/storage.mjs —— 部署到 Qoder 时由平台注入的托管存储，优先命中
 //   2. ./storage.mjs        —— 自持部署时用的本地文件系统实现
@@ -123,16 +185,13 @@ async function requireAuth({ supabase, request }) {
     return { error: "session_expired" };
   }
   const { data: user } = await supabase.from("users")
-    .select("id, username, role").eq("id", session.user_id).maybeSingle();
+    .select("id, username, role, perms").eq("id", session.user_id).maybeSingle();
   if (!user) return { error: "login_required" };
   return { ok: true, user };
 }
 
-function requireOrganizer(authResult) {
-  if (authResult.error) return authResult;
-  if (authResult.user.role !== "organizer") return { error: "forbidden" };
-  return authResult;
-}
+// 注：原来这里有 requireOrganizer()，现在「主催专属」由 ACTION_PERM 里的
+// ORGANIZER_ONLY 统一表达，不再需要单独的判断函数（2026-10-19 权限改造）。
 
 // ─── GET handlers ───
 
@@ -780,7 +839,7 @@ async function doLogin({ supabase, body }) {
     return { error: "invalid_body" };
   }
   const { data: user } = await supabase.from("users")
-    .select("id, username, password_hash, password_salt, role")
+    .select("id, username, password_hash, password_salt, role, perms")
     .eq("username", body.username).maybeSingle();
   if (!user) return { error: "invalid_credentials" };
   const ok = await verifyPassword(body.password, user.password_salt, user.password_hash);
@@ -791,7 +850,12 @@ async function doLogin({ supabase, body }) {
   const { error } = await supabase.from("auth_sessions")
     .insert({ id: sessionId, user_id: user.id, created_at: t, expires_at: expiresAt });
   if (error) return { error: "database_request_failed" };
-  return { ok: true, session_id: sessionId, user: { id: user.id, username: user.username, role: user.role } };
+  // perms 一起下发：前端登录后要先按权限把侧栏摆好，不能等点了才 403
+  return {
+    ok: true,
+    session_id: sessionId,
+    user: { id: user.id, username: user.username, role: user.role, perms: permsView(user) },
+  };
 }
 
 async function doLogout({ supabase, sessionId }) {
@@ -820,37 +884,121 @@ async function doChangePassword({ supabase, body, userId }) {
   return { ok: true };
 }
 
+/**
+ * 改自己的账户名。
+ * 为什么要求当前密码：后台常在公用电脑上开着不登出，只有 session 就能改名的话，
+ * 别人可以先把名字改成他的，再用自己的密码登录 —— 事后看日志还以为是他本人。
+ * session 认的是 user_id 不是 username，所以改完不需要重新登录。
+ */
+async function doRenameSelf({ supabase, body, userId }) {
+  if (!body || typeof body.username !== "string" || typeof body.password !== "string") {
+    return { error: "invalid_body" };
+  }
+  const name = body.username.trim();
+  if (!validUsername(name)) return { error: "invalid_username" };
+  const { data: user } = await supabase.from("users")
+    .select("id, username, password_hash, password_salt").eq("id", userId).maybeSingle();
+  if (!user) return { error: "user_not_found" };
+  if (user.username === name) return { ok: true, username: name, unchanged: true };
+
+  const ok = await verifyPassword(body.password, user.password_salt, user.password_hash);
+  if (!ok) return { error: "invalid_password" };
+
+  const { data: taken } = await supabase.from("users")
+    .select("id").eq("username", name).maybeSingle();
+  if (taken) return { error: "username_exists" };
+
+  const { error } = await supabase.from("users")
+    .update({ username: name, updated_at: now() }).eq("id", userId);
+  if (error) return { error: "database_request_failed" };
+  return { ok: true, username: name };
+}
+
+/** 主催改别人的用户名 / 可编辑页面。不能改主催（含自己）的角色，避免把唯一主催锁死 */
+async function doUpdateUser({ supabase, body, currentUser }) {
+  if (!body || !uuidRe.test(String(body.id || ""))) return { error: "invalid_id" };
+  const { data: target } = await supabase.from("users")
+    .select("id, username, role, perms").eq("id", body.id).maybeSingle();
+  if (!target) return { error: "user_not_found" };
+  // 主催之间互不改：万一只有一个主催，被自己降权就再也没人能管账号了
+  if (target.role === "organizer" && target.id !== (currentUser && currentUser.id)) {
+    return { error: "cannot_modify_organizer" };
+  }
+
+  const patch = {};
+  if (body.username !== undefined) {
+    const name = String(body.username).trim();
+    if (!validUsername(name)) return { error: "invalid_username" };
+    if (name !== target.username) {
+      const { data: taken } = await supabase.from("users")
+        .select("id").eq("username", name).maybeSingle();
+      if (taken) return { error: "username_exists" };
+      patch.username = name;
+    }
+  }
+  if (body.perms !== undefined) {
+    // 主催的权限虽然恒为全开，仍然照存：以后把他降成 admin 时不用重新配一遍
+    patch.perms = JSON.stringify(cleanPerms(body.perms));
+  }
+  if (!Object.keys(patch).length) return { ok: true, unchanged: true };
+
+  patch.updated_at = now();
+  const { error } = await supabase.from("users").update(patch).eq("id", target.id);
+  if (error) return { error: "database_request_failed" };
+  return {
+    ok: true,
+    id: target.id,
+    username: patch.username || target.username,
+    perms: permsView({ role: target.role, perms: patch.perms || target.perms }),
+  };
+}
+
 async function doListUsers({ supabase }) {
   const { data, error } = await supabase.from("users")
-    .select("id, username, role, created_at").order("created_at");
+    .select("id, username, role, perms, created_at").order("created_at");
   if (error || !Array.isArray(data)) return { error: "database_request_failed" };
-  return { ok: true, items: data };
+  // perms 统一以对象形态下发，前端不用关心库里存的是 JSON 字符串
+  return {
+    ok: true,
+    domains: PERM_DOMAINS,
+    items: data.map((u) => Object.assign({}, u, { perms: permsView(u) })),
+  };
 }
 
 async function doCreateUser({ supabase, body }) {
   if (!body || typeof body.username !== "string" || typeof body.password !== "string") {
     return { error: "invalid_body" };
   }
-  if (body.username.length < 2 || body.username.length > 32) return { error: "invalid_username" };
-  if (!/^[a-zA-Z0-9_]+$/.test(body.username)) return { error: "invalid_username" };
+  const name = body.username.trim();
+  if (!validUsername(name)) return { error: "invalid_username" };
   if (body.password.length < 6) return { error: "password_too_short" };
   const role = body.role === "organizer" ? "organizer" : "admin";
+  // 建号时就定权限：新账号第一次登录看到的侧栏就是配好的那几页
+  const perms = role === "organizer" ? allPerms() : cleanPerms(body.perms);
   const salt = randomSalt();
   const hash = await hashPassword(body.password, salt);
   const t = now();
   const { data: existing } = await supabase.from("users")
-    .select("id").eq("username", body.username).maybeSingle();
+    .select("id").eq("username", name).maybeSingle();
   if (existing) return { error: "username_exists" };
   const id = crypto.randomUUID();
   const { error } = await supabase.from("users")
-    .insert({ id, username: body.username, password_hash: hash, password_salt: salt, role, created_at: t, updated_at: t });
+    .insert({
+      id, username: name, password_hash: hash, password_salt: salt,
+      role, perms: JSON.stringify(perms), created_at: t, updated_at: t,
+    });
   if (error) return { error: "database_request_failed" };
-  return { ok: true, id };
+  return { ok: true, id, perms };
 }
 
 async function doDeleteUser({ supabase, id, currentUserId }) {
   if (!uuidRe.test(id)) return { error: "invalid_id" };
   if (id === currentUserId) return { error: "cannot_delete_self" };
+  const { data: target } = await supabase.from("users")
+    .select("id, role").eq("id", id).maybeSingle();
+  if (!target) return { error: "user_not_found" };
+  // 主催不能被别人删掉：账号管理里只暴露给主催，但接口要自己兜住
+  if (target.role === "organizer") return { error: "cannot_modify_organizer" };
   const { error } = await supabase.from("users").delete().eq("id", id);
   if (error) return { error: "database_request_failed" };
   await supabase.from("auth_sessions").delete().eq("user_id", id);
@@ -870,6 +1018,7 @@ async function bootstrapOrganizer({ supabase, body }) {
     password_hash: body.password_hash,
     password_salt: body.password_salt,
     role,
+    perms: JSON.stringify(role === "organizer" ? allPerms() : cleanPerms(body.perms)),
     created_at: body.created_at || now(),
     updated_at: body.updated_at || now(),
   });
@@ -898,7 +1047,6 @@ const getActions = {
 };
 
 // 走 GET 但必须带有效 session 的 action（其余 GET 都是公开内容）
-const getAuthRequired = new Set(["admin_goods"]);
 
 const postActions = {
   save_settings: saveSettings,
@@ -922,21 +1070,65 @@ const postActions = {
   login: doLogin,
   logout: doLogout,
   change_password: doChangePassword,
+  rename_self: doRenameSelf,
   list_users: doListUsers,
   create_user: doCreateUser,
+  update_user: doUpdateUser,
   delete_user: doDeleteUser,
   bootstrap_organizer: bootstrapOrganizer,
 };
 
-const authRequired = new Set([
-  "save_settings", "save_hero", "save_notice", "delete_notice",
-  "save_brand", "delete_brand", "save_good", "set_good_status", "save_home_goods", "delete_good",
-  "save_event", "save_social", "save_about", "save_shop", "save_goods_block",
-  "save_recruit", "upload_image", "delete_image",
-  "logout", "change_password", "list_users", "create_user", "delete_user",
-]);
+// ─── 写操作 → 需要哪个内容域的权限 ──────────────────────────────────
+//   "settings"…"images"  该域的 write 权限（主催天然全有）
+//   null                 登录即可（都是「操作自己」：改密码、改名、登出）
+//   "__organizer__"      主催专属（账号管理）
+// 不在这张表里的（login / bootstrap_organizer）不需要登录。
+// ⚠️ 新增写接口一定要来这张表登记，漏登记 = 默认放行，任何人登录后都能调用。
+const ORGANIZER_ONLY = "__organizer__";
+const ACTION_PERM = {
+  save_settings: "settings",
+  save_hero: "hero",
+  save_notice: "notices",
+  delete_notice: "notices",
+  save_brand: "brands",
+  delete_brand: "brands",
+  save_good: "goods",
+  set_good_status: "goods",
+  save_home_goods: "goods",
+  delete_good: "goods",
+  save_goods_block: "goods",   // 商品页底部那两张卡的文案，归商品页
+  save_event: "event",
+  save_social: "social",
+  save_about: "about",
+  save_shop: "shop",
+  save_recruit: "recruit",
+  upload_image: "images",
+  delete_image: "images",
+  change_password: null,
+  rename_self: null,
+  logout: null,
+  list_users: ORGANIZER_ONLY,
+  create_user: ORGANIZER_ONLY,
+  update_user: ORGANIZER_ONLY,
+  delete_user: ORGANIZER_ONLY,
+};
 
-const organizerRequired = new Set(["list_users", "create_user", "delete_user"]);
+// 走 GET 但要权限的 action（其余 GET 都是公开内容）
+const getPermRequired = { admin_goods: "goods" };
+
+// 不需要登录就能调的写接口：登录本身，以及空库首次建主催。
+// 其余一律要在 ACTION_PERM 里登记，否则 403（fail-closed）。
+const PUBLIC_POST = new Set(["login", "bootstrap_organizer"]);
+
+/** 错误码 → HTTP 状态。集中一处，免得每个特判各写一套三元表达式 */
+function errorStatus(err) {
+  if (!err) return 200;
+  if (err === "forbidden" || err === "cannot_modify_organizer" || err === "action_not_permitted") return 403;
+  if (err === "user_not_found") return 404;
+  if (err === "username_exists" || err === "password_too_short" || err === "invalid_password") return 400;
+  if (err.startsWith("invalid") || err.startsWith("too_many")) return 400;
+  return 503;
+}
 
 export async function handleRequest({ request, supabase }) {
   const url = new URL(request.url);
@@ -946,10 +1138,15 @@ export async function handleRequest({ request, supabase }) {
   if (request.method === "GET") {
     const handler = getActions[action];
     if (!handler) return json({ error: "unknown_action" }, 404);
-    // 极少数 GET 会带后台数据（例如含下架商品的 admin_goods），单独要求 session
-    if (getAuthRequired.has(action)) {
+    // 绝大多数 GET 是公开内容；只有后台专用的（例如含下架商品的 admin_goods）
+    // 要求对应域的权限，否则「没授权商品页的人」也能把下架商品全拉下来
+    const needDomain = getPermRequired[action];
+    if (needDomain) {
       const auth = await requireAuth({ supabase, request });
       if (auth.error) return json({ error: auth.error }, 401);
+      if (!canWrite(auth.user, needDomain)) {
+        return json({ error: "forbidden", domain: needDomain }, 403);
+      }
     }
     try {
       const id = url.searchParams.get("id") || "";
@@ -965,15 +1162,22 @@ export async function handleRequest({ request, supabase }) {
     const handler = postActions[action];
     if (!handler) return json({ error: "unknown_action" }, 404);
 
-    if (authRequired.has(action)) {
-      const auth = await requireAuth({ supabase, request });
-      if (auth.error) {
-        const status = auth.error === "session_expired" ? 401 : 401;
-        return json({ error: auth.error }, status);
-      }
-      if (organizerRequired.has(action)) {
-        const orgCheck = requireOrganizer(auth);
-        if (orgCheck.error) return json({ error: orgCheck.error }, 403);
+    // 统一鉴权。默认拒绝：没在 ACTION_PERM 里登记、又不在公开名单里的写接口，
+    // 一律 403 —— 这样「新增动作忘了配权限」会当场暴露，而不是悄悄对所有人开放。
+    if (!PUBLIC_POST.has(action) && ACTION_PERM[action] === undefined) {
+      return json({ error: "action_not_permitted" }, 403);
+    }
+
+    let auth = null;
+    const need = ACTION_PERM[action];
+    if (need !== undefined) {
+      auth = await requireAuth({ supabase, request });
+      if (auth.error) return json({ error: auth.error }, 401);
+      if (need === ORGANIZER_ONLY) {
+        if (auth.user.role !== "organizer") return json({ error: "forbidden" }, 403);
+      } else if (need !== null && !canWrite(auth.user, need)) {
+        // 带上 domain：前端能直接说清「你没有商品页的权限」，不用翻代码猜
+        return json({ error: "forbidden", domain: need }, 403);
       }
     }
 
@@ -1017,6 +1221,22 @@ export async function handleRequest({ request, supabase }) {
         if (!body) return json({ error: "invalid_body" }, 400);
         const result = await handler({ supabase, body, userId: auth.user.id });
         if (result.error) return json({ error: result.error }, result.error.startsWith("invalid") || result.error === "password_too_short" ? 400 : 503);
+        return json(result);
+      }
+      if (action === "rename_self") {
+        // 改自己的名字：只需要登录（上面的统一鉴权已确认 auth 存在）
+        body = await readJson(request);
+        if (!body) return json({ error: "invalid_body" }, 400);
+        const result = await handler({ supabase, body, userId: auth.user.id });
+        if (result.error) return json({ error: result.error }, errorStatus(result.error));
+        return json(result);
+      }
+      if (action === "update_user") {
+        // 主催改别人的名字 / 权限（统一鉴权已保证是 organizer）
+        body = await readJson(request);
+        if (!body) return json({ error: "invalid_body" }, 400);
+        const result = await handler({ supabase, body, currentUser: auth.user });
+        if (result.error) return json({ error: result.error }, errorStatus(result.error));
         return json(result);
       }
       if (action === "delete_user") {

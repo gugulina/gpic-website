@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>站点管理 · 幻电投企划</title>
+<link rel="stylesheet" href="style.css">
+<style>
+:root { --admin-bg: #f5f6f8; --admin-sidebar: #1D3C2C; --admin-card: #fff; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--admin-bg); color: #222; }
+.admin-wrap { display: flex; min-height: 100vh; }
+.admin-sidebar { width: 220px; background: var(--admin-sidebar); color: #fff; padding: 20px 0; flex-shrink: 0; }
+.admin-sidebar h2 { font-size: 15px; padding: 0 20px 16px; margin: 0; border-bottom: 1px solid rgba(255,255,255,.12); }
+/* 侧栏版本号：跟站点同源（web/version.json），后台改完顺手就能核对线上版本 */
+.admin-ver { display: block; margin-top: 4px; font-style: normal; font-weight: 400; font-size: 11px; letter-spacing: .03em; color: rgba(255,255,255,.45); font-family: var(--mono, ui-monospace, Consolas, monospace); }
+.admin-ver:empty { display: none; }
+.admin-sidebar nav a { display: block; padding: 10px 20px; color: rgba(255,255,255,.78); text-decoration: none; font-size: 14px; border-left: 3px solid transparent; transition: .15s; }
+.admin-sidebar nav a:hover, .admin-sidebar nav a.is-active { background: rgba(255,255,255,.08); color: #fff; border-left-color: #4CAF50; }
+.admin-main { flex: 1; padding: 24px 32px; overflow-y: auto; }
+.admin-main h1 { font-size: 22px; margin: 0 0 20px; }
+.admin-card { background: var(--admin-card); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.admin-card h3 { margin: 0 0 12px; font-size: 16px; }
+.form-row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; }
+.form-row label { width: 100px; font-size: 13px; color: #555; flex-shrink: 0; text-align: right; }
+.form-row input, .form-row textarea, .form-row select { flex: 1; padding: 7px 10px; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 13.5px; font-family: inherit; }
+.form-row textarea { min-height: 80px; resize: vertical; }
+.form-row input:focus, .form-row textarea:focus { outline: none; border-color: var(--brand-green); box-shadow: 0 0 0 2px rgba(13,90,56,.1); }
+/* 权限勾选：两列铺开，一屏看完 11 个页面，不用滚动 */
+.perm-grid { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
+.perm-item { display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: #333; cursor: pointer; user-select: none; }
+.perm-item input { flex: none; width: 15px; height: 15px; margin: 0; accent-color: var(--brand-green); cursor: pointer; }
+.perm-item.is-locked { color: #999; cursor: default; }
+.btn-row { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+.btn-save { padding: 7px 20px; background: var(--brand-green); color: #fff; border: none; border-radius: 6px; font-size: 13.5px; cursor: pointer; font-weight: 600; }
+.btn-save:hover { opacity: .9; }
+.btn-save:disabled { opacity: .5; cursor: not-allowed; }
+.btn-del { padding: 7px 16px; background: #e53935; color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.btn-del:hover { opacity: .9; }
+.btn-add { padding: 7px 16px; background: #fff; color: var(--brand-green); border: 1.5px solid var(--brand-green); border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; }
+.btn-add:hover { background: var(--tint-green); }
+.item-list { display: flex; flex-direction: column; gap: 8px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; font-size: 13px; }
+.item-row .item-title { flex: 1; font-weight: 500; }
+.item-row .item-meta { color: #888; font-size: 12px; }
+.item-row button { padding: 4px 10px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; }
+.item-row .btn-edit { background: #e8f5e9; color: #2e7d32; }
+.item-row .btn-rm { background: #ffebee; color: #c62828; }
+
+/* 商品展示状态（在售 / 售罄 / 下架） */
+.st-pill {
+  display: inline-block; flex: none; padding: 2px 8px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .02em; line-height: 1.7;
+}
+.st-on_sale { background: #e8f5e9; color: #2e7d32; }
+.st-sold_out { background: #fff3e0; color: #b26a00; }
+.st-off_shelf { background: #eceff1; color: #607d8b; }
+.st-select {
+  flex: none; padding: 4px 6px; font-size: 12px; border-radius: 4px;
+  border: 1px solid #d0d0d0; background: #fff; cursor: pointer;
+}
+
+/* 首页商品精选 */
+.hg-list { display: flex; flex-direction: column; gap: 6px; }
+.hg-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; background: #f8f9fa; border-radius: 6px; font-size: 13px;
+}
+.hg-row.is-rest { background: #fbfbfb; }
+.hg-no {
+  flex: none; width: 22px; text-align: center; font-size: 12px;
+  color: #888; font-family: var(--mono);
+}
+.hg-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hg-btn {
+  flex: none; padding: 3px 8px; font-size: 12px; border-radius: 4px;
+  border: 1px solid #d0d0d0; background: #fff; cursor: pointer; color: #444;
+}
+.hg-btn:hover { background: #eef3f0; border-color: #b9c9c0; }
+.hg-on { color: #2e7d32; border-color: #b7dcc0; }
+.hg-off { color: #c62828; border-color: #f0c4c4; }
+.status-msg { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
+.status-msg.ok { background: #e8f5e9; color: #2e7d32; }
+.status-msg.err { background: #ffebee; color: #c62828; }
+.status-msg.info { background: #e3f2fd; color: #1565c0; }
+.status-tail { display: block; margin-top: 4px; font-size: 12px; opacity: .78; }
+.login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1D3C2C 0%, #0D5A38 100%); }
+.login-box { background: #fff; padding: 36px 32px; border-radius: 14px; width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,.18); }
+.login-box h1 { font-size: 20px; margin: 0 0 6px; text-align: center; }
+.login-box p { font-size: 13px; color: #888; text-align: center; margin: 0 0 20px; }
+.login-box input { width: 100%; padding: 9px 12px; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 14px; margin-bottom: 10px; }
+.login-box button { width: 100%; padding: 10px; background: var(--brand-green); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { opacity: .9; }
+.login-err { color: #c62828; font-size: 12px; text-align: center; margin-top: 8px; }
+.env-hint { margin-top: 14px; padding: 10px 12px; border-radius: 6px; background: #fff4e5; border: 1px solid #f0c36d; color: #8a5a00; font-size: 12px; line-height: 1.75; text-align: left; }
+.env-hint code { background: rgba(0,0,0,.07); padding: 1px 4px; border-radius: 3px; font-size: 11px; word-break: break-all; }
+.env-hint b { color: #6d4600; }
+.tab-panel { display: none; }
+.tab-panel.is-active { display: block; }
+.json-block { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; font-family: "Cascadia Code", monospace; font-size: 12px; max-height: 200px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+.img-preview { max-width: 120px; max-height: 80px; border-radius: 4px; border: 1px solid #e0e0e0; }
+.upload-zone { border: 2px dashed #ccc; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: .15s; }
+.upload-zone:hover { border-color: var(--brand-green); background: rgba(13,90,56,.03); }
+.upload-zone input { display: none; }
+.block-editor { border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 8px; background: #fafafa; }
+.block-editor .block-type { font-size: 12px; color: #888; margin-bottom: 6px; }
+.block-editor textarea { width: 100%; min-height: 60px; padding: 6px 8px; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 13px; font-family: inherit; resize: vertical; }
+.block-actions { display: flex; gap: 6px; margin-top: 6px; }
+.block-actions button { padding: 3px 8px; font-size: 11px; border-radius: 3px; border: none; cursor: pointer; }
+@media (max-width: 768px) {
+  .admin-wrap { flex-direction: column; }
+  .admin-sidebar { width: 100%; padding: 12px 0; }
+  .admin-sidebar nav { display: flex; overflow-x: auto; }
+  .admin-sidebar nav a { white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; padding: 8px 14px; }
+  .admin-sidebar nav a.is-active { border-bottom-color: #4CAF50; }
+  .admin-main { padding: 16px; }
+  .form-row { flex-direction: column; align-items: stretch; }
+  .form-row label { width: auto; text-align: left; }
+}
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login-wrap">
+  <div class="login-box">
+    <h1>站点管理</h1>
+    <p>幻电投企划 · 内容管理后台</p>
+    <input type="text" id="loginUser" placeholder="用户名" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="密码" autocomplete="current-password">
+    <button onclick="doLogin()">登 录</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="env-hint" id="envHint" hidden></div>
+  </div>
+</div>
+
+<div id="adminView" class="admin-wrap" style="display:none">
+  <aside class="admin-sidebar">
+    <h2>幻电投 · 管理<em class="admin-ver" data-site-version></em></h2>
+    <nav id="sideNav">
+      <a href="#" data-tab="dashboard" class="is-active">仪表盘</a>
+      <!-- data-perm 与后端 PERM_DOMAINS 一一对应。少一个 → 点得进去、保存 403 -->
+      <a href="#" data-tab="settings" data-perm="settings">站点设置</a>
+      <a href="#" data-tab="hero" data-perm="hero">首页横幅</a>
+      <a href="#" data-tab="notices" data-perm="notices">新闻公告</a>
+      <a href="#" data-tab="brands" data-perm="brands">品牌集群</a>
+      <a href="#" data-tab="goods" data-perm="goods">周边商品</a>
+      <a href="#" data-tab="shop" data-perm="shop">通贩商店</a>
+      <a href="#" data-tab="event" data-perm="event">参展活动</a>
+      <a href="#" data-tab="recruit" data-perm="recruit">人员招募</a>
+      <a href="#" data-tab="social" data-perm="social">社交链接</a>
+      <a href="#" data-tab="about" data-perm="about">关于我们</a>
+      <a href="#" data-tab="images" data-perm="images">图片管理</a>
+      <a href="#" data-tab="account">我的账户</a>
+      <!-- 以下两项主催专属 -->
+      <a href="#" data-tab="seed" id="nav-seed" style="display:none">数据迁移</a>
+      <a href="#" data-tab="users" id="nav-users" style="display:none">账户管理</a>
+    </nav>
+    <div style="padding:16px 20px;border-top:1px solid rgba(255,255,255,.12);margin-top:auto;font-size:12px;color:rgba(255,255,255,.5)">
+      <span id="userInfo">未登录</span>
+    </div>
+  </aside>
+  <main class="admin-main">
+    <div id="statusBar"></div>
+
+    <!-- Dashboard -->
+    <div class="tab-panel is-active" id="tab-dashboard">
+      <h1>仪表盘</h1>
+      <div class="admin-card">
+        <h3>数据概览</h3>
+        <div id="dashStats">加载中…</div>
+      </div>
+      <div class="admin-card">
+        <h3>快捷操作</h3>
+        <p style="font-size:13px;color:#666">
+          <a href="index.html" target="_blank">查看前台首页 →</a>
+        </p>
+        <button class="btn-add" onclick="loadAll()">刷新全部数据</button>
+        <button class="btn-del" style="margin-left:8px" onclick="doLogout()">退出登录</button>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="tab-panel" id="tab-settings">
+      <h1>站点设置</h1>
+      <div class="admin-card" id="settingsForm">加载中…</div>
+    </div>
+
+    <!-- Hero -->
+    <div class="tab-panel" id="tab-hero">
+      <h1>首页横幅</h1>
+      <div class="admin-card" id="heroForm">加载中…</div>
+    </div>
+
+    <!-- Notices -->
+    <div class="tab-panel" id="tab-notices">
+      <h1>新闻公告</h1>
+      <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0">公告列表</h3>
+          <button class="btn-add" onclick="newNotice()">+ 新建公告</button>
+        </div>
+        <div class="item-list" id="noticesList">加载中…</div>
+      </div>
+      <div class="admin-card" id="noticeEditor" style="display:none"></div>
+    </div>
+
+    <!-- Brands -->
+    <div class="tab-panel" id="tab-brands">
+      <h1>品牌集群</h1>
+      <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0">品牌列表</h3>
+          <button class="btn-add" onclick="newBrand()">+ 新建品牌</button>
+        </div>
+        <div class="item-list" id="brandsList">加载中…</div>
+      </div>
+      <div class="admin-card" id="brandEditor" style="display:none"></div>
+    </div>
+
+    <!-- Goods -->
+    <div class="tab-panel" id="tab-goods">
+      <h1>周边商品</h1>
+      <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0">商品列表</h3>
+          <button class="btn-add" onclick="newGood()">+ 新建商品</button>
+        </div>
+        <div class="item-list" id="goodsList">加载中…</div>
+      </div>
+      <div class="admin-card" id="homeGoodsCard" style="display:none"></div>
+      <div class="admin-card" id="goodEditor" style="display:none"></div>
+      <div class="admin-card" id="goodsBlockForm" style="display:none"></div>
+    </div>
+
+    <!-- Shop -->
+    <div class="tab-panel" id="tab-shop">
+      <h1>通贩商店</h1>
+      <div class="admin-card" id="shopForm">加载中…</div>
+    </div>
+
+    <!-- Event -->
+    <div class="tab-panel" id="tab-event">
+      <h1>参展活动</h1>
+      <div class="admin-card" id="eventForm">加载中…</div>
+    </div>
+
+    <!-- Recruit -->
+    <div class="tab-panel" id="tab-recruit">
+      <h1>人员招募</h1>
+      <div class="admin-card" id="recruitForm">加载中…</div>
+    </div>
+
+    <!-- Social -->
+    <div class="tab-panel" id="tab-social">
+      <h1>社交链接</h1>
+      <div class="admin-card" id="socialForm">加载中…</div>
+    </div>
+
+    <!-- About -->
+    <div class="tab-panel" id="tab-about">
+      <h1>关于我们</h1>
+      <div class="admin-card" id="aboutForm">加载中…</div>
+    </div>
+
+    <!-- Images -->
+    <div class="tab-panel" id="tab-images">
+      <h1>图片管理</h1>
+      <div class="admin-card">
+        <h3>上传图片</h3>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <input type="file" id="fileInput" accept="image/*" onchange="uploadFile(this.files[0]); this.value=''">
+          <p style="margin:0;font-size:14px;color:#888">点击选择图片上传</p>
+          <p style="margin:4px 0 0;font-size:12px;color:#aaa">JPG / PNG / WebP / GIF · 原图上限 20MB · 自动转成 WebP 后存进 assets/images</p>
+        </div>
+        <div id="uploadResult" style="margin-top:10px"></div>
+      </div>
+      <div class="admin-card">
+        <h3>图库 · assets/images</h3>
+        <div id="imagesList">
+          <p style="color:#888;font-size:13px">加载中…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seed -->
+    <div class="tab-panel" id="tab-seed">
+      <h1>数据迁移</h1>
+      <div class="admin-card">
+        <h3>从 content.json 导入</h3>
+        <p style="font-size:13px;color:#666">将现有 content.json 的数据写入数据库。此操作会覆盖已有数据。</p>
+        <div class="form-row">
+          <label>JSON 文件</label>
+          <input type="file" id="seedFile" accept=".json">
+        </div>
+        <div class="btn-row">
+          <button class="btn-save" onclick="doSeed()">开始导入</button>
+        </div>
+        <div id="seedResult" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <!-- 我的账户（所有账号都能进） -->
+    <div class="tab-panel" id="tab-account">
+      <h1>我的账户</h1>
+
+      <div class="admin-card">
+        <h3>账户名</h3>
+        <p style="font-size:13px;color:#666">改的是你自己的登录名，改完不用重新登录。需要验证当前密码——后台常在公用电脑上开着不登出，只凭登录态就能改名的话，别人可以先把名字改掉再登录。</p>
+        <div class="form-row"><label>当前账户名</label><span id="acctName" style="font-weight:600"></span></div>
+        <div class="form-row"><label>新账户名</label><input type="text" id="acctNewName" placeholder="英文、数字、下划线，2-32 位" autocomplete="username"></div>
+        <div class="form-row"><label>当前密码</label><input type="password" id="acctPwd" placeholder="仅用于验证，不会保存" autocomplete="current-password"></div>
+        <div class="btn-row">
+          <span id="acctMsg" style="flex:1;font-size:13px"></span>
+          <button class="btn-save" onclick="doRenameSelf()">保存账户名</button>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h3>修改密码</h3>
+        <p style="font-size:13px;color:#666">所有账号都可以修改自己的登录密码。</p>
+        <div class="form-row"><label>当前密码</label><input type="password" id="pwdOld" placeholder="输入当前密码"></div>
+        <div class="form-row"><label>新密码</label><input type="password" id="pwdNew" placeholder="至少 6 位"></div>
+        <div class="form-row"><label>确认密码</label><input type="password" id="pwdConfirm" placeholder="再次输入新密码"></div>
+        <div class="btn-row">
+          <span id="pwdMsg" style="flex:1;font-size:13px"></span>
+          <button class="btn-save" onclick="doChangePassword()">保存新密码</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 账户管理（主催专属） -->
+    <div class="tab-panel" id="tab-users">
+      <h1>账户管理</h1>
+
+      <div class="admin-card" id="organizerPanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0">管理员账户</h3>
+          <button class="btn-add" onclick="toggleCreateUser()">+ 创建管理员</button>
+        </div>
+        <p style="font-size:13px;color:#666;margin:0 0 12px">勾选哪些页面，这个账号登录后就只看得见、也只改得了那几页。主催不受限制，永远全权。</p>
+        <div class="item-list" id="usersList">加载中…</div>
+      </div>
+
+      <div class="admin-card" id="createUserCard" style="display:none">
+        <h3>创建新管理员</h3>
+        <div class="form-row"><label>用户名</label><input type="text" id="newUsername" placeholder="英文、数字、下划线，2-32 位"></div>
+        <div class="form-row"><label>初始密码</label><input type="password" id="newPassword" placeholder="至少 6 位"></div>
+        <div class="form-row" style="align-items:flex-start"><label>可编辑页面</label><div class="perm-grid" id="newUserPerms"></div></div>
+        <div class="btn-row">
+          <span id="createUserMsg" style="flex:1;font-size:13px"></span>
+          <button class="btn-add" onclick="cancelCreateUser()">取消</button>
+          <button class="btn-save" onclick="doCreateUser()">创建</button>
+        </div>
+      </div>
+
+      <div class="admin-card" id="editUserCard" style="display:none">
+        <h3>编辑账户 <span id="editUserWho" style="font-weight:400;font-size:13px;color:#666"></span></h3>
+        <div class="form-row"><label>用户名</label><input type="text" id="editUsername" placeholder="英文、数字、下划线，2-32 位"></div>
+        <div class="form-row" style="align-items:flex-start"><label>可编辑页面</label><div class="perm-grid" id="editUserPerms"></div></div>
+        <p id="editUserHint" style="font-size:12.5px;color:#8a6d3b;margin:0 0 8px"></p>
+        <div class="btn-row">
+          <span id="editUserMsg" style="flex:1;font-size:13px"></span>
+          <button class="btn-add" onclick="cancelEditUser()">取消</button>
+          <button class="btn-save" onclick="doUpdateUser()">保存</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const API = '/functions/v1/app';
+let siteData = {};
+
+// ─── 站点版本 ───
+// 与前台页脚、X-GPIC-Version 响应头同源（web/version.json）。
+// 单独读静态文件而不是走接口：接口挂了也要能看见后台跑的是哪一版。
+fetch('version.json', { cache: 'no-store' })
+  .then((r) => (r.ok ? r.json() : null))
+  .then((v) => {
+    if (!v || !v.version) return;
+    document.querySelectorAll('[data-site-version]').forEach((el) => {
+      el.textContent = 'v' + v.version;
+      el.title = (v.name || '') + (v.released ? ' · ' + v.released : '');
+    });
+  })
+  .catch(() => { /* 取不到就不显示 */ });
+
+// ─── Auth ───
+let currentUser = null;
+
+// ─── 权限域 ───
+// 与后端 PERM_DOMAINS、侧栏 data-perm 三处必须一致。
+// 顺序照后台侧栏排：勾选面板与导航看着是同一个顺序，找起来不费劲。
+const PERM_LABELS = {
+  settings: '站点设置', hero: '首页横幅', notices: '新闻公告', brands: '品牌集群',
+  goods: '周边商品', shop: '通贩商店', event: '参展活动', recruit: '人员招募',
+  social: '社交链接', about: '关于我们', images: '图片管理',
+};
+const PERM_ORDER = Object.keys(PERM_LABELS);
+
+function allPermsObj() {
+  const all = {};
+  for (const d of PERM_ORDER) all[d] = 'write';
+  return all;
+}
+
+/** 我实际拥有的权限。主催永远全开，所以统一在这里补全，别处不用再判断角色 */
+function myPerms() {
+  if (!currentUser) return {};
+  if (currentUser.role === 'organizer') return allPermsObj();
+  return currentUser.perms || {};
+}
+
+function canSee(domain) { return !!myPerms()[domain]; }
+
+/** 造一组权限勾选框。names 里列出的域按 PERM_ORDER 顺序铺开 */
+function permGridHtml(checked, { disabled = false } = {}) {
+  const mine = checked || {};
+  return PERM_ORDER.map((d) =>
+    '<label class="perm-item' + (disabled ? ' is-locked' : '') + '">' +
+      '<input type="checkbox" value="' + d + '"' +
+        (mine[d] ? ' checked' : '') +
+        (disabled ? ' disabled' : '') + '>' +
+      '<span>' + PERM_LABELS[d] + '</span>' +
+    '</label>'
+  ).join('');
+}
+
+/** 把容器里勾上的域读成 {notices:'write'}，与后端 cleanPerms 的预期一致 */
+function readPermGrid(container) {
+  const out = {};
+  if (!container) return out;
+  container.querySelectorAll('input[type="checkbox"]').forEach((box) => {
+    if (box.checked) out[box.value] = 'write';
+  });
+  return out;
+}
+
+// ─── 运行环境自检 ───
+// 直接双击本文件打开时是 file:// 协议，接口路径 /functions/v1/app 会被解析到本地
+// 文件系统上并不存在的位置，登录必然失败。这里提前把原因说清楚，免得以为账号坏了。
+(function checkEnvironment() {
+  if (location.protocol !== 'file:') return;
+  const hint = document.getElementById('envHint');
+  if (!hint) return;
+  hint.hidden = false;
+  hint.innerHTML =
+    '<b>这个页面不能靠双击打开。</b><br>'
+    + '你现在是 <code>file://</code> 打开的本地文件，后台要访问的接口 <code>/functions/v1/app</code> '
+    + '在本地文件里并不存在，所以怎么登都不会成功。<br>'
+    + '请先双击 <b>启动自持站.bat</b> 把服务跑起来，再改从下面这个地址进：<br>'
+    + '<code>http://127.0.0.1:4321/admin.html</code>';
+  const btn = document.querySelector('.login-box button');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.45'; btn.style.cursor = 'not-allowed'; }
+})();
+
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!u || !p) { errEl.textContent = '请输入用户名和密码'; return; }
+  try {
+    const res = await fetch(API + '?action=login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Origin': location.origin },
+      body: JSON.stringify({ username: u, password: p }),
+    });
+    const data = await res.json();
+    if (data.error) { errEl.textContent = data.error === 'invalid_credentials' ? '用户名或密码错误' : data.error; return; }
+    currentUser = data.user;
+    sessionStorage.setItem('gpic_user', JSON.stringify(data.user));
+    if (data.session_id) sessionStorage.setItem('gpic_session_id', data.session_id);
+    applyRoleUI();
+    showAdmin();
+  } catch { errEl.textContent = '连不上后台服务。请确认「启动自持站.bat」的窗口还开着，并从 http://127.0.0.1:4321/admin.html 访问'; }
+}
+
+async function doLogout() {
+  try {
+    await fetch(API + '?action=logout', { method: 'POST', headers: sessionHeaders({ 'Origin': location.origin }) });
+  } catch {}
+  sessionStorage.removeItem('gpic_user');
+  sessionStorage.removeItem('gpic_session_id');
+  currentUser = null;
+  location.reload();
+}
+
+function showAdmin() {
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('adminView').style.display = 'flex';
+  loadAll();
+}
+
+function applyRoleUI() {
+  const isOrg = currentUser && currentUser.role === 'organizer';
+
+  // 侧栏：带 data-perm 的按权限显隐，主催全开。
+  // 隐藏只是第一层——真正的边界在后端，没权限的写接口一律 403。
+  document.querySelectorAll('#sideNav a[data-perm]').forEach((a) => {
+    a.style.display = isOrg || canSee(a.dataset.perm) ? '' : 'none';
+  });
+
+  // 主催专属：数据迁移会覆盖全站内容，账户管理能改别人密码，都不给普通管理员
+  ['nav-seed', 'nav-users'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isOrg ? '' : 'none';
+  });
+
+  // 万一当前停在被隐藏的页（比如权限刚被主催收回），退回仪表盘，
+  // 不要把人留在空面板上还以为后台坏了
+  const active = document.querySelector('#sideNav a.is-active');
+  if (active && active.style.display === 'none') {
+    document.querySelectorAll('#sideNav a').forEach((x) => x.classList.remove('is-active'));
+    document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('is-active'));
+    const dash = document.querySelector('#sideNav a[data-tab="dashboard"]');
+    if (dash) dash.classList.add('is-active');
+    const panel = document.getElementById('tab-dashboard');
+    if (panel) panel.classList.add('is-active');
+  }
+
+  const userInfo = document.getElementById('userInfo');
+  if (userInfo && currentUser) {
+    const n = Object.keys(myPerms()).length;
+    const roleLabel = isOrg ? '主催' : (n ? n + ' 个页面' : '无编辑权限');
+    userInfo.textContent = currentUser.username + ' · ' + roleLabel;
+  }
+
+  const acctName = document.getElementById('acctName');
+  if (acctName && currentUser) acctName.textContent = currentUser.username;
+}
+
+// Restore session
+(function() {
+  const stored = sessionStorage.getItem('gpic_user');
+  if (stored) {
+    try { currentUser = JSON.parse(stored); applyRoleUI(); showAdmin(); } catch {}
+  }
+})();
+
+// ─── API helpers ───
+function sessionHeaders(extra) {
+  const h = Object.assign({}, extra || {});
+  const sid = sessionStorage.getItem('gpic_session_id');
+  if (sid) h['X-Session-Id'] = sid;
+  return h;
+}
+
+function clearSession() {
+  sessionStorage.removeItem('gpic_user');
+  sessionStorage.removeItem('gpic_session_id');
+  currentUser = null;
+  location.reload();
+}
+
+async function apiGet(action, extra = '') {
+  const r = await fetch(`${API}?action=${action}${extra}`, { headers: sessionHeaders() });
+  const data = await r.json();
+  if (data.error === 'login_required' || data.error === 'session_expired') { clearSession(); return data; }
+  return data;
+}
+
+async function apiPost(action, body) {
+  const r = await fetch(`${API}?action=${action}`, {
+    method: 'POST',
+    headers: sessionHeaders({ 'Content-Type': 'application/json', 'Origin': location.origin }),
+    body: JSON.stringify(body),
+  });
+  const data = await r.json();
+  if (data.error === 'login_required' || data.error === 'session_expired') { clearSession(); return data; }
+  return data;
+}
+
+function showStatus(msg, type = 'ok') {
+  const bar = document.getElementById('statusBar');
+  // 保存成功只代表写进了本地 SQLite 库。公网站点读的是被打包进仓库的
+  // data/content.json，必须再跑一次「同步到公网.bat」才会变。这句提示
+  // 就是为了让「我点了保存，公网怎么没变」不再需要靠猜。
+  const saved = type === 'ok' && /已保存|已写入/.test(msg);
+  const tail = saved
+    ? '<span class="status-tail">已写入本地数据库 —— 公网站点还不会变。'
+      + '回电脑双击「同步到公网.bat」并等它跑完，才是真正上线。</span>'
+    : '';
+  bar.innerHTML = `<div class="status-msg ${type}">${msg}${tail}</div>`;
+  setTimeout(() => { bar.innerHTML = ''; }, saved ? 9000 : 4000);
+}
+
+// ─── Tab navigation ──
+document.getElementById('sideNav').addEventListener('click', e => {
+  const a = e.target.closest('a[data-tab]');
+  if (!a) return;
+  e.preventDefault();
+  document.querySelectorAll('.admin-sidebar nav a').forEach(x => x.classList.remove('is-active'));
+  a.classList.add('is-active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('is-active'));
+  document.getElementById('tab-' + a.dataset.tab).classList.add('is-active');
+  if (a.dataset.tab === 'images') loadImages();
+  if (a.dataset.tab === 'account') applyRoleUI();
+  if (a.dataset.tab === 'users') {
+    // 创建卡片的勾选框只渲染一次：每次进页面重渲染会把用户刚勾的选掉
+    const box = document.getElementById('newUserPerms');
+    if (box && !box.children.length) box.innerHTML = permGridHtml({});
+    loadUsers();
+  }
+});
+
+// ─── Load all data ───
+async function loadAll() {
+  try {
+    // all 只有公开商品（不含下架）；后台要能编辑下架商品，所以再拉一份完整列表。
+    // 两个请求并发，失败时降级到公开列表，至少不会让整个后台打不开。
+    const [data, adminGoods] = await Promise.all([
+      apiGet('all'),
+      apiGet('admin_goods'),
+    ]);
+    if (data.error) { showStatus('加载失败: ' + data.error, 'err'); return; }
+    siteData = data;
+    const agOk = adminGoods && !adminGoods.error;
+    // admin_goods 挂了就退回公开列表：能编辑在售商品，只是暂时看不到下架的
+    siteData.adminGoods = agOk && Array.isArray(adminGoods.items) ? adminGoods.items : (data.goods || []);
+    // null = 没读到（区别于「读到了但是空数组」），首页精选卡片据此给出不同提示
+    siteData.homeGoods = agOk && Array.isArray(adminGoods.homeGoods) ? adminGoods.homeGoods : null;
+    renderDashboard();
+    renderSettings();
+    renderHero();
+    renderNotices();
+    renderBrands();
+    renderGoods();
+    renderShop();
+    renderEvent();
+    renderRecruit();
+    renderSocial();
+    renderAbout();
+  } catch (e) {
+    showStatus('网络错误: ' + e.message, 'err');
+  }
+}
+
+// ─── Dashboard ───
+function renderDashboard() {
+  const d = siteData;
+  document.getElementById('dashStats').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+      <div style="padding:12px;background:#f0f7f3;border-radius:8px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:var(--brand-green)">${(d.notices||[]).length}</div>
+        <div style="font-size:12px;color:#666">公告</div>
+      </div>
+      <div style="padding:12px;background:#f0f7f3;border-radius:8px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:var(--brand-green)">${(d.brands||[]).length}</div>
+        <div style="font-size:12px;color:#666">品牌</div>
+      </div>
+      <div style="padding:12px;background:#f0f7f3;border-radius:8px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:var(--brand-green)">${(d.adminGoods||d.goods||[]).length}</div>
+        <div style="font-size:12px;color:#666">商品（含下架）</div>
+      </div>
+      <div style="padding:12px;background:#f0f7f3;border-radius:8px;text-align:center">
+        <div style="font-size:24px;font-weight:700;color:var(--brand-green)">${(d.social||[]).length}</div>
+        <div style="font-size:12px;color:#666">社交链接</div>
+      </div>
+    </div>`;
+}
+
+// ─── Settings ───
+const SETTINGS_KEYS = [
+  ['name', '站点名称'], ['nameEn', '英文名称'], ['shortName', '简称'],
+  ['slogan', '口号'], ['sloganEn', '英文口号'], ['themeColor', '主题色'],
+  ['seoTitle', 'SEO 标题'], ['seoDescription', 'SEO 描述'],
+  ['footerAbout', '页脚简介'], ['copyright', '版权信息'], ['footerNote', '页脚备注'],
+  ['worldviewNote', '世界观声明'],
+];
+
+function renderSettings() {
+  const s = siteData.site || {};
+  let html = '<h3>基本设置</h3>';
+  for (const [key, label] of SETTINGS_KEYS) {
+    html += `<div class="form-row"><label>${label}</label><input data-key="${key}" value="${esc(s[key]||'')}"></div>`;
+  }
+  html += `<div class="btn-row"><button class="btn-save" onclick="saveSettings()">保存设置</button></div>`;
+  document.getElementById('settingsForm').innerHTML = html;
+}
+
+async function saveSettings() {
+  const inputs = document.querySelectorAll('#settingsForm input[data-key]');
+  const data = {};
+  inputs.forEach(i => { data[i.dataset.key] = i.value; });
+  const r = await apiPost('save_settings', data);
+  showStatus(r.ok ? '设置已保存' : '保存失败: ' + r.error, r.ok ? 'ok' : 'err');
+}
+
+// ─── Hero ───
+function renderHero() {
+  const h = siteData.hero || {};
+  const html = `
+    <h3>横幅内容</h3>
+    <div class="form-row"><label>横幅图片</label><input id="h-banner" value="${esc(h.banner||'')}"></div>
+    <div class="form-row"><label>备用图片</label><input id="h-banner-fb" value="${esc(h.banner_fallback||'')}"></div>
+    <div class="form-row"><label>图片描述</label><input id="h-banner-alt" value="${esc(h.banner_alt||'')}"></div>
+    <div class="form-row"><label>标签文字</label><input id="h-badge" value="${esc(h.badge||'')}"></div>
+    <div class="form-row"><label>标题</label><input id="h-title" value="${esc(h.title||'')}"></div>
+    <div class="form-row"><label>正文</label><textarea id="h-body">${esc(h.body||'')}</textarea></div>
+    <div class="form-row"><label>副标题</label><input id="h-sub" value="${esc(h.sub||'')}"></div>
+    <h3>操作按钮 (JSON)</h3>
+    <div class="form-row"><label>按钮</label><textarea id="h-actions">${esc(JSON.stringify(h.actions||[],null,2))}</textarea></div>
+    <h3>数据统计 (JSON)</h3>
+    <div class="form-row"><label>统计</label><textarea id="h-stats">${esc(JSON.stringify(h.stats||[],null,2))}</textarea></div>
+    <div class="btn-row"><button class="btn-save" onclick="saveHero()">保存横幅</button></div>`;
+  document.getElementById('heroForm').innerHTML = html;
+}
+
+async function saveHero() {
+  let actions, stats;
+  try { actions = JSON.parse(document.getElementById('h-actions').value); } catch { showStatus('按钮 JSON 格式错误', 'err'); return; }
+  try { stats = JSON.parse(document.getElementById('h-stats').value); } catch { showStatus('统计 JSON 格式错误', 'err'); return; }
+  const data = {
+    banner: document.getElementById('h-banner').value,
+    banner_fallback: document.getElementById('h-banner-fb').value,
+    banner_alt: document.getElementById('h-banner-alt').value,
+    badge: document.getElementById('h-badge').value,
+    title: document.getElementById('h-title').value,
+    body: document.getElementById('h-body').value,
+    sub: document.getElementById('h-sub').value,
+    actions, stats,
+  };
+  const r = await apiPost('save_hero', data);
+  showStatus(r.ok ? '横幅已保存' : '保存失败: ' + r.error, r.ok ? 'ok' : 'err');
+}
+
+// ─── Notices ───
+function renderNotices() {
+  const items = siteData.notices || [];
+  if (!items.length) { document.getElementById('noticesList').innerHTML = '<p style="color:#888;font-size:13px">暂无公告</p>'; return; }
+  document.getElementById('noticesList').innerHTML = items.map(n => `
+    <div class="item-row">
+      <span class="item-title">${esc(n.title)}</span>
+      <span class="item-meta">${n.date} · ${esc(n.type)}</span>
+      <button class="btn-edit" onclick="editNotice('${n.id}')">编辑</button>
+      <button class="btn-rm" onclick="delNotice('${n.id}')">删除</button>
+    </div>`).join('');
+}
+
+function newNotice() {
+  const id = new Date().toISOString().slice(0,10) + '-a';
+  editNoticeForm({ id, date: new Date().toISOString().slice(0,10), type: '通告', style: 'green', summary: '', title: '', cover: '', cover_alt: '', body: [{ kind: 'p', text: '' }] });
+}
+
+async function editNotice(id) {
+  const data = await apiGet('notice', '&id=' + id);
+  if (data.error) { showStatus('加载失败: ' + data.error, 'err'); return; }
+  editNoticeForm(data);
+}
+
+function editNoticeForm(n) {
+  const blocks = (n.body || []).map((b, i) => renderBlock(b, i)).join('');
+  document.getElementById('noticeEditor').style.display = 'block';
+  document.getElementById('noticeEditor').innerHTML = `
+    <h3>编辑公告</h3>
+    <div class="form-row"><label>ID</label><input id="n-id" value="${esc(n.id)}" ${n.id && !n.id.endsWith('-a') ? 'readonly' : ''}></div>
+    <div class="form-row"><label>日期</label><input id="n-date" type="date" value="${n.date||''}"></div>
+    <div class="form-row"><label>类型</label><input id="n-type" value="${esc(n.type||'')}"></div>
+    <div class="form-row"><label>样式</label><select id="n-style">
+      <option value="green" ${n.style==='green'?'selected':''}>绿色</option>
+      <option value="red" ${n.style==='red'?'selected':''}>红色</option>
+      <option value="gold" ${n.style==='gold'?'selected':''}>金色</option>
+    </select></div>
+    <div class="form-row"><label>摘要</label><input id="n-summary" value="${esc(n.summary||'')}"></div>
+    <div class="form-row"><label>标题</label><input id="n-title" value="${esc(n.title||'')}"></div>
+    <div class="form-row"><label>封面图</label><input id="n-cover" value="${esc(n.cover||'')}"></div>
+    <div class="form-row"><label>封面描述</label><input id="n-cover-alt" value="${esc(n.cover_alt||'')}"></div>
+    <h3>内容块</h3>
+    <div id="blocksContainer">${blocks}</div>
+    <div style="margin-top:8px">
+      <button class="btn-add" onclick="addBlock('p')">+ 段落</button>
+      <button class="btn-add" onclick="addBlock('h')">+ 标题</button>
+      <button class="btn-add" onclick="addBlock('ul')">+ 列表</button>
+      <button class="btn-add" onclick="addBlock('quote')">+ 引用</button>
+      <button class="btn-add" onclick="addBlock('sign')">+ 署名</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn-save" onclick="saveNotice()">保存公告</button>
+      <button class="btn-add" onclick="document.getElementById('noticeEditor').style.display='none'">取消</button>
+    </div>`;
+}
+
+function renderBlock(b, i) {
+  const kindLabel = { p: '段落', h: '标题', ul: '列表', quote: '引用', sign: '署名' }[b.kind] || b.kind;
+  if (b.kind === 'ul') {
+    return `<div class="block-editor" data-idx="${i}">
+      <div class="block-type">列表 (每项一行)</div>
+      <textarea data-field="items">${esc((b.items||[]).join('\n'))}</textarea>
+      <div class="block-actions"><button class="btn-rm" onclick="removeBlock(${i})">删除</button></div>
+    </div>`;
+  }
+  return `<div class="block-editor" data-idx="${i}">
+    <div class="block-type">${kindLabel}</div>
+    <textarea data-field="text">${esc(b.text||'')}</textarea>
+    <div class="block-actions"><button class="btn-rm" onclick="removeBlock(${i})">删除</button></div>
+  </div>`;
+}
+
+function addBlock(kind) {
+  const container = document.getElementById('blocksContainer');
+  const idx = container.children.length;
+  const b = kind === 'ul' ? { kind: 'ul', items: [''] } : { kind, text: '' };
+  container.insertAdjacentHTML('beforeend', renderBlock(b, idx));
+}
+
+function removeBlock(idx) {
+  const el = document.querySelector(`.block-editor[data-idx="${idx}"]`);
+  if (el) el.remove();
+}
+
+function collectBlocks() {
+  const blocks = [];
+  document.querySelectorAll('#blocksContainer .block-editor').forEach(el => {
+    const ta = el.querySelector('textarea');
+    if (ta.dataset.field === 'items') {
+      blocks.push({ kind: 'ul', items: ta.value.split('\n').filter(s => s.trim()) });
+    } else {
+      const kind = el.querySelector('.block-type').textContent;
+      const kindMap = { '段落': 'p', '标题': 'h', '引用': 'quote', '署名': 'sign' };
+      blocks.push({ kind: kindMap[kind] || 'p', text: ta.value });
+    }
+  });
+  return blocks;
+}
+
+async function saveNotice() {
+  const data = {
+    id: document.getElementById('n-id').value,
+    date: document.getElementById('n-date').value,
+    type: document.getElementById('n-type').value,
+    style: document.getElementById('n-style').value,
+    summary: document.getElementById('n-summary').value,
+    title: document.getElementById('n-title').value,
+    cover: document.getElementById('n-cover').value,
+    cover_alt: document.getElementById('n-cover-alt').value,
+    body: collectBlocks(),
+  };
+  if (!data.title) { showStatus('标题不能为空', 'err'); return; }
+  const r = await apiPost('save_notice', data);
+  if (r.ok) {
+    showStatus('公告已保存', 'ok');
+    document.getElementById('noticeEditor').style.display = 'none';
+    loadAll();
+  } else {
+    showStatus('保存失败: ' + r.error, 'err');
+  }
+}
+
+async function delNotice(id) {
+  if (!confirm('确定删除此公告？')) return;
+  const r = await fetch(`${API}?action=delete_notice&id=${id}`, { method: 'POST', headers: sessionHeaders() });
+  const data = await r.json();
+  showStatus(data.ok ? '已删除' : '删除失败: ' + data.error, data.ok ? 'ok' : 'err');
+  if (data.ok) loadAll();
+}
+
+// ─── Brands ───
+function renderBrands() {
+  const items = siteData.brands || [];
+  if (!items.length) { document.getElementById('brandsList').innerHTML = '<p style="color:#888;font-size:13px">暂无品牌</p>'; return; }
+  document.getElementById('brandsList').innerHTML = items.map((b, i) => `
+    <div class="item-row">
+      ${b.logo ? `<img src="${esc(b.logo)}" class="img-preview" style="max-width:32px;max-height:32px">` : ''}
+      <span class="item-title">${esc(b.name)}</span>
+      <span class="item-meta">${esc(b.sub||'')}</span>
+      <button class="btn-edit" onclick="editBrand(${i})">编辑</button>
+      <button class="btn-rm" onclick="delBrand('${b.id}')">删除</button>
+    </div>`).join('');
+}
+
+function newBrand() { editBrandForm({ name: '', sub: '', logo: '', is_self: false, display_order: (siteData.brands||[]).length }); }
+
+function editBrand(i) { editBrandForm(siteData.brands[i]); }
+
+function editBrandForm(b) {
+  document.getElementById('brandEditor').style.display = 'block';
+  document.getElementById('brandEditor').innerHTML = `
+    <h3>编辑品牌</h3>
+    <input type="hidden" id="b-id" value="${b.id||''}">
+    <div class="form-row"><label>名称</label><input id="b-name" value="${esc(b.name||'')}"></div>
+    <div class="form-row"><label>描述</label><input id="b-sub" value="${esc(b.sub||'')}"></div>
+    <div class="form-row"><label>Logo</label><input id="b-logo" value="${esc(b.logo||'')}"></div>
+    <div class="form-row"><label>排序</label><input id="b-order" type="number" value="${b.display_order||0}"></div>
+    <div class="form-row"><label>本社</label><input id="b-self" type="checkbox" ${b.is_self?'checked':''}></div>
+    <div class="btn-row">
+      <button class="btn-save" onclick="saveBrand()">保存</button>
+      <button class="btn-add" onclick="document.getElementById('brandEditor').style.display='none'">取消</button>
+    </div>`;
+}
+
+async function saveBrand() {
+  const data = {
+    id: document.getElementById('b-id').value || undefined,
+    name: document.getElementById('b-name').value,
+    sub: document.getElementById('b-sub').value,
+    logo: document.getElementById('b-logo').value,
+    is_self: document.getElementById('b-self').checked,
+    display_order: parseInt(document.getElementById('b-order').value) || 0,
+  };
+  if (!data.name) { showStatus('名称不能为空', 'err'); return; }
+  const r = await apiPost('save_brand', data);
+  if (r.ok) { showStatus('品牌已保存', 'ok'); document.getElementById('brandEditor').style.display = 'none'; loadAll(); }
+  else showStatus('保存失败: ' + r.error, 'err');
+}
+
+async function delBrand(id) {
+  if (!confirm('确定删除此品牌？')) return;
+  const r = await fetch(`${API}?action=delete_brand&id=${id}`, { method: 'POST', headers: sessionHeaders() });
+  const data = await r.json();
+  showStatus(data.ok ? '已删除' : '删除失败', data.ok ? 'ok' : 'err');
+  if (data.ok) loadAll();
+}
+
+// ─── Goods ───
+// 三种展示状态：在售 / 售罄 / 下架。
+// 用文字常量集中管理，前后端与前台页面保持同一套措辞。
+const GOOD_STATUS_LABEL = { on_sale: '在售', sold_out: '售罄', off_shelf: '下架' };
+
+function renderGoods() {
+  renderGoodsBlock();
+  renderHomeGoods();
+  // 后台看的是 adminGoods（含下架）；拿不到时退回公开列表
+  const items = siteData.adminGoods || siteData.goods || [];
+  if (!items.length) { document.getElementById('goodsList').innerHTML = '<p style="color:#888;font-size:13px">暂无商品</p>'; return; }
+  document.getElementById('goodsList').innerHTML = items.map((g, i) => {
+    const st = g.status || 'on_sale';
+    return `
+    <div class="item-row">
+      ${g.image ? `<img src="${esc(g.image)}" class="img-preview" style="max-width:32px;max-height:32px">` : ''}
+      <span class="st-pill st-${st}">${GOOD_STATUS_LABEL[st] || st}</span>
+      <span class="item-title">${esc(g.name)}</span>
+      <span class="item-meta">${esc(g.badge||'')} · ¥${g.price||'--'}${esc(g.unit||'')}</span>
+      <select class="st-select" title="展示状态" onchange="setGoodStatus('${g.id}', this.value)">
+        ${Object.keys(GOOD_STATUS_LABEL).map(k =>
+          `<option value="${k}" ${k === st ? 'selected' : ''}>${GOOD_STATUS_LABEL[k]}</option>`).join('')}
+      </select>
+      <button class="btn-edit" onclick="editGood(${i})">编辑</button>
+      <button class="btn-rm" onclick="delGood('${g.id}')">删除</button>
+    </div>`;
+  }).join('');
+}
+
+// 只改状态、不动其他字段：避免在列表上点一下就把详情页里刚改的文案回滚了
+async function setGoodStatus(id, status) {
+  const r = await apiPost('set_good_status', { id, status });
+  if (r.ok) {
+    const g = (siteData.adminGoods || []).find(x => x.id === id);
+    if (g) g.status = status;
+    showStatus('状态已改为「' + (GOOD_STATUS_LABEL[status] || status) + '」', 'ok');
+    renderGoods();
+  } else {
+    showStatus('状态修改失败: ' + r.error, 'err');
+    loadAll();
+  }
+}
+
+// ── 首页商品精选 ──
+// 存的是一个有序 id 数组：谁在里面、顺序如何，首页就照这个渲染。
+// 不在里面的商品不会上首页；下架商品即使被选中，前台也会被过滤掉。
+function renderHomeGoods() {
+  const card = document.getElementById('homeGoodsCard');
+  if (!card) return;
+  const all = siteData.adminGoods || [];
+  const ids = siteData.homeGoods;
+  card.style.display = 'block';
+
+  if (!Array.isArray(ids)) {
+    card.innerHTML = '<h3>首页商品精选</h3>'
+      + '<p style="color:#A60402;font-size:13px">读取失败，请刷新页面重试（商品列表本身仍可正常编辑）。</p>';
+    return;
+  }
+
+  const byId = {};
+  all.forEach(g => { byId[g.id] = g; });
+  const picked = ids.map(id => byId[id]).filter(Boolean);
+  const pickedSet = picked.map(g => g.id);
+  // 未选中的按商品列表原顺序排在后面
+  const rest = all.filter(g => pickedSet.indexOf(g.id) === -1);
+
+  const row = (g, no) => {
+    const st = g.status || 'on_sale';
+    const isOff = st === 'off_shelf';
+    return `<div class="hg-row${no ? '' : ' is-rest'}">
+      ${no ? `<span class="hg-no">${no}</span>` : '<span class="hg-no">—</span>'}
+      <span class="hg-name"${isOff ? ' style="color:#999"' : ''}>${esc(g.name)}</span>
+      <span class="st-pill st-${st}" style="margin-left:2px">${GOOD_STATUS_LABEL[st] || st}</span>
+      ${no
+        ? `<button class="hg-btn" title="上移" onclick="moveHomeGood('${g.id}',-1)">↑</button>
+           <button class="hg-btn" title="下移" onclick="moveHomeGood('${g.id}',1)">↓</button>
+           <button class="hg-btn hg-off" onclick="toggleHomeGood('${g.id}')">移除</button>`
+        : `<button class="hg-btn hg-on" onclick="toggleHomeGood('${g.id}')">加入首页</button>`}
+    </div>`;
+  };
+
+  card.innerHTML = `
+    <h3>首页商品精选</h3>
+    <p style="color:#666;font-size:13px;margin-bottom:12px">
+      首页「周边产品」只显示下面已加入的商品，顺序即展示顺序。
+      <strong>没加入的商品不会出现在首页</strong>；全部移除时首页整段商品区会隐藏。
+    </p>
+    ${picked.length
+      ? `<div class="hg-list">${picked.map((g, i) => row(g, i + 1)).join('')}</div>`
+      : '<p style="color:#A60402;font-size:13px;margin-bottom:10px">当前没有选择任何商品，首页商品区将不显示。</p>'}
+    ${rest.length
+      ? `<p style="color:#888;font-size:12.5px;margin:14px 0 8px">未上首页（${rest.length}）</p>
+         <div class="hg-list">${rest.map(g => row(g, 0)).join('')}</div>`
+      : ''}`;
+}
+
+async function saveHomeGoods(ids) {
+  const r = await apiPost('save_home_goods', { ids });
+  if (r.ok) {
+    siteData.homeGoods = r.homeGoods || ids;
+    renderHomeGoods();
+    showStatus('首页展示已更新：' + siteData.homeGoods.length + ' 件商品', 'ok');
+  } else {
+    showStatus('保存失败: ' + r.error, 'err');
+    loadAll();
+  }
+}
+
+function toggleHomeGood(id) {
+  const ids = (siteData.homeGoods || []).slice();
+  const i = ids.indexOf(id);
+  if (i >= 0) ids.splice(i, 1); else ids.push(id);
+  saveHomeGoods(ids);
+}
+
+function moveHomeGood(id, dir) {
+  const ids = (siteData.homeGoods || []).slice();
+  const i = ids.indexOf(id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= ids.length) return;
+  const t = ids[i]; ids[i] = ids[j]; ids[j] = t;
+  saveHomeGoods(ids);
+}
+
+function newGood() { editGoodForm({ badge: '', badge_style: 'green', name: '', description: '', image: '', image_alt: '', tags: [], alt_label: '', price: '', unit: '', is_free: false, free_label: '', display_order: (siteData.adminGoods||[]).length, status: 'on_sale' }); }
+
+function editGood(i) { editGoodForm((siteData.adminGoods || siteData.goods || [])[i]); }
+
+function editGoodForm(g) {
+  const st = g.status || 'on_sale';
+  document.getElementById('goodEditor').style.display = 'block';
+  document.getElementById('goodEditor').innerHTML = `
+    <h3>编辑商品</h3>
+    <input type="hidden" id="g-id" value="${g.id||''}">
+    <div class="form-row"><label>名称</label><input id="g-name" value="${esc(g.name||'')}"></div>
+    <div class="form-row"><label>标签</label><input id="g-badge" value="${esc(g.badge||'')}"></div>
+    <div class="form-row"><label>标签样式</label><select id="g-badge-style">
+      <option value="green" ${g.badge_style==='green'?'selected':''}>绿色</option>
+      <option value="red" ${g.badge_style==='red'?'selected':''}>红色</option>
+      <option value="gold" ${g.badge_style==='gold'?'selected':''}>金色</option>
+    </select></div>
+    <div class="form-row"><label>展示状态</label><select id="g-status">
+      <option value="on_sale" ${st==='on_sale'?'selected':''}>在售 —— 正常展示，可导流购买</option>
+      <option value="sold_out" ${st==='sold_out'?'selected':''}>售罄 —— 仍展示，标注售罄并排在后面</option>
+      <option value="off_shelf" ${st==='off_shelf'?'selected':''}>下架 —— 前台完全隐藏，数据保留</option>
+    </select></div>
+    <div class="form-row"><label>描述</label><textarea id="g-desc">${esc(g.description||'')}</textarea></div>
+    <div class="form-row"><label>图片</label><input id="g-image" value="${esc(g.image||'')}"><button type="button" class="btn-add" style="margin-left:6px;flex:none" onclick="pickImage(function (p) { document.getElementById('g-image').value = p; })">上传</button></div>
+    <div class="form-row"><label>图片描述</label><input id="g-image-alt" value="${esc(g.image_alt||'')}"></div>
+    <div class="form-row"><label>标签 (JSON)</label><input id="g-tags" value="${esc(JSON.stringify(g.tags||[]))}"></div>
+    <div class="form-row"><label>规格</label><input id="g-alt" value="${esc(g.alt_label||'')}"></div>
+    <div class="form-row"><label>价格</label><input id="g-price" value="${esc(g.price||'')}"></div>
+    <div class="form-row"><label>单位</label><input id="g-unit" value="${esc(g.unit||'')}"></div>
+    <div class="form-row"><label>免费</label><input id="g-free" type="checkbox" ${g.is_free?'checked':''}></div>
+    <div class="form-row"><label>免费标签</label><input id="g-free-label" value="${esc(g.free_label||'')}"></div>
+    <div class="form-row"><label>排序</label><input id="g-order" type="number" value="${g.display_order||0}"></div>
+    <div style="color:#888;font-size:12px;margin-left:112px;margin-bottom:10px">
+      「排序」只影响商品页内的先后；首页顺序请在「首页商品精选」里单独调整。
+    </div>
+    <div class="btn-row">
+      <button class="btn-save" onclick="saveGood()">保存</button>
+      <button class="btn-add" onclick="document.getElementById('goodEditor').style.display='none'">取消</button>
+    </div>`;
+}
+
+async function saveGood() {
+  let tags;
+  try { tags = JSON.parse(document.getElementById('g-tags').value); } catch { showStatus('标签 JSON 格式错误', 'err'); return; }
+  const data = {
+    id: document.getElementById('g-id').value || undefined,
+    name: document.getElementById('g-name').value,
+    badge: document.getElementById('g-badge').value,
+    badge_style: document.getElementById('g-badge-style').value,
+    status: document.getElementById('g-status').value,
+    description: document.getElementById('g-desc').value,
+    image: document.getElementById('g-image').value,
+    image_alt: document.getElementById('g-image-alt').value,
+    tags,
+    alt_label: document.getElementById('g-alt').value,
+    price: document.getElementById('g-price').value,
+    unit: document.getElementById('g-unit').value,
+    is_free: document.getElementById('g-free').checked,
+    free_label: document.getElementById('g-free-label').value,
+    display_order: parseInt(document.getElementById('g-order').value) || 0,
+  };
+  if (!data.name) { showStatus('名称不能为空', 'err'); return; }
+  const r = await apiPost('save_good', data);
+  if (r.ok) { showStatus('商品已保存', 'ok'); document.getElementById('goodEditor').style.display = 'none'; loadAll(); }
+  else showStatus('保存失败: ' + r.error, 'err');
+}
+
+async function delGood(id) {
+  if (!confirm('确定删除此商品？')) return;
+  const r = await fetch(`${API}?action=delete_good&id=${id}`, { method: 'POST', headers: sessionHeaders() });
+  const data = await r.json();
+  showStatus(data.ok ? '已删除' : '删除失败', data.ok ? 'ok' : 'err');
+  if (data.ok) loadAll();
+}
+
+// ─── 商品页工具区（海报 / 通贩 两张卡）───
+// goods.html 底部这两张卡原来是写死的 HTML：海报路径、「前往闲鱼购买」的
+// 链接都硬编码在模板里，后台一点也改不了。现在文案与按钮存进 site_settings
+// 的 goods_block 键，导出时合进 content.json 的 goods 块，前台读它渲染。
+const GOODS_BLOCK_DEFAULTS = {
+  posterTitle: '商品目录海报',
+  posterDesc: '查看完整商品目录海报，含各款商品实物图与规格。',
+  poster: 'assets/images/goods-poster.webp',
+  posterLabel: '查看海报 →',
+  buyTitle: '线上通贩',
+  buyDesc: '闲鱼搜索「幻电投市场部」即可购买。本站不收款、不下单。',
+  buyHref: '',
+  buyLabel: '前往闲鱼购买',
+  note: '',
+};
+
+function renderGoodsBlock() {
+  const b = Object.assign({}, GOODS_BLOCK_DEFAULTS, siteData.goodsBlock || {});
+  const card = document.getElementById('goodsBlockForm');
+  if (!card) return;
+  card.style.display = '';
+  // 输入框先留空，随后用 .value 赋值 —— 免去把引号/尖括号塞进 HTML 属性的转义风险
+  card.innerHTML = `
+    <h3 style="margin-top:0">商品页工具区（两个按钮）</h3>
+    <p style="font-size:13px;color:#666;margin-top:-4px">
+      商品页底部的「商品目录海报」和「线上通贩」两张卡。按钮文字、链接、说明都在这里改。
+      按钮链接留空 = 前台隐藏该按钮。</p>
+    <h4 style="margin:16px 0 6px">① 商品目录海报</h4>
+    <div class="form-row"><label>卡片标题</label><input id="gb-poster-title"></div>
+    <div class="form-row"><label>卡片说明</label><textarea id="gb-poster-desc"></textarea></div>
+    <div class="form-row"><label>海报图片（第一页）</label><input id="gb-poster">
+      <button type="button" class="btn-add" style="margin-left:6px;flex:none"
+        onclick="pickImage(function (p) { document.getElementById('gb-poster').value = p; })">上传图片</button></div>
+    <div class="form-row"><label>按钮文字（第一页）</label><input id="gb-poster-label"></div>
+    <div class="form-row"><label>海报图片（第二页）</label><input id="gb-poster2" placeholder="留空 = 前台只显示一个按钮">
+      <button type="button" class="btn-add" style="margin-left:6px;flex:none"
+        onclick="pickImage(function (p) { document.getElementById('gb-poster2').value = p; })">上传图片</button></div>
+    <div class="form-row"><label>按钮文字（第二页）</label><input id="gb-poster-label2"></div>
+    <h4 style="margin:18px 0 6px">② 线上通贩</h4>
+    <div class="form-row"><label>卡片标题</label><input id="gb-buy-title"></div>
+    <div class="form-row"><label>卡片说明</label><textarea id="gb-buy-desc"></textarea></div>
+    <div class="form-row"><label>按钮链接</label><input id="gb-buy-href"></div>
+    <div class="form-row"><label>按钮文字</label><input id="gb-buy-label"></div>
+    <h4 style="margin:18px 0 6px">③ 页脚备注</h4>
+    <div class="form-row"><label>备注</label><textarea id="gb-note" rows="3"></textarea></div>
+    <div class="btn-row"><button class="btn-save" onclick="saveGoodsBlock()">保存</button></div>`;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+  set('gb-poster-title', b.posterTitle);
+  set('gb-poster-desc', b.posterDesc);
+  set('gb-poster', b.poster);
+  set('gb-poster-label', b.posterLabel);
+  set('gb-poster2', b.poster2);
+  set('gb-poster-label2', b.posterLabel2);
+  set('gb-buy-title', b.buyTitle);
+  set('gb-buy-desc', b.buyDesc);
+  set('gb-buy-href', b.buyHref);
+  set('gb-buy-label', b.buyLabel);
+  set('gb-note', b.note);
+}
+
+async function saveGoodsBlock() {
+  const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const noteEl = document.getElementById('gb-note');
+  const r = await apiPost('save_goods_block', {
+    posterTitle: val('gb-poster-title'),
+    posterDesc: val('gb-poster-desc'),
+    poster: val('gb-poster'),
+    posterLabel: val('gb-poster-label'),
+    poster2: val('gb-poster2'),
+    posterLabel2: val('gb-poster-label2'),
+    buyTitle: val('gb-buy-title'),
+    buyDesc: val('gb-buy-desc'),
+    buyHref: val('gb-buy-href'),
+    buyLabel: val('gb-buy-label'),
+    note: noteEl ? noteEl.value : '',   // 备注保留换行，不 trim
+  });
+  if (r.ok) { showStatus('商品页工具区已保存', 'ok'); loadAll(); }
+  else showStatus('保存失败: ' + r.error, 'err');
+}
+
+// ─── Shop ───
+// 通贩商店没有独立表，存在 site_settings 的 shop 键里（JSON）。字段：
+//   title / desc / links[{label,href,sub}] / note
+function shopLinkRow(label, href, sub) {
+  return `<div class="form-row shop-link-row" style="border:1px solid #e0e0e0;border-radius:6px;padding:8px;margin-bottom:6px">
+    <label>渠道名称</label><input data-k="label" value="${esc(label||'')}">
+    <label style="width:50px">链接</label><input data-k="href" value="${esc(href||'')}">
+    <label style="width:50px">备注</label><input data-k="sub" value="${esc(sub||'')}">
+    <div style="margin-top:6px"><button class="btn-rm" onclick="this.closest('.shop-link-row').remove()">删除本行</button></div>
+  </div>`;
+}
+
+function renderShop() {
+  const s = siteData.shop || {};
+  const links = Array.isArray(s.links) ? s.links : [];
+  const html = `
+    <h3>商店区块</h3>
+    <p style="font-size:13px;color:#666;margin-top:-4px">首页「通贩商店」区块。本站只做展示与导流，不收款、不下单。</p>
+    <div class="form-row"><label>标题</label><input id="sh-title" value="${esc(s.title||'')}"></div>
+    <div class="form-row"><label>说明</label><textarea id="sh-desc">${esc(s.desc||'')}</textarea></div>
+    <h3>购买渠道</h3>
+    <div id="shopLinks"></div>
+    <div class="btn-row">
+      <button class="btn-add" onclick="addShopLink()">+ 添加渠道</button>
+      <button class="btn-save" onclick="saveShop()">保存商店</button>
+    </div>
+    <div class="form-row"><label>页脚备注</label><textarea id="sh-note">${esc(s.note||'')}</textarea></div>`;
+  document.getElementById('shopForm').innerHTML = html;
+  const box = document.getElementById('shopLinks');
+  links.forEach(l => box.insertAdjacentHTML('beforeend', shopLinkRow(l.label, l.href, l.sub)));
+}
+
+function addShopLink() {
+  document.getElementById('shopLinks').insertAdjacentHTML('beforeend', shopLinkRow('', '', ''));
+}
+
+async function saveShop() {
+  const title = document.getElementById('sh-title').value.trim();
+  if (!title) { showStatus('标题不能为空', 'err'); return; }
+  const links = [];
+  document.querySelectorAll('#shopLinks .shop-link-row').forEach(row => {
+    const val = k => { const el = row.querySelector(`[data-k="${k}"]`); return el ? el.value.trim() : ''; };
+    const label = val('label');
+    if (!label) return;              // 没名字的行视为空行，丢弃
+    links.push({ label, href: val('href'), sub: val('sub') });
+  });
+  const r = await apiPost('save_shop', {
+    title,
+    desc: document.getElementById('sh-desc').value,
+    links,
+    note: document.getElementById('sh-note').value,
+  });
+  showStatus(r.ok ? '商店已保存' : '保存失败: ' + r.error, r.ok ? 'ok' : 'err');
+  if (r.ok) loadAll();               // 回读，确认落库形状
+}
+
+// ─── Recruit ───
+// 与 shop 同一套路：整块 JSON 存在 site_settings 的 recruit 键里。
+// 岗位用结构化编辑器（岗位名 + 若干「标签/内容」行），报名说明与备注用「一行一条」文本框
+// —— 比让咕咕直接改 JSON 友好。正文里的 **…** 前端会转成 <strong>。
+function recruitJobRow(label, value) {
+  return `<div class="form-row job-row-edit" style="border-top:1px dashed #e8e8e8;padding-top:6px">
+    <label>标签</label><input data-k="label" value="${esc(label||'')}" style="max-width:150px">
+    <label style="width:50px">内容</label><input data-k="value" value="${esc(value||'')}">
+    <div style="margin-top:6px"><button class="btn-rm" onclick="this.closest('.job-row-edit').remove()">删除本行</button></div>
+  </div>`;
+}
+
+function recruitJobCard(j) {
+  j = j || { title: '', rows: [] };
+  const rows = (j.rows || []).map(x => recruitJobRow(x.label, x.value)).join('');
+  return `<div class="job-edit" style="border:1px solid #e0e0e0;border-radius:6px;padding:10px;margin-bottom:10px">
+    <div class="form-row"><label>岗位名称</label><input data-k="title" value="${esc(j.title||'')}"></div>
+    <div class="job-rows">${rows}</div>
+    <div class="btn-row">
+      <button class="btn-add" onclick="addRecruitJobRow(this)">+ 添加一行</button>
+      <button class="btn-rm" onclick="this.closest('.job-edit').remove()">删除本岗位</button>
+    </div>
+  </div>`;
+}
+
+function addRecruitJob() {
+  document.getElementById('recruitJobs').insertAdjacentHTML('beforeend', recruitJobCard(null));
+}
+
+function addRecruitJobRow(btn) {
+  const card = btn.closest('.job-edit');
+  const box = card.querySelector('.job-rows');
+  box.insertAdjacentHTML('beforeend', recruitJobRow('', ''));
+  box.lastElementChild.querySelector('input').focus();
+}
+
+function renderRecruit() {
+  const r = siteData.recruit || {};
+  const html = `
+    <h3>公告头</h3>
+    <div class="form-row"><label>文号</label><input id="r-badge" value="${esc(r.badge||'')}"></div>
+    <div class="form-row"><label>标题</label><input id="r-title" value="${esc(r.title||'')}"></div>
+    <div class="form-row"><label>导语</label><textarea id="r-intro">${esc(r.intro||'')}</textarea></div>
+    <div class="form-row"><label>报名截止</label><input id="r-deadline" value="${esc(r.deadline||'')}"></div>
+    <div class="form-row"><label>联系 QQ</label><input id="r-qq" value="${esc(r.contact_qq||'')}"></div>
+    <div class="form-row"><label>报名链接</label><input id="r-url" value="${esc(r.contact_url||'')}"></div>
+
+    <h3>招募岗位</h3>
+    <p style="font-size:13px;color:#666;margin-top:-4px">内容里的 <code>**文字**</code> 会显示为粗体。</p>
+    <div id="recruitJobs"></div>
+    <div class="btn-row"><button class="btn-add" onclick="addRecruitJob()">+ 添加岗位</button></div>
+
+    <h3>报名与录用</h3>
+    <div class="form-row"><label>说明</label><textarea id="r-how" style="min-height:130px">${esc((r.how_items||[]).join('\n'))}</textarea></div>
+
+    <h3>其他说明</h3>
+    <div class="form-row"><label>说明</label><textarea id="r-notes" style="min-height:130px">${esc((r.notes||[]).join('\n'))}</textarea></div>
+
+    <h3>底部报名按钮</h3>
+    <div class="form-row"><label>标语</label><input id="r-cta-slogan" value="${esc(r.cta_slogan||'')}"></div>
+    <div class="form-row"><label>提示文字</label><input id="r-cta-text" value="${esc(r.cta_text||'')}"></div>
+    <div class="form-row"><label>按钮文字</label><input id="r-cta-button" value="${esc(r.cta_button||'')}"></div>
+
+    <div class="btn-row"><button class="btn-save" onclick="saveRecruit()">保存招募页</button></div>`;
+  document.getElementById('recruitForm').innerHTML = html;
+  const box = document.getElementById('recruitJobs');
+  (r.jobs || []).forEach(j => box.insertAdjacentHTML('beforeend', recruitJobCard(j)));
+}
+
+async function saveRecruit() {
+  const title = document.getElementById('r-title').value.trim();
+  if (!title) { showStatus('标题不能为空', 'err'); return; }
+  const jobs = [];
+  document.querySelectorAll('#recruitJobs .job-edit').forEach(card => {
+    const t = (card.querySelector('[data-k="title"]').value || '').trim();
+    if (!t) return;                      // 没名字的岗位视为空块，丢弃
+    const rows = [];
+    card.querySelectorAll('.job-row-edit').forEach(rr => {
+      const label = (rr.querySelector('[data-k="label"]').value || '').trim();
+      const value = (rr.querySelector('[data-k="value"]').value || '').trim();
+      if (!label) return;                // 没标签的行丢弃
+      rows.push({ label, value });
+    });
+    jobs.push({ title: t, rows });
+  });
+  const lines = id => document.getElementById(id).value.split('\n')
+    .map(s => s.trim()).filter(Boolean);
+  const r = await apiPost('save_recruit', {
+    badge: document.getElementById('r-badge').value,
+    title,
+    intro: document.getElementById('r-intro').value,
+    deadline: document.getElementById('r-deadline').value,
+    contact_qq: document.getElementById('r-qq').value,
+    contact_url: document.getElementById('r-url').value,
+    jobs,
+    how_items: lines('r-how'),
+    notes: lines('r-notes'),
+    cta_slogan: document.getElementById('r-cta-slogan').value,
+    cta_text: document.getElementById('r-cta-text').value,
+    cta_button: document.getElementById('r-cta-button').value,
+  });
+  showStatus(r.ok ? '招募页已保存' : '保存失败: ' + r.error, r.ok ? 'ok' : 'err');
+  if (r.ok) loadAll();
+}
+
+// ─── Event ───
+function renderEvent() {
+  const e = siteData.event || {};
+  const html = `
+    <h3>活动信息</h3>
+    <div class="form-row"><label>标签</label><input id="e-badge" value="${esc(e.badge||'')}"></div>
+    <div class="form-row"><label>标题</label><input id="e-title" value="${esc(e.title||'')}"></div>
+    <div class="form-row"><label>副标题</label><input id="e-subtitle" value="${esc(e.subtitle||'')}"></div>
+    <div class="form-row"><label>摊位</label><input id="e-booth" value="${esc(e.booth||'')}"></div>
+    <div class="form-row"><label>首发</label><input id="e-debut" value="${esc(e.debut||'')}"></div>
+    <div class="form-row"><label>开始时间</label><input id="e-start" value="${esc(e.date_start||'')}"></div>
+    <div class="form-row"><label>结束时间</label><input id="e-end" value="${esc(e.date_end||'')}"></div>
+    <div class="form-row"><label>链接文字</label><input id="e-link-label" value="${esc(e.link_label||'')}"></div>
+    <div class="form-row"><label>链接地址</label><input id="e-link-href" value="${esc(e.link_href||'')}"></div>
+    <div class="form-row"><label>图片</label><input id="e-visual" value="${esc(e.visual||'')}"></div>
+    <div class="form-row"><label>图片描述</label><input id="e-visual-alt" value="${esc(e.visual_alt||'')}"></div>
+    <div class="btn-row"><button class="btn-save" onclick="saveEvent()">保存</button></div>`;
+  document.getElementById('eventForm').innerHTML = html;
+}
+
+async function saveEvent() {
+  const data = {
+    id: (siteData.event||{}).id || undefined,
+    badge: document.getElementById('e-badge').value,
+    title: document.getElementById('e-title').value,
+    subtitle: document.getElementById('e-subtitle').value,
+    booth: document.getElementById('e-booth').value,
+    debut: document.getElementById('e-debut').value,
+    date_start: document.getElementById('e-start').value,
+    date_end: document.getElementById('e-end').value,
+    link_label: document.getElementById('e-link-label').value,
+    link_href: document.getElementById('e-link-href').value,
+    visual: document.getElementById('e-visual').value,
+    visual_alt: document.getElementById('e-visual-alt').value,
+  };
+  const r = await apiPost('save_event', data);
+  showStatus(r.ok ? '活动已保存' : '保存失败: ' + r.error, r.ok ? 'ok' : 'err');
+}
+
+// ─── Social ───
+function renderSocial() {
+  const items = siteData.social || [];
+  let html = '<h3>社交链接</h3>';
+  items.forEach((s, i) => {
+    html += `<div class="form-row" style="border:1px solid #e0e0e0;border-radius:6px;padding:8px;margin-bottom:6px">
+      <label>名称</label><input data-s-label="${i}" value="${esc(s.label||'')}">
+      <label style="width:50px">链接</label><input data-s-href="${i}" value="${esc(s.href||'')}">
+      <label style="width:50px">备注</label><input data-s-sub="${i}" value="${esc(s.sub||'')}">
+    </div>`;
+  });
+  html += `<div class="btn-row">
+    <button class="btn-add" onclick="addSocialRow()">+ 添加</button>
+    <button class="btn-save" onclick="saveSocial()">保存</button>
+  </div>`;
+  document.getElementById('socialForm').innerHTML = html;
+}
+
+let socialCount = 0;
+function addSocialRow() {
+  const i = (siteData.social||[]).length + socialCount++;
+  const container = document.getElementById('socialForm');
+  const btnRow = container.querySelector('.btn-row');
+  btnRow.insertAdjacentHTML('beforebegin', `<div class="form-row" style="border:1px solid #e0e0e0;border-radius:6px;padding:8px;margin-bottom:6px">
+    <label>名称</label><input data-s-label="${i}" value="">
+    <label style="width:50px">链接</label><input data-s-href="${i}" value="">
+    <label style="width:50px">备注</label><input data-s-sub="${i}" value="">
+  </div>`);
+}
+
+async function saveSocial() {
+  const items = [];
+  document.querySelectorAll('#socialForm [data-s-label]').forEach(el => {
+    const i = el.dataset.sLabel;
+    const label = el.value;
+    if (!label) return;
+    const href = document.querySelector(`[data-s-href="${i}"]`)?.value || '';
+    const sub = document.querySelector(`[data-s-sub="${i}"]`)?.value || '';
+    items.push({ label, href, sub });
+  });
+  const r = await apiPost('save_social', { items });
+  showStatus(r.ok ? '链接已保存' : '保存失败: ' + r.error, r.ok ? 'ok' : 'err');
+}
+
+// ─── About ───
+function renderAbout() {
+  const a = siteData.about || {};
+  const html = `
+    <h3>关于内容</h3>
+    <div class="form-row"><label>标签</label><input id="a-badge" value="${esc(a.badge||'')}"></div>
+    <div class="form-row"><label>标题</label><input id="a-title" value="${esc(a.title||'')}"></div>
+    <div class="form-row"><label>副标题</label><input id="a-subtitle" value="${esc(a.subtitle||'')}"></div>
+    <div class="form-row"><label>段落 (JSON)</label><textarea id="a-paragraphs" style="min-height:120px">${esc(JSON.stringify(a.paragraphs||[],null,2))}</textarea></div>
+    <div class="form-row"><label>定位标题</label><input id="a-id-title" value="${esc(a.identity_title||'')}"></div>
+    <div class="form-row"><label>定位标签 (JSON)</label><input id="a-id-tags" value="${esc(JSON.stringify(a.identity_tags||[]))}"></div>
+    <div class="form-row"><label>业务标题</label><input id="a-biz-title" value="${esc(a.biz_title||'')}"></div>
+    <div class="form-row"><label>业务标签 (JSON)</label><input id="a-biz-tags" value="${esc(JSON.stringify(a.biz_tags||[]))}"></div>
+    <div class="form-row"><label>配图</label><input id="a-visual" value="${esc(a.visual||'')}"></div>
+    <div class="form-row"><label>配图描述</label><input id="a-visual-alt" value="${esc(a.visual_alt||'')}"></div>
+    <div class="btn-row"><button class="btn-save" onclick="saveAbout()">保存</button></div>`;
+  document.getElementById('aboutForm').innerHTML = html;
+}
+
+async function saveAbout() {
+  let paragraphs, identity_tags, biz_tags;
+  try { paragraphs = JSON.parse(document.getElementById('a-paragraphs').value); } catch { showStatus('段落 JSON 格式错误', 'err'); return; }
+  try { identity_tags = JSON.parse(document.getElementById('a-id-tags').value); } catch { showStatus('定位标签 JSON 格式错误', 'err'); return; }
+  try { biz_tags = JSON.parse(document.getElementById('a-biz-tags').value); } catch { showStatus('业务标签 JSON 格式错误', 'err'); return; }
+  const data = {
+    badge: document.getElementById('a-badge').value,
+    title: document.getElementById('a-title').value,
+    subtitle: document.getElementById('a-subtitle').value,
+    paragraphs, identity_title: document.getElementById('a-id-title').value, identity_tags,
+    biz_title: document.getElementById('a-biz-title').value, biz_tags,
+    visual: document.getElementById('a-visual').value,
+    visual_alt: document.getElementById('a-visual-alt').value,
+  };
+  const r = await apiPost('save_about', data);
+  showStatus(r.ok ? '已保存' : '保存失败: ' + r.error, r.ok ? 'ok' : 'err');
+}
+
+// ─── 图片：转 WebP → 落到 assets/images/ ───
+// 编码用浏览器自带的 canvas.toBlob('image/webp')，不引第三方库：这台机器上
+// 既没有 sharp 也没有 cwebp，为了转格式去装依赖会把"零依赖"这件事破功。
+// Chrome / Edge / Firefox 都支持 WebP 编码；不支持时明确报错，不偷偷传原图。
+// GIF 跳过转换（canvas 只画首帧，转了就把动图弄死），WebP 也不再压一遍。
+
+const MAX_ORIGIN_IMAGE = 20 * 1024 * 1024;   // 原图上限
+const MAX_UPLOAD_IMAGE = 5 * 1024 * 1024;    // 转换后上限，与后端 MAX_IMAGE 对齐
+const WEBP_MAX_SIDE = 1800;                  // 长边上限，超出等比缩小
+const WEBP_QUALITY = 0.86;
+
+function fmtSize(n) {
+  if (!n) return '0 B';
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
+  return (n / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+function convertToWebp(file) {
+  return new Promise((resolve, reject) => {
+    if (file.type === 'image/gif' || file.type === 'image/webp') { resolve(null); return; }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      try {
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        const scale = Math.min(1, WEBP_MAX_SIDE / Math.max(w, h));
+        w = Math.max(1, Math.round(w * scale));
+        h = Math.max(1, Math.round(h * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => {
+          if (!blob) { reject(new Error('浏览器没有返回图片数据')); return; }
+          if (blob.type !== 'image/webp') { reject(new Error('当前浏览器不支持 WebP 编码')); return; }
+          resolve({ blob, width: w, height: h });
+        }, 'image/webp', WEBP_QUALITY);
+      } catch (e) {
+        reject(e);
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('这张图片解不开')); };
+    img.src = url;
+  });
+}
+
+// 上传一张图 → { path, size, origin, converted } 或 null（失败时已提示）
+async function uploadAndGetPath(file) {
+  if (!file) return null;
+  if (file.size > MAX_ORIGIN_IMAGE) {
+    showStatus('原图超过 20MB，先压一下再传', 'err');
+    return null;
+  }
+  let converted = null;
+  try {
+    converted = await convertToWebp(file);
+  } catch (e) {
+    showStatus('转 WebP 失败：' + e.message, 'err');
+    return null;
+  }
+  const blob = converted ? converted.blob : file;
+  if (blob.size > MAX_UPLOAD_IMAGE) {
+    showStatus('处理后的文件 ' + fmtSize(blob.size) + ' 仍超过 5MB 上限', 'err');
+    return null;
+  }
+  const payload = converted ? new File([blob], 'upload.webp', { type: 'image/webp' }) : file;
+  const fd = new FormData();
+  fd.append('file', payload);
+  const r = await fetch(`${API}?action=upload_image`, { method: 'POST', headers: sessionHeaders(), body: fd });
+  const data = await r.json();
+  if (!data.ok) { showStatus('上传失败: ' + data.error, 'err'); return null; }
+  return { path: data.path, size: blob.size, origin: file.size, converted: !!converted };
+}
+
+function copyPath(p) {
+  const done = () => showStatus('已复制：' + p, 'ok');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(p).then(done, function () { window.prompt('手动复制：', p); });
+  } else {
+    window.prompt('手动复制：', p);
+  }
+}
+
+async function uploadFile(file) {
+  const box = document.getElementById('uploadResult');
+  if (!file) return;
+  box.innerHTML = '<div class="status-msg info">正在转换并上传…</div>';
+  const res = await uploadAndGetPath(file);
+  if (!res) { box.innerHTML = ''; return; }
+  const saved = res.origin > 0 ? Math.round((1 - res.size / res.origin) * 100) : 0;
+  box.innerHTML = '<div class="status-msg ok">上传成功：<code>' + esc(res.path) + '</code><br>'
+    + '<span style="font-size:12px">原始 ' + fmtSize(res.origin) + ' → WebP ' + fmtSize(res.size)
+    + (res.converted && saved > 0 ? '（省 ' + saved + '%）' : '') + '</span><br>'
+    + '<button class="btn-edit" style="margin-top:6px" onclick="copyPath(\'' + esc(res.path) + '\')">复制路径</button>'
+    + '</div>';
+  loadImages();
+}
+
+// 某张图有没有被站点引用（商品图、横幅、logo…）—— 用来在删除前提醒
+function imageUsage(path) {
+  try { return JSON.stringify(siteData || {}).indexOf(path) !== -1; } catch (e) { return false; }
+}
+
+async function loadImages() {
+  const box = document.getElementById('imagesList');
+  const data = await apiGet('list_images');
+  if (data.error) {
+    box.innerHTML = '<p style="color:#888;font-size:13px">'
+      + esc(data.error === 'storage_unavailable' ? 'Storage 未启用' : '加载失败：' + data.error) + '</p>';
+    return;
+  }
+  const items = data.items || [];
+  if (!items.length) { box.innerHTML = '<p style="color:#888;font-size:13px">图库里还没有图片</p>'; return; }
+  box.innerHTML = '<p style="color:#888;font-size:12px;margin:0 0 10px">共 ' + items.length
+    + ' 张 · 目录 <code>web/assets/images/</code></p>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">'
+    + items.map(function (img) {
+        const used = imageUsage(img.path);
+        return '<div style="border:1px solid #e8e8e8;border-radius:8px;padding:8px;background:#fff">'
+          + '<img src="' + esc(img.path) + '" alt="" loading="lazy" '
+          + 'style="width:100%;height:92px;object-fit:contain;background:#fafafa;border-radius:6px">'
+          + '<div style="font-size:11px;color:#444;word-break:break-all;margin:6px 0 2px">' + esc(img.name) + '</div>'
+          + '<div style="font-size:11px;color:#999;margin-bottom:6px">' + fmtSize(img.size)
+          + (used ? ' · <span style="color:#c62828">引用中</span>' : '') + '</div>'
+          + '<button class="btn-edit" onclick="copyPath(\'' + esc(img.path) + '\')">复制</button> '
+          + '<button class="btn-rm" onclick="removeImage(\'' + esc(img.path) + '\')">删除</button>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+async function removeImage(path) {
+  const name = String(path).split('/').pop();
+  if (imageUsage(path)) {
+    if (!confirm('「' + name + '」正在被站点引用，删掉后对应位置会变成空图。\n确定要删？')) return;
+  }
+  if (!confirm('删除 ' + name + ' ？文件会从 assets/images/ 移除，不可撤销。')) return;
+  const r = await fetch(`${API}?action=delete_image&id=${encodeURIComponent(name)}`,
+    { method: 'POST', headers: sessionHeaders() });
+  const data = await r.json();
+  if (data.ok) { showStatus('已删除 ' + name, 'ok'); loadImages(); }
+  else showStatus('删除失败: ' + data.error, 'err');
+}
+
+// 给表单里的「图片」字段用：选文件 → 转 WebP → 上传 → 把路径回填
+function pickImage(cb) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    showStatus('处理中…', 'info');
+    const res = await uploadAndGetPath(file);
+    if (!res) return;
+    cb(res.path);
+    showStatus('已上传：' + res.path, 'ok');
+  };
+  input.click();
+}
+
+// ─── Seed data ───
+async function doSeed() {
+  const file = document.getElementById('seedFile').files[0];
+  if (!file) { showStatus('请先选择 JSON 文件', 'err'); return; }
+  const text = await file.text();
+  let content;
+  try { content = JSON.parse(text); } catch { showStatus('JSON 格式错误', 'err'); return; }
+
+  const results = [];
+  const out = document.getElementById('seedResult');
+  out.innerHTML = '<div class="status-msg info">正在导入…</div>';
+
+  // Settings
+  if (content.site) {
+    const r = await apiPost('save_settings', content.site);
+    results.push(['站点设置', r.ok]);
+  }
+
+  // Hero
+  if (content.hero) {
+    const r = await apiPost('save_hero', content.hero);
+    results.push(['首页横幅', r.ok]);
+  }
+
+  // Notices
+  if (content.notices?.items) {
+    for (const n of content.notices.items) {
+      const r = await apiPost('save_notice', n);
+      if (!r.ok) { results.push(['公告 ' + n.id, false]); break; }
+    }
+    results.push(['公告 (' + content.notices.items.length + ')', true]);
+  }
+
+  // Brands
+  if (content.brands?.items) {
+    for (let i = 0; i < content.brands.items.length; i++) {
+      const b = content.brands.items[i];
+      const r = await apiPost('save_brand', { ...b, display_order: i });
+      if (!r.ok) { results.push(['品牌', false]); break; }
+    }
+    results.push(['品牌 (' + content.brands.items.length + ')', true]);
+  }
+
+  // Goods
+  if (content.goods?.items) {
+    for (let i = 0; i < content.goods.items.length; i++) {
+      const g = content.goods.items[i];
+      const r = await apiPost('save_good', { ...g, display_order: i });
+      if (!r.ok) { results.push(['商品', false]); break; }
+    }
+    results.push(['商品 (' + content.goods.items.length + ')', true]);
+  }
+
+  // Event
+  if (content.event) {
+    const r = await apiPost('save_event', content.event);
+    results.push(['参展活动', r.ok]);
+  }
+
+  // Social
+  if (content.social) {
+    const r = await apiPost('save_social', { items: content.social });
+    results.push(['社交链接', r.ok]);
+  }
+
+  // About
+  if (content.about) {
+    const r = await apiPost('save_about', content.about);
+    results.push(['关于我们', r.ok]);
+  }
+
+  const ok = results.filter(r => r[1]).length;
+  const total = results.length;
+  out.innerHTML = `<div class="status-msg ${ok===total?'ok':'err'}">导入完成: ${ok}/${total} 项成功</div>
+    <div style="font-size:12px;color:#666;margin-top:6px">${results.map(r => `${r[0]}: ${r[1]?'✓':'✗'}`).join(' · ')}</div>`;
+
+  if (ok === total) loadAll();
+}
+
+// ─── Helpers ───
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─── Init ───
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ─── User management ───
+
+// ─── 改自己的账户名 ───
+// session 认的是 user_id，所以改完不用重新登录，只要把本地这份 currentUser 换掉。
+async function doRenameSelf() {
+  const input = document.getElementById('acctNewName');
+  const pwd = document.getElementById('acctPwd');
+  const msg = document.getElementById('acctMsg');
+  const name = input.value.trim();
+  msg.style.color = '';
+  if (!currentUser) return;
+  if (!name) { msg.textContent = '请输入新的账户名'; msg.style.color = '#c62828'; return; }
+  if (name === currentUser.username) { msg.textContent = '和当前账户名一样，没有改动'; msg.style.color = '#c2761a'; return; }
+  if (!/^[a-zA-Z0-9_]{2,32}$/.test(name)) { msg.textContent = '账户名只能含英文、数字、下划线，2-32 位'; msg.style.color = '#c62828'; return; }
+  if (!pwd.value) { msg.textContent = '请输入当前密码用于验证'; msg.style.color = '#c62828'; return; }
+
+  try {
+    const res = await fetch(API + '?action=rename_self', {
+      method: 'POST',
+      headers: sessionHeaders({ 'Content-Type': 'application/json', 'Origin': location.origin }),
+      body: JSON.stringify({ username: name, password: pwd.value }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      const msgs = {
+        invalid_username: '账户名只能含英文、数字、下划线，2-32 位',
+        invalid_password: '当前密码错误',
+        username_exists: '这个账户名已经有人用了',
+      };
+      msg.textContent = msgs[data.error] || data.error;
+      msg.style.color = '#c62828';
+      return;
+    }
+    currentUser.username = data.username;
+    sessionStorage.setItem('gpic_user', JSON.stringify(currentUser));
+    applyRoleUI();
+    msg.textContent = '已改为 ' + data.username + '，下次登录请用新账户名';
+    msg.style.color = '#2e7d32';
+    input.value = '';
+    pwd.value = '';
+    loadUsers();
+  } catch { msg.textContent = '网络错误'; msg.style.color = '#c62828'; }
+}
+
+async function doChangePassword() {
+  const oldP = document.getElementById('pwdOld').value;
+  const newP = document.getElementById('pwdNew').value;
+  const confirmP = document.getElementById('pwdConfirm').value;
+  const msg = document.getElementById('pwdMsg');
+  msg.style.color = '';
+  if (!oldP || !newP) { msg.textContent = '请填写当前密码和新密码'; msg.style.color = '#c62828'; return; }
+  if (newP.length < 6) { msg.textContent = '新密码至少 6 位'; msg.style.color = '#c62828'; return; }
+  if (newP !== confirmP) { msg.textContent = '两次输入的新密码不一致'; msg.style.color = '#c62828'; return; }
+  try {
+    const res = await fetch(API + '?action=change_password', {
+      method: 'POST',
+      headers: sessionHeaders({ 'Content-Type': 'application/json', 'Origin': location.origin }),
+      body: JSON.stringify({ old_password: oldP, new_password: newP }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      const msgs = { invalid_old_password: '当前密码错误', password_too_short: '密码太短' };
+      msg.textContent = msgs[data.error] || data.error;
+      msg.style.color = '#c62828';
+      return;
+    }
+    msg.textContent = '密码修改成功，下次登录请使用新密码';
+    msg.style.color = '#2e7d32';
+    document.getElementById('pwdOld').value = '';
+    document.getElementById('pwdNew').value = '';
+    document.getElementById('pwdConfirm').value = '';
+  } catch { msg.textContent = '网络错误'; msg.style.color = '#c62828'; }
+}
+
+function toggleCreateUser() {
+  const card = document.getElementById('createUserCard');
+  card.style.display = card.style.display === 'none' ? '' : 'none';
+  document.getElementById('createUserMsg').textContent = '';
+  // 直接从侧栏点进来时页面还没渲染过勾选框，这里补一次
+  const box = document.getElementById('newUserPerms');
+  if (box && !box.children.length) box.innerHTML = permGridHtml({});
+}
+
+function cancelCreateUser() {
+  document.getElementById('createUserCard').style.display = 'none';
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('newUserPerms').innerHTML = permGridHtml({});
+}
+
+async function doCreateUser() {
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const msg = document.getElementById('createUserMsg');
+  const perms = readPermGrid(document.getElementById('newUserPerms'));
+  msg.style.color = '';
+  if (!username || !password) { msg.textContent = '请填写用户名和密码'; msg.style.color = '#c62828'; return; }
+  if (username.length < 2 || username.length > 32) { msg.textContent = '用户名 2-32 位'; msg.style.color = '#c62828'; return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { msg.textContent = '用户名只能含英文、数字、下划线'; msg.style.color = '#c62828'; return; }
+  if (password.length < 6) { msg.textContent = '密码至少 6 位'; msg.style.color = '#c62828'; return; }
+  try {
+    const res = await fetch(API + '?action=create_user', {
+      method: 'POST',
+      headers: sessionHeaders({ 'Content-Type': 'application/json', 'Origin': location.origin }),
+      body: JSON.stringify({ username, password, role: 'admin', perms }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      const msgs = { username_exists: '用户名已存在', password_too_short: '密码太短' };
+      msg.textContent = msgs[data.error] || data.error;
+      msg.style.color = '#c62828';
+      return;
+    }
+    const n = Object.keys(perms).length;
+    msg.textContent = n
+      ? '创建成功，该账号可编辑 ' + n + ' 个页面'
+      : '创建成功，但没勾任何页面 —— 该账号登录后只能看仪表盘、改自己的账户';
+    msg.style.color = n ? '#2e7d32' : '#c2761a';
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('newUserPerms').innerHTML = permGridHtml({});
+    loadUsers();
+  } catch { msg.textContent = '网络错误'; msg.style.color = '#c62828'; }
+}
+
+// ─── 账户列表 ───
+let usersCache = [];
+let editingUserId = null;
+
+/** 一行里显示「这个账号能改哪几页」：别让人点开编辑才知道 */
+function permSummary(u) {
+  if (u.role === 'organizer') return '全部页面';
+  const list = PERM_ORDER.filter((d) => u.perms && u.perms[d]);
+  if (!list.length) return '无编辑权';
+  if (list.length === PERM_ORDER.length) return '全部页面';
+  return list.map((d) => PERM_LABELS[d]).join('、');
+}
+
+async function loadUsers() {
+  const el = document.getElementById('usersList');
+  if (!el) return;
+  el.textContent = '加载中…';
+  try {
+    const data = await apiPost('list_users', {});
+    if (data.error) {
+      el.textContent = data.error === 'forbidden' ? '只有主催能查看账户列表' : '加载失败';
+      return;
+    }
+    usersCache = data.items || [];
+    if (!usersCache.length) { el.textContent = '暂无管理员账户'; return; }
+    el.innerHTML = usersCache.map((u) => {
+      const isSelf = currentUser && u.id === currentUser.id;
+      const isOrg = u.role === 'organizer';
+      const roleTag = isOrg
+        ? '<span style="color:#b8860b;font-weight:600">主催</span>'
+        : '管理员';
+      // 主催只能编辑自己（改名），别的主催不给动；普通管理员都能编辑
+      const canEdit = isOrg ? isSelf : true;
+      const editBtn = canEdit
+        ? '<button class="btn-add" onclick="startEditUser(\'' + u.id + '\')">编辑</button>'
+        : '';
+      const delBtn = (!isOrg && !isSelf)
+        ? '<button class="btn-rm" onclick="doDeleteUser(\'' + u.id + '\',\'' + u.username.replace(/'/g, "\\'") + '\')">删除</button>'
+        : '';
+      return '<div class="item-row">' +
+        '<span class="item-title">' + u.username + (isSelf ? ' <em style="font-style:normal;color:#999;font-size:12px">（我）</em>' : '') + '</span>' +
+        '<span class="item-meta">' + roleTag + ' · ' + permSummary(u) + ' · ' + (u.created_at || '').slice(0, 10) + '</span>' +
+        '<span style="display:flex;gap:6px">' + editBtn + delBtn + '</span>' +
+        '</div>';
+    }).join('');
+  } catch { el.textContent = '加载失败'; }
+}
+
+function startEditUser(id) {
+  const u = usersCache.find((x) => x.id === id);
+  if (!u) return;
+  editingUserId = id;
+  const card = document.getElementById('editUserCard');
+  card.style.display = '';
+  document.getElementById('editUserWho').textContent = '· ' + u.username;
+  document.getElementById('editUsername').value = u.username;
+  const locked = u.role === 'organizer';
+  document.getElementById('editUserPerms').innerHTML = permGridHtml(
+    locked ? allPermsObj() : (u.perms || {}),
+    { disabled: locked }
+  );
+  document.getElementById('editUserHint').textContent = locked
+    ? '主催永远拥有全部页面权限，这一栏不可改。'
+    : '';
+  document.getElementById('editUserMsg').textContent = '';
+  // scrollIntoView 不是所有环境都有（无头浏览器 / 老内核），缺了就别调，
+  // 展开卡片本身已经够明确，不能因为滚动这一下把整个编辑流程打断
+  if (typeof card.scrollIntoView === 'function') {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function cancelEditUser() {
+  document.getElementById('editUserCard').style.display = 'none';
+  editingUserId = null;
+  document.getElementById('editUserMsg').textContent = '';
+}
+
+async function doUpdateUser() {
+  if (!editingUserId) return;
+  const name = document.getElementById('editUsername').value.trim();
+  const msg = document.getElementById('editUserMsg');
+  const perms = readPermGrid(document.getElementById('editUserPerms'));
+  msg.style.color = '';
+  if (!/^[a-zA-Z0-9_]{2,32}$/.test(name)) {
+    msg.textContent = '用户名只能含英文、数字、下划线，2-32 位';
+    msg.style.color = '#c62828';
+    return;
+  }
+  try {
+    const res = await fetch(API + '?action=update_user', {
+      method: 'POST',
+      headers: sessionHeaders({ 'Content-Type': 'application/json', 'Origin': location.origin }),
+      body: JSON.stringify({ id: editingUserId, username: name, perms }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      const msgs = {
+        username_exists: '这个用户名已经有人用了',
+        invalid_username: '用户名只能含英文、数字、下划线，2-32 位',
+        cannot_modify_organizer: '不能修改其他主催的账号',
+        user_not_found: '这个账号已经不存在了',
+      };
+      msg.textContent = msgs[data.error] || data.error;
+      msg.style.color = '#c62828';
+      return;
+    }
+    // 改的要是自己，本地这份 currentUser 得跟着变，否则侧栏还显示旧名字
+    if (currentUser && currentUser.id === editingUserId) {
+      currentUser.username = data.username;
+      currentUser.perms = data.perms;
+      sessionStorage.setItem('gpic_user', JSON.stringify(currentUser));
+      applyRoleUI();
+    }
+    msg.textContent = '已保存';
+    msg.style.color = '#2e7d32';
+    loadUsers();
+  } catch { msg.textContent = '网络错误'; msg.style.color = '#c62828'; }
+}
+
+async function doDeleteUser(userId, username) {
+  if (!confirm('确定删除管理员「' + username + '」？此操作不可撤销。')) return;
+  try {
+    const res = await fetch(API + '?action=delete_user&id=' + encodeURIComponent(userId), {
+      method: 'POST',
+      headers: sessionHeaders({ 'Origin': location.origin }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      const msgs = { cannot_delete_self: '不能删除自己的账户', cannot_modify_organizer: '不能删除主催账号' };
+      alert(msgs[data.error] || data.error);
+      return;
+    }
+    loadUsers();
+  } catch { alert('网络错误'); }
+}
+</script>
+</body>
+</html>

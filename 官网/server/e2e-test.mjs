@@ -287,9 +287,14 @@ const pubAfter = await api("goods");
 check("下架商品不出现在公开 goods 接口", !pubAfter.items.some((g) => g.id === offId),
   `共 ${pubAfter.items.length} 条`);
 check("售罄商品仍出现在公开 goods 接口", pubAfter.items.some((g) => g.id === soldOutId));
+// 判据是「所有售罄都排在所有在售之后」，不是「售罄恰好是最后一条」——
+// 库里同时有多件售罄时（钥匙扣、储物筒都会售罄），后一种写法必然误报。
+const statuses = pubAfter.items.map((g) => g.status);
+const firstSoldOut = statuses.indexOf("sold_out");
+const lastOnSale = statuses.lastIndexOf("on_sale");
 check("售罄商品排在所有在售商品之后",
-  pubAfter.items.findIndex((g) => g.id === soldOutId) === pubAfter.items.length - 1,
-  `位置 ${pubAfter.items.findIndex((g) => g.id === soldOutId)} / ${pubAfter.items.length - 1}`);
+  firstSoldOut === -1 || lastOnSale === -1 || firstSoldOut > lastOnSale,
+  `首个售罄位置 ${firstSoldOut} / 最后一个在售 ${lastOnSale}`);
 check("公开接口不下发 off_shelf 状态", !pubAfter.items.some((g) => g.status === "off_shelf"));
 
 const allAfterStatus = await api("all");
@@ -535,6 +540,138 @@ for (const p of ["index", "goods", "notice", "recruitment"]) {
   check(`${p}.html 版本占位`, hasSlot && !hardcoded,
     !hasSlot ? "缺 data-site-version" : hardcoded ? "版本号被写死在 HTML 里" : "空占位");
 }
+
+// ─────────────────────────────────────────────────────────────────
+section("K. 权限与账户");
+
+// H 段「登出」已经把主 session 销毁了，这里用主催身份重新登录一次，
+// 后面所有主催操作都走这个新 session（别再指望全局 sessionId）。
+const orgLogin = await api("login", { method: "POST", body: { username: USERNAME, password: PASSWORD } });
+check("主催重新登录（K 段前置）", orgLogin.ok === true, `HTTP ${orgLogin.__status}`);
+const orgSid = orgLogin.session_id;
+
+const PERM_USER = { username: "e2e_perm", password: "e2e_prm_641" };
+
+// ① 建号时就配权限；混进非法域，验证白名单过滤
+const mkPerm = await api("create_user", {
+  method: "POST", auth: true, session: orgSid,
+  body: {
+    username: PERM_USER.username, password: PERM_USER.password, role: "admin",
+    perms: { notices: "write", settings: true, "不存在的域": "write", goods: false },
+  },
+});
+check("create_user 支持 perms", mkPerm.ok === true && mkPerm.perms?.notices === "write", JSON.stringify(mkPerm.perms));
+check("非白名单域与 false 都被丢弃",
+  Object.keys(mkPerm.perms || {}).length === 2 && !("不存在的域" in (mkPerm.perms || {})),
+  JSON.stringify(mkPerm.perms));
+
+// ② 登录：perms 必须跟着一起下发，否则前端没法先摆侧栏
+const pl = await api("login", { method: "POST", body: PERM_USER });
+check("登录返回 perms", pl.ok === true && pl.user?.perms?.notices === "write", JSON.stringify(pl.user?.perms));
+const permSid = pl.session_id;
+
+// ③ 有权限的页：能写
+const permNoticeBody = {
+  id: "2099-02-02-z", date: "2099-02-02", type: "测试", style: "green",
+  summary: "s", title: "权限测试公告", body: [{ kind: "p", text: "x" }],
+};
+const wNotice = await api("save_notice", { method: "POST", auth: true, session: permSid, body: permNoticeBody });
+check("授权页 save_notice 通过", wNotice.ok === true, `HTTP ${wNotice.__status}`);
+
+// ④ 没授权的页：403，且要说清是哪个域
+const permGoodBody = {
+  name: "越权制品", badge: "", badge_style: "", description: "d",
+  image: "/assets/images/goods-badge.webp", image_alt: "a",
+  tags: [], alt_label: "a", price: "1", unit: "元", is_free: false, display_order: 98,
+};
+const wGood = await api("save_good", { method: "POST", auth: true, session: permSid, body: permGoodBody });
+check("未授权页 save_good → 403", wGood.__status === 403 && wGood.error === "forbidden" && wGood.domain === "goods",
+  `HTTP ${wGood.__status} domain=${wGood.domain}`);
+
+// ⑤ 后台专用的 GET 同样拦（否则没授权也能拉下架商品）
+const gAdmin = await api("admin_goods", { auth: true, session: permSid });
+check("未授权 admin_goods → 403", gAdmin.__status === 403, `HTTP ${gAdmin.__status}`);
+
+// ⑥ 主催专属接口
+const gUsers = await api("list_users", { method: "POST", auth: true, session: permSid, body: {} });
+check("非主催 list_users → 403", gUsers.__status === 403, `HTTP ${gUsers.__status}`);
+const uUser = await api("update_user", {
+  method: "POST", auth: true, session: permSid,
+  body: { id: pl.user.id, username: "e2e_perm2" },
+});
+check("非主催 update_user → 403", uUser.__status === 403, `HTTP ${uUser.__status}`);
+
+// ⑦ 改自己的账户名：三种拒绝 + 一种成功
+const badPwd = await api("rename_self", {
+  method: "POST", auth: true, session: permSid,
+  body: { username: "e2e_perm2", password: "这不是密码" },
+});
+check("改名密码错 → 400", badPwd.__status === 400 && badPwd.error === "invalid_password", badPwd.error);
+const dupName = await api("rename_self", {
+  method: "POST", auth: true, session: permSid,
+  body: { username: USERNAME, password: PERM_USER.password },
+});
+check("改名撞已有账号 → username_exists", dupName.error === "username_exists", dupName.error);
+const badName = await api("rename_self", {
+  method: "POST", auth: true, session: permSid,
+  body: { username: "中文名字", password: PERM_USER.password },
+});
+check("改名含非法字符 → 400", badName.__status === 400 && badName.error === "invalid_username", badName.error);
+
+const RENAMED = "e2e_perm_renamed";
+const renamed = await api("rename_self", {
+  method: "POST", auth: true, session: permSid,
+  body: { username: RENAMED, password: PERM_USER.password },
+});
+check("改名成功", renamed.ok === true && renamed.username === RENAMED, JSON.stringify(renamed));
+
+// ⑧ 改名不该把自己踢下线（session 认 user_id，不认用户名）
+const stillIn = await api("save_notice", {
+  method: "POST", auth: true, session: permSid,
+  body: Object.assign({}, permNoticeBody, { title: "改名后仍能写" }),
+});
+check("改名后旧 session 仍有效", stillIn.ok === true, `HTTP ${stillIn.__status}`);
+
+// ⑨ 旧名字登不上，新名字能登
+const permOldLogin = await api("login", { method: "POST", body: PERM_USER });
+check("旧账户名登录失败", permOldLogin.__status === 401, `HTTP ${permOldLogin.__status}`);
+const permNewLogin = await api("login", { method: "POST", body: { username: RENAMED, password: PERM_USER.password } });
+check("新账户名登录成功", permNewLogin.ok === true);
+
+// ⑩ 主催加权限 → 同一账号立刻能写；收权 → 立刻写不进去
+const grant = await api("update_user", {
+  method: "POST", auth: true, session: orgSid,
+  body: { id: pl.user.id, perms: { notices: "write", goods: "write" } },
+});
+check("update_user 加权限", grant.ok === true && Object.keys(grant.perms || {}).length === 2, JSON.stringify(grant.perms));
+const wGood2 = await api("save_good", {
+  method: "POST", auth: true, session: permSid,
+  body: Object.assign({}, permGoodBody, { name: "授权后制品" }),
+});
+check("加权后同一账号能写商品", wGood2.ok === true, `HTTP ${wGood2.__status}`);
+
+await api("update_user", { method: "POST", auth: true, session: orgSid, body: { id: pl.user.id, perms: { notices: "write" } } });
+const wGood3 = await api("save_good", {
+  method: "POST", auth: true, session: permSid,
+  body: Object.assign({}, permGoodBody, { name: "收权后制品" }),
+});
+check("收权后立刻写不进去", wGood3.__status === 403, `HTTP ${wGood3.__status}`);
+
+// ⑪ 权限全清 = 只能看仪表盘：连原本有权限的公告页也写不了
+await api("update_user", { method: "POST", auth: true, session: orgSid, body: { id: pl.user.id, perms: {} } });
+const wNotice2 = await api("save_notice", { method: "POST", auth: true, session: permSid, body: permNoticeBody });
+check("权限清空后公告也写不了", wNotice2.__status === 403, `HTTP ${wNotice2.__status}`);
+
+// ⑫ 主催不能把主催改掉（防唯一主催被锁死）
+const orgSelf = await api("update_user", {
+  method: "POST", auth: true, session: orgSid,
+  body: { id: (usersBefore.items || []).find((u) => u.role === "organizer")?.id, perms: {} },
+});
+check("主催可改自己（权限对主催无意义）", orgSelf.ok === true, JSON.stringify(orgSelf).slice(0, 60));
+
+// 收尾：删掉测试账号，别留在库里
+const delPerm = await api("delete_user", { method: "POST", auth: true, session: orgSid, query: `&id=${pl.user.id}` });
+check("删除测试账号", delPerm.ok === true, JSON.stringify(delPerm));
 
 // ── 汇总 ───────────────────────────────────────────────────────────
 console.log("");
