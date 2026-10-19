@@ -7,6 +7,10 @@
  *   [2/3] 打包：content.json → 静态快照 web-standalone/
  *   [3/3] 上线：git commit + git push → GitHub Pages 自动发布
  *
+ * 位置：本脚本与 同步到公网.bat 都放在**仓库根**（.git / .github 那一层），
+ *   因为第 3 步做的是仓库级操作，和站点源码不在同一语义层。
+ *   站点目录固定为「官网/」，由 ROOT 拼出来，不依赖当前工作目录。
+ *
  * 为什么第 3 步必不可少：
  *   后台的「保存」只写本机的 SQLite 库。公网读的是仓库里的
  *   data/content.json。前两步只把本地文件改新，不推上去，线上
@@ -19,18 +23,21 @@
  *   纯 ASCII + chcp 65001 正常，因此 bat 保持纯 ASCII，中文全在
  *   本文件输出（Node 的 UTF-8 输出不受此影响）。
  *
+ *   这也是本文件虽然从 官网/scripts/ 搬到了仓库根、而 .bat 里的
+ *   调用路径写成 "%~dp0sync-public.mjs" 而不是 "%~dp0官网\\scripts\\..." 的原因：
+ *   后者会在 bat 里留下「官网」两个字，前功尽弃。
+ *
  * 用法：
- *   node scripts/sync-public.mjs
- *   node scripts/sync-public.mjs --dry-run    # 只做到第 2 步，不提交不推送
+ *   node sync-public.mjs
+ *   node sync-public.mjs --dry-run    # 只做到第 2 步，不提交不推送
  */
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const SITE = resolve(__dirname, "..");          // 官网/
-const ROOT = resolve(SITE, "..");               // 项目根（.git 所在层）
+const ROOT = dirname(fileURLToPath(import.meta.url)); // 仓库根：.git / .github 所在层
+const SITE = join(ROOT, "官网");                       // 站点目录
 const DRY = process.argv.includes("--dry-run");
 
 const SEP = "  " + "-".repeat(60);
@@ -88,6 +95,16 @@ say("  幻电投官网 · 内容同步到公网");
 say(SEP);
 
 // ── 前置检查 ──
+// 脚本靠自身位置推仓库根，所以先确认「同层找得到 官网/」。
+// 少了这一步的话，脚本被拷到别处时会误报「找不到数据库」，很难查。
+if (!existsSync(join(SITE, "web")) || !existsSync(join(SITE, "server"))) {
+  die("脚本位置不对：它必须和「官网」文件夹放在同一层。", [
+    "脚本当前所在目录：" + ROOT,
+    "同层应当能找到「官网」文件夹，里面有 web/ 与 server/。",
+    "把 同步到公网.bat 和 sync-public.mjs 一起放回仓库根目录即可。",
+  ]);
+}
+
 const DB = join(SITE, "server", "data", "gpic.sqlite");
 if (!existsSync(DB)) {
   die("找不到数据库 server/data/gpic.sqlite", [
