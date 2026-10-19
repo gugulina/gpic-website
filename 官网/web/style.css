@@ -374,6 +374,21 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .goods-alt { font-size: 12px; color: var(--text-2); font-family: var(--mono); }
 .goods-free { font-size: 14px; font-weight: 700; color: var(--brand-green); }
 
+/* ============ 10b. 售罄状态 ============
+   售罄 ≠ 下架：卡片照常展示（图片、文案、价格都在），只是整体降权
+   并给出明确的「补货中」。下架商品由后端直接过滤，根本不会渲染到这里。 */
+.badge-gray { background: #EEF1F0; color: var(--text-2); }
+.goods-card.is-soldout .goods-media img { filter: grayscale(0.65); opacity: 0.66; }
+.goods-card.is-soldout:hover { transform: none; box-shadow: var(--shadow-sm); }
+.goods-card.is-soldout .goods-body h3 { color: var(--text-2); }
+.goods-card.is-soldout .goods-price { color: var(--text-3); text-decoration: line-through; }
+.goods-soldout {
+  display: inline-block; align-self: flex-start;
+  margin-top: 12px; padding: 4px 11px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em;
+  color: #8A4A18; background: var(--tint-orange); border-radius: 999px;
+}
+
 /* ============ 11. 参展预告 ============ */
 .event-card {
   display: grid; grid-template-columns: 1.2fr 1fr;

@@ -267,6 +267,68 @@ check("all 接口带回 goodsBlock", allWithBlock.goodsBlock?.posterLabel === "�
 const badHref = await api("save_goods_block", { method: "POST", auth: true, body: { buyHref: "javascript:alert(1)" } });
 check("save_goods_block 挡住 javascript: 链接", badHref.error === "invalid_href", JSON.stringify(badHref));
 
+// ── 商品状态：售罄 / 下架 / 首页精选 ──────────────────────────────
+// 三态的可见性差异是这组断言的重点：
+//   售罄 → 公开接口仍返回、但排在在售之后
+//   下架 → 公开接口完全不返回，后台仍能看到
+const offId = rGood.id;                       // 刚新建的「测试制品」当成下架样本
+const soldOutId = SEED.goods.items[0].id;     // 拿一件真实商品当售罄样本
+
+const rOff = await api("set_good_status", { method: "POST", auth: true, body: { id: offId, status: "off_shelf" } });
+check("set_good_status 标记下架", rOff.ok === true && rOff.status === "off_shelf", JSON.stringify(rOff));
+
+const rSold = await api("set_good_status", { method: "POST", auth: true, body: { id: soldOutId, status: "sold_out" } });
+check("set_good_status 标记售罄", rSold.ok === true && rSold.status === "sold_out", JSON.stringify(rSold));
+
+const badStatus = await api("set_good_status", { method: "POST", auth: true, body: { id: soldOutId, status: "不存在的状态" } });
+check("set_good_status 拒绝非法状态", badStatus.error === "invalid_status", JSON.stringify(badStatus));
+
+const pubAfter = await api("goods");
+check("下架商品不出现在公开 goods 接口", !pubAfter.items.some((g) => g.id === offId),
+  `共 ${pubAfter.items.length} 条`);
+check("售罄商品仍出现在公开 goods 接口", pubAfter.items.some((g) => g.id === soldOutId));
+check("售罄商品排在所有在售商品之后",
+  pubAfter.items.findIndex((g) => g.id === soldOutId) === pubAfter.items.length - 1,
+  `位置 ${pubAfter.items.findIndex((g) => g.id === soldOutId)} / ${pubAfter.items.length - 1}`);
+check("公开接口不下发 off_shelf 状态", !pubAfter.items.some((g) => g.status === "off_shelf"));
+
+const allAfterStatus = await api("all");
+check("all 接口同样过滤下架商品", !allAfterStatus.goods.some((g) => g.id === offId));
+
+const adminList = await api("admin_goods", { auth: true });
+const anonAdmin = await api("admin_goods");
+check("admin_goods 匿名访问被拒", ["login_required", "session_expired"].includes(anonAdmin.error), `HTTP ${anonAdmin.__status}`);
+check("admin_goods 含下架商品", Array.isArray(adminList.items) && adminList.items.some((g) => g.id === offId),
+  `共 ${adminList.items?.length} 条`);
+
+// 首页精选：只认列表里有的，顺序即数组顺序
+const homeIds = [SEED.goods.items[2].id, SEED.goods.items[1].id];
+const rHome = await api("save_home_goods", { method: "POST", auth: true, body: { ids: homeIds } });
+check("save_home_goods 保存顺序", rHome.ok === true && JSON.stringify(rHome.homeGoods) === JSON.stringify(homeIds), JSON.stringify(rHome));
+const allHome = await api("all");
+check("all 接口回传 homeGoods 且保持顺序", JSON.stringify(allHome.homeGoods) === JSON.stringify(homeIds), JSON.stringify(allHome.homeGoods));
+
+// 重复 id 要去重，但不能打乱首次出现的顺序
+const rDup = await api("save_home_goods", { method: "POST", auth: true, body: { ids: [homeIds[0], homeIds[1], homeIds[0]] } });
+check("save_home_goods 去重且顺序稳定", JSON.stringify(rDup.homeGoods) === JSON.stringify(homeIds), JSON.stringify(rDup.homeGoods));
+
+const badHome = await api("save_home_goods", { method: "POST", auth: true, body: { ids: ["not-a-uuid"] } });
+check("save_home_goods 拒绝非法 id", badHome.error === "invalid_id", JSON.stringify(badHome));
+
+// 删商品时必须顺手把它从首页精选里摘掉，否则后台会留一条指向不存在商品的空条目
+await api("save_home_goods", { method: "POST", auth: true, body: { ids: [offId, homeIds[0]] } });
+const hb = await api("home_goods");
+check("home_goods 读回刚写入的列表", hb.homeGoods && hb.homeGoods[0] === offId, JSON.stringify(hb.homeGoods));
+
+const rDel = await api("delete_good", { method: "POST", auth: true, query: `&id=${offId}` });
+check("delete_good 删除下架商品", rDel.ok === true, JSON.stringify(rDel));
+const homeAfterDel = await api("home_goods");
+check("删除商品后自动从首页精选摘除", !homeAfterDel.homeGoods.includes(offId), JSON.stringify(homeAfterDel.homeGoods));
+
+// 复原售罄样本，避免影响后面的「首屏/静态断言」；首页精选也复位成「只有第一件」
+await api("set_good_status", { method: "POST", auth: true, body: { id: soldOutId, status: "on_sale" } });
+await api("save_home_goods", { method: "POST", auth: true, body: { ids: [SEED.goods.items[0].id] } });
+
 
 const rEvent = await api("save_event", { method: "POST", auth: true, body: { badge: "测试展", title: "测试展会", subtitle: "sub", booth: "A01", debut: "首发", date_start: "2099-05-01", date_end: "2099-05-02", link_label: "详情", link_href: "https://example.com", visual: "", visual_alt: "" } });
 check("save_event", rEvent.ok === true, `id=${rEvent.id}`);

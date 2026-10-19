@@ -90,10 +90,14 @@
     }
     function mapGood(g, i) {
       return {
-        id: 'good-' + i, badge: g.badge, badge_style: g.badgeStyle, name: g.name,
+        // 优先用 content.json 里带的真 id（首页精选靠它匹配 homeIds），
+        // 老版本 JSON 没有 id 时退回下标，保证不至于抛错
+        id: g.id || ('good-' + i), badge: g.badge, badge_style: g.badgeStyle, name: g.name,
         description: g.desc, image: g.image, image_alt: g.imageAlt, tags: g.tags,
         alt_label: g.alt, price: g.price, unit: g.unit,
-        is_free: g.free || false, free_label: g.freeLabel || ''
+        is_free: g.free || false, free_label: g.freeLabel || '',
+        // 下架商品在导出阶段已被剔除，这里只可能拿到 on_sale / sold_out
+        status: g.status || 'on_sale'
       };
     }
     function mapEvent(e) {
@@ -147,6 +151,8 @@
           notices: notices.map(mapNotice),
           brands: brands.map(mapBrand),
           goods: goods.map(mapGood),
+          // 首页只渲染这些 id，顺序即展示顺序
+          homeGoods: (content.goods && content.goods.homeIds) || [],
           event: mapEvent(content.event),
           social: social.map(mapSocial),
           about: mapAbout(content.about),

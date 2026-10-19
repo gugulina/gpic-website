@@ -279,7 +279,9 @@ if (RESET_USERS) {
   for (let i = 0; i < items.length; i++) {
     const g = items[i];
     const { error } = await client.from("goods").upsert({
-      id: sentinel("1000000", i + 1),
+      // content.json 里带了真 id 就用真的：home_goods 存的是 id 数组，
+      // 重新 seed 时必须保持同一套 id，否则首页精选会全部失配。
+      id: g.id || sentinel("1000000", i + 1),
       badge: g.badge || "",
       badge_style: g.badgeStyle || "green",
       name: g.name || "",
@@ -293,6 +295,7 @@ if (RESET_USERS) {
       is_free: !!g.free,
       free_label: g.freeLabel || "",
       display_order: i,
+      status: g.status || "on_sale",
       updated_at: t,
     });
     if (error) {
@@ -302,6 +305,24 @@ if (RESET_USERS) {
     count++;
   }
   step("制品", `${count} 款`);
+}
+
+// ── 6b. 首页商品精选 ───────────────────────────────────────────────
+// content.json 的 goods.homeIds 是「首页要显示的商品 id，按展示顺序」。
+// 这里原样写回 site_settings，重建库后首页不会突然变成空白或全量。
+{
+  const homeIds = (content.goods && content.goods.homeIds) || [];
+  if (!homeIds.length) {
+    step("首页精选", "content.json 无 homeIds，跳过");
+  } else {
+    const { error } = await client.from("site_settings").upsert({
+      key: "home_goods",
+      value: JSON.stringify({ ids: homeIds }),
+      updated_at: nowIso(),
+    });
+    if (error) fail("首页精选", error.message);
+    else step("首页精选", `${homeIds.length} 件`);
+  }
 }
 
 // ── 7. 参展活动 ─────────────────────────────────────────────────────

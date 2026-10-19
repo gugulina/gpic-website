@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "updatedAt": "2026-10-19T03:17:16.450Z",
+  "updatedAt": "2026-10-19T03:36:27.093Z",
   "site": {
     "name": "幻电投企划",
     "nameEn": "Gensokyo Power Investment Corporation",
@@ -453,6 +453,7 @@
     "posterLabel": "查看海报（上）→",
     "items": [
       {
+        "id": "10000000-0000-4000-8000-000000000001",
         "badge": "证件类",
         "badgeStyle": "green",
         "name": "幻想乡电网职务证明书",
@@ -472,9 +473,11 @@
         "alt": "整册 7 张 ¥40",
         "price": "6",
         "unit": "/ 张",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000002",
         "badge": "警示类",
         "badgeStyle": "red",
         "name": "符卡级安全用电警示贴",
@@ -494,9 +497,11 @@
         "alt": "整套 6 张 ¥10",
         "price": "3",
         "unit": "/ 张",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000003",
         "badge": "标识类",
         "badgeStyle": "red",
         "name": "⑨级能效贴纸／冰箱贴",
@@ -512,9 +517,11 @@
         "alt": "每套含 2 件",
         "price": "9",
         "unit": "/ 套",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000004",
         "badge": "插画类",
         "badgeStyle": "green",
         "name": "本居小铃「银杏下的智慧」",
@@ -534,9 +541,11 @@
         "alt": "每件",
         "price": "35",
         "unit": "/ 件",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000005",
         "badge": "挂件类",
         "badgeStyle": "green",
         "name": "天界输电枢纽检查记录 钥匙扣",
@@ -556,9 +565,11 @@
         "alt": "整套 2 件 ¥8",
         "price": "5",
         "unit": "/ 件",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000006",
         "badge": "徽章类",
         "badgeStyle": "green",
         "name": "幻电投企业形象徽章",
@@ -578,9 +589,11 @@
         "alt": "一对 ¥5",
         "price": "5",
         "unit": "/ 件",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000008",
         "badge": "界桩系列",
         "badgeStyle": "green",
         "name": "「幻想乡电网界桩便携款」杯套",
@@ -600,9 +613,11 @@
         "alt": "每件",
         "price": "25",
         "unit": "/ 个",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000009",
         "badge": "界桩系列",
         "badgeStyle": "green",
         "name": "「幻想乡电网界桩桌面款」储物筒",
@@ -622,9 +637,11 @@
         "alt": "每件",
         "price": "10",
         "unit": "/ 个",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000007",
         "badge": "明信片",
         "badgeStyle": "green",
         "name": "明信片系列 幻电投形象风景明信片",
@@ -644,9 +661,11 @@
         "alt": "",
         "price": "6",
         "unit": "/ 张",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       },
       {
+        "id": "10000000-0000-4000-8000-000000000010",
         "badge": "透卡",
         "badgeStyle": "green",
         "name": "「玄武涧的运维日常」透卡",
@@ -666,7 +685,8 @@
         "alt": "",
         "price": "8",
         "unit": "/ 张",
-        "free": false
+        "free": false,
+        "status": "on_sale"
       }
     ],
     "posterTitle": "商品目录海报",
@@ -676,7 +696,13 @@
     "buyHref": "https://www.goofish.com/personal?userId=4151830427",
     "buyLabel": "前往闲鱼购买",
     "poster2": "assets/images/goods-poster-2.webp",
-    "posterLabel2": "查看海报（下）→"
+    "posterLabel2": "查看海报（下）→",
+    "homeIds": [
+      "10000000-0000-4000-8000-000000000001",
+      "10000000-0000-4000-8000-000000000002",
+      "10000000-0000-4000-8000-000000000004",
+      "10000000-0000-4000-8000-000000000006"
+    ]
   },
   "works": {
     "title": "作品展示",

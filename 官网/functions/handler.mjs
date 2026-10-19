@@ -5,6 +5,20 @@ const json = (body, status = 200) => Response.json(body, {
 
 const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const noticeIdRe = /^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+$/;
+
+// ─── 商品状态 ───────────────────────────────────────────────────────
+// 三态是「展示口径」而不是「库存数字」：管理员手动切换，不需要盘点。
+//   on_sale   公开可见、顺序靠前、可导流购买
+//   sold_out  公开可见、排在在售之后、标注售罄并隐藏购买入口
+//   off_shelf 公开接口完全不返回（后台仍可见，数据保留）
+const GOOD_STATUSES = new Set(["on_sale", "sold_out", "off_shelf"]);
+// 三态在列表里的排序权重：在售 0 → 售罄 1 → 下架 2（下架本来就不出库，留 2 只是兜底）
+const GOOD_STATUS_RANK = { on_sale: 0, sold_out: 1, off_shelf: 2 };
+// 公开接口统一用这份列清单，避免三处 select 写歪
+const GOOD_COLS = "id,badge,badge_style,name,description,image,image_alt,tags,alt_label,price,unit,is_free,free_label,display_order,status";
+// 首页精选只存「商品 id 的有序数组」，数组下标即展示顺序
+const HOME_GOODS_KEY = "home_goods";
+const HOME_GOODS_MAX = 12;
 const MAX_BODY = 512 * 1024;
 const MAX_IMAGE = 5 * 1024 * 1024;
 const IMAGE_BUCKET = "images";
@@ -107,7 +121,7 @@ async function getAll({ supabase }) {
     supabase.from("hero_content").select("*").limit(1).maybeSingle(),
     supabase.from("notices").select("id,date,type,style,summary,title,cover,cover_alt").order("date", { ascending: false }),
     supabase.from("brands").select("id,name,sub,logo,is_self").order("display_order"),
-    supabase.from("goods").select("id,badge,badge_style,name,description,image,image_alt,tags,alt_label,price,unit,is_free,free_label").order("display_order"),
+    supabase.from("goods").select(GOOD_COLS).order("display_order"),
     supabase.from("events").select("*").order("date_start", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("social_links").select("id,label,href,sub").order("display_order"),
     supabase.from("about_content").select("*").limit(1).maybeSingle(),
@@ -115,8 +129,11 @@ async function getAll({ supabase }) {
 
   const settings = {};
   const blobs = {};
+  let homeGoodsRaw = "";
   if (settingsR.data) {
     for (const r of settingsR.data) {
+      // home_goods 是「首页精选的有序 id 数组」，不随 site 一起下发
+      if (r.key === HOME_GOODS_KEY) { homeGoodsRaw = r.value; continue; }
       // shop / recruit 这类「整块 JSON」的设置单独取出来，
       // 别把一坨 JSON 字符串混进 site 里
       if (BLOB_KEYS.has(r.key)) { blobs[r.key] = parseJsonObject(r.value); continue; }
@@ -124,13 +141,19 @@ async function getAll({ supabase }) {
     }
   }
 
+  // 公开接口：下架商品一律不出库。售罄保留（前端负责标注），
+  // 并且排到在售商品后面，避免「首页第一眼看到买不到的东西」。
+  const publicGoods = sortGoods((goodsR.data || []).filter((g) => g.status !== "off_shelf"));
+
   return {
     ok: true,
     site: settings,
     hero: heroR.data || null,
     notices: noticesR.data || [],
     brands: brandsR.data || [],
-    goods: goodsR.data || [],
+    goods: publicGoods,
+    // 首页只渲染这里列出的商品，顺序即数组顺序；未列出的不上首页
+    homeGoods: parseHomeIds(homeGoodsRaw),
     event: eventsR.data || null,
     social: socialR.data || [],
     about: aboutR.data || null,
@@ -171,17 +194,48 @@ async function getGoods({ supabase }) {
   // 也是内容（海报路径、购买链接）。这些都存在 site_settings 的 goods_block
   // 里，和 items 一起返回，前端一次请求就能把整页填满。
   const [listR, blockR] = await Promise.all([
-    supabase.from("goods")
-      .select("id,badge,badge_style,name,description,image,image_alt,tags,alt_label,price,unit,is_free,free_label")
-      .order("display_order"),
+    supabase.from("goods").select(GOOD_COLS).order("display_order"),
     supabase.from("site_settings").select("value").eq("key", GOODS_BLOCK_KEY).maybeSingle(),
   ]);
   if (listR.error || !Array.isArray(listR.data)) return { error: "database_request_failed" };
   return {
     ok: true,
-    items: listR.data,
+    // 下架商品对公开页面不存在；售罄保留并排在在售之后
+    items: sortGoods(listR.data.filter((g) => g.status !== "off_shelf")),
     block: parseJsonObject(blockR.data && blockR.data.value) || null,
   };
+}
+
+// 后台专用：包含下架商品。GET 请求默认不带鉴权，所以路由层对它单独要求 session。
+async function getAdminGoods({ supabase }) {
+  const [listR, homeIds] = await Promise.all([
+    supabase.from("goods").select(GOOD_COLS).order("display_order"),
+    readHomeIds(supabase),
+  ]);
+  if (listR.error || !Array.isArray(listR.data)) return { error: "database_request_failed" };
+  return { ok: true, items: sortGoods(listR.data), homeGoods: homeIds };
+}
+
+async function getHomeGoods({ supabase }) {
+  return { ok: true, homeGoods: await readHomeIds(supabase) };
+}
+
+async function saveHomeGoods({ supabase, body }) {
+  if (!body || !Array.isArray(body.ids)) return { error: "invalid_body" };
+  if (body.ids.length > HOME_GOODS_MAX) return { error: "too_many_items" };
+  // 顺序就是展示顺序，所以只能做「去重」不能做「排序」：保留首次出现的下标
+  const ids = [];
+  for (const id of body.ids) {
+    if (typeof id !== "string" || !uuidRe.test(id)) return { error: "invalid_id" };
+    if (!ids.includes(id)) ids.push(id);
+  }
+  const { error } = await supabase.from("site_settings").upsert({
+    key: HOME_GOODS_KEY,
+    value: JSON.stringify({ ids }),
+    updated_at: now(),
+  });
+  if (error) return { error: "database_request_failed" };
+  return { ok: true, homeGoods: ids };
 }
 
 async function getEvents({ supabase }) {
@@ -238,6 +292,42 @@ function parseJsonObject(value) {
   } catch {
     return null;
   }
+}
+
+// ─── 商品排序与首页精选 ─────────────────────────────────────────────
+
+// 在售在前、售罄在后；同状态内按 display_order，再按名称兜底（避免顺序抖动）。
+// 排序放在 JS 里而不是 SQL 里，是因为 sqlite 适配层的 order() 只接列名，
+// 写不了 CASE WHEN；商品量级只有几十条，内存排序没有代价。
+function sortGoods(list) {
+  return list.slice().sort((a, b) => {
+    const ra = GOOD_STATUS_RANK[a.status] ?? 0;
+    const rb = GOOD_STATUS_RANK[b.status] ?? 0;
+    if (ra !== rb) return ra - rb;
+    const da = Number(a.display_order) || 0;
+    const db = Number(b.display_order) || 0;
+    if (da !== db) return da - db;
+    return String(a.name || "").localeCompare(String(b.name || ""));
+  });
+}
+
+// home_goods 的值形如 {"ids":["uuid1","uuid2"]}。
+// 只放行合法 UUID：历史上删掉的商品可能在数组里留悬空 id，
+// 这里顺手过滤掉，前端就不用再兜一遍。
+function parseHomeIds(value) {
+  const obj = parseJsonObject(value);
+  if (!obj || !Array.isArray(obj.ids)) return [];
+  const out = [];
+  for (const id of obj.ids) {
+    if (typeof id === "string" && uuidRe.test(id) && !out.includes(id)) out.push(id);
+  }
+  return out;
+}
+
+async function readHomeIds(supabase) {
+  const { data } = await supabase.from("site_settings")
+    .select("value").eq("key", HOME_GOODS_KEY).maybeSingle();
+  return parseHomeIds(data && data.value);
 }
 
 async function getShop({ supabase }) {
@@ -464,21 +554,58 @@ async function deleteBrand({ supabase, id }) {
 
 async function saveGood({ supabase, body }) {
   if (!body || typeof body !== "object") return { error: "invalid_body" };
-  const { id, badge, badge_style, name, description, image, image_alt, tags, alt_label, price, unit, is_free, free_label, display_order } = body;
+  const { id, badge, badge_style, name, description, image, image_alt, tags, alt_label, price, unit, is_free, free_label, display_order, status } = body;
   if (typeof name !== "string") return { error: "invalid_fields" };
   if (!Array.isArray(tags)) return { error: "invalid_jsonb" };
   const gid = id && uuidRe.test(id) ? id : crypto.randomUUID();
   const t = now();
+
+  // 状态缺省 = 在售（新建商品、以及老客户端不带这个字段时都走这里）；
+  // 带了但不认识就报错，别静默回落成在售 —— 那样「标记下架」会变成
+  // 「悄悄上架」，是最难查的一类事故。
+  let goodStatus = "on_sale";
+  if (status !== undefined && status !== null && status !== "") {
+    if (!GOOD_STATUSES.has(status)) return { error: "invalid_status" };
+    goodStatus = status;
+  }
+
   const { error } = await supabase.from("goods")
-    .upsert({ id: gid, badge: badge || "", badge_style: badge_style || "green", name, description: description || "", image: image || "", image_alt: image_alt || "", tags, alt_label: alt_label || "", price: price || "", unit: unit || "", is_free: !!is_free, free_label: free_label || "", display_order: display_order || 0, updated_at: t });
+    .upsert({ id: gid, badge: badge || "", badge_style: badge_style || "green", name, description: description || "", image: image || "", image_alt: image_alt || "", tags, alt_label: alt_label || "", price: price || "", unit: unit || "", is_free: !!is_free, free_label: free_label || "", display_order: display_order || 0, status: goodStatus, updated_at: t });
   if (error) return { error: "database_request_failed" };
   return { ok: true, id: gid };
+}
+
+// 只改状态、不碰其他字段：后台列表上的「售罄 / 下架 / 上架」下拉走这条路，
+// 避免整表单回写时把别人刚改的文案覆盖掉。
+async function setGoodStatus({ supabase, body }) {
+  if (!body || typeof body !== "object") return { error: "invalid_body" };
+  if (!uuidRe.test(body.id || "")) return { error: "invalid_id" };
+  if (!GOOD_STATUSES.has(body.status)) return { error: "invalid_status" };
+  const { error } = await supabase.from("goods")
+    .update({ status: body.status, updated_at: now() }).eq("id", body.id);
+  if (error) return { error: "database_request_failed" };
+  return { ok: true, id: body.id, status: body.status };
 }
 
 async function deleteGood({ supabase, id }) {
   if (!uuidRe.test(id)) return { error: "invalid_id" };
   const { error } = await supabase.from("goods").delete().eq("id", id);
   if (error) return { error: "database_request_failed" };
+
+  // 顺手把它从首页精选里摘掉，否则后台会留一条指向不存在商品的空条目。
+  // 失败不影响删除本身，所以不把错误往上抛。
+  try {
+    const ids = await readHomeIds(supabase);
+    if (ids.includes(id)) {
+      const left = ids.filter((x) => x !== id);
+      await supabase.from("site_settings").upsert({
+        key: HOME_GOODS_KEY,
+        value: JSON.stringify({ ids: left }),
+        updated_at: now(),
+      });
+    }
+  } catch { /* 清理失败就让前端跳过悬空 id */ }
+
   return { ok: true };
 }
 
@@ -737,6 +864,8 @@ const getActions = {
   notice: getNotice,
   brands: getBrands,
   goods: getGoods,
+  admin_goods: getAdminGoods,
+  home_goods: getHomeGoods,
   events: getEvents,
   social: getSocial,
   about: getAbout,
@@ -744,6 +873,9 @@ const getActions = {
   recruit: getRecruit,
   list_images: listImages,
 };
+
+// 走 GET 但必须带有效 session 的 action（其余 GET 都是公开内容）
+const getAuthRequired = new Set(["admin_goods"]);
 
 const postActions = {
   save_settings: saveSettings,
@@ -753,6 +885,8 @@ const postActions = {
   save_brand: saveBrand,
   delete_brand: deleteBrand,
   save_good: saveGood,
+  set_good_status: setGoodStatus,
+  save_home_goods: saveHomeGoods,
   delete_good: deleteGood,
   save_event: saveEvent,
   save_social: saveSocial,
@@ -773,7 +907,7 @@ const postActions = {
 
 const authRequired = new Set([
   "save_settings", "save_hero", "save_notice", "delete_notice",
-  "save_brand", "delete_brand", "save_good", "delete_good",
+  "save_brand", "delete_brand", "save_good", "set_good_status", "save_home_goods", "delete_good",
   "save_event", "save_social", "save_about", "save_shop", "save_goods_block",
   "save_recruit", "upload_image", "delete_image",
   "logout", "change_password", "list_users", "create_user", "delete_user",
@@ -789,6 +923,11 @@ export async function handleRequest({ request, supabase }) {
   if (request.method === "GET") {
     const handler = getActions[action];
     if (!handler) return json({ error: "unknown_action" }, 404);
+    // 极少数 GET 会带后台数据（例如含下架商品的 admin_goods），单独要求 session
+    if (getAuthRequired.has(action)) {
+      const auth = await requireAuth({ supabase, request });
+      if (auth.error) return json({ error: auth.error }, 401);
+    }
     try {
       const id = url.searchParams.get("id") || "";
       const result = await handler({ supabase, id });

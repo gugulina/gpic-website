@@ -85,8 +85,12 @@ CREATE TABLE IF NOT EXISTS brands (
 CREATE INDEX IF NOT EXISTS idx_brands_order ON brands(display_order);
 
 -- ── 制品 / 通贩商品 ───────────────────────────────────────────────
--- handler: getGoods / saveGood / deleteGood
+-- handler: getGoods / getAdminGoods / saveGood / setGoodStatus / deleteGood
 -- tags = string[]
+-- status 三态（见 goods.html / index.html 的渲染分支）：
+--   on_sale   在售 —— 正常展示，可导流到通贩平台
+--   sold_out  售罄 —— 仍然展示（含图片与描述），但标注售罄、不提供购买入口
+--   off_shelf 下架 —— 公开接口一律不返回，仅在后台可见，数据保留可随时重新上架
 CREATE TABLE IF NOT EXISTS goods (
   id            TEXT PRIMARY KEY,
   badge         TEXT NOT NULL DEFAULT '',
@@ -102,6 +106,7 @@ CREATE TABLE IF NOT EXISTS goods (
   is_free       INTEGER NOT NULL DEFAULT 0,      -- 布尔
   free_label    TEXT NOT NULL DEFAULT '',
   display_order INTEGER NOT NULL DEFAULT 0,
+  status        TEXT NOT NULL DEFAULT 'on_sale', -- on_sale / sold_out / off_shelf
   updated_at    TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_goods_order ON goods(display_order);

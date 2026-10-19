@@ -323,17 +323,23 @@ document.addEventListener('click', function (e) {
       if (!grid) return;
       grid.innerHTML = data.items.map(function(g) {
         var badgeClass = 'badge-' + (g.badge_style || 'green');
+        // 售罄：仍然展示（让访客知道有这件东西、也方便老客确认补货），
+        // 但图片降饱和、价格加删除线、并给一条明确的「补货中」提示。
+        // 下架商品根本不会出现在 data.items 里，前端不用管。
+        var soldOut = g.status === 'sold_out';
         var tagsHtml = (g.tags || []).map(function(t) {
           return '<span' + (t.key ? ' class="is-key"' : '') + '>' + esc(t.text) + '</span>';
         }).join('');
         var priceText = g.is_free ? esc(g.free_label || '免费') : '¥' + esc(g.price) + '<em> ' + esc(g.unit) + '</em>';
-        return '<article class="goods-card">' +
+        return '<article class="goods-card' + (soldOut ? ' is-soldout' : '') + '">' +
           '<div class="goods-media"><img src="' + esc(g.image) + '" alt="' + esc(g.image_alt) + '" loading="lazy"></div>' +
           '<div class="goods-body">' +
           '<span class="badge ' + badgeClass + '">' + esc(g.badge) + '</span>' +
+          (soldOut ? '<span class="badge badge-gray">售罄</span>' : '') +
           '<h3>' + esc(g.name) + '</h3>' +
           '<p>' + esc(g.description) + '</p>' +
           '<div class="goods-tags">' + tagsHtml + '</div>' +
+          (soldOut ? '<div class="goods-soldout">已售罄 · 补货中</div>' : '') +
           '<div class="goods-foot">' +
           '<span class="goods-alt">' + esc(g.alt_label) + '</span>' +
           '<span class="goods-price">' + priceText + '</span>' +

@@ -83,7 +83,19 @@ async function main() {
     const settingRows = (await client.from("site_settings").select("key,value")).data || [];
     const site = {};
     const blobs = { shop: base.shop || null, recruit: base.recruit || null, goods_block: null };
+    // 首页精选：site_settings 里的一行 {"ids":[...]}，单独取出来，
+    // 不混进 site（site 里全是标量，塞一串 JSON 进去前端会拿到意外类型）
+    let homeIds = [];
     for (const row of settingRows) {
+      if (row.key === "home_goods") {
+        try {
+          const v = JSON.parse(row.value);
+          if (v && Array.isArray(v.ids)) homeIds = v.ids.filter((x) => typeof x === "string");
+        } catch {
+          /* 解析不了就当作空列表：首页商品区会隐藏，不会报错 */
+        }
+        continue;
+      }
       if (row.key === "shop" || row.key === "recruit" || row.key === "goods_block") {
         try {
           blobs[row.key] = JSON.parse(row.value);
@@ -167,32 +179,41 @@ async function main() {
     }
 
     // ── 周边商品 ──
-    const goodRows = (await client.from("goods").select("*").order("display_order")).data || [];
-    if (goodRows.length) {
-      // goods_block 是商品页「海报 / 通贩」两张卡的文案与按钮，
-      // 后台在「周边商品」页底部编辑，优先级高于骨架里的旧值。
-      out.goods = Object.assign({}, base.goods, blobs.goods_block || {}, {
-        items: goodRows.map((g) => {
-          const item = {
-            badge: g.badge,
-            badgeStyle: g.badge_style,
-            name: g.name,
-            desc: g.description,
-            image: g.image,
-            imageAlt: g.image_alt,
-            tags: g.tags || [],
-            alt: g.alt_label,
-            price: g.price,
-            unit: g.unit,
-            free: !!g.is_free,
-          };
-          // freeLabel 只在非空时出现，跟原 content.json 的写法保持一致
-          if (g.free_label) item.freeLabel = g.free_label;
-          return item;
-        }),
-      });
-      stats.push(["商品", goodRows.length]);
-    }
+    // 下架商品不进 content.json：静态站没有服务端，过滤必须在这里做完，
+    // 否则它们会跟着 JSON 一起被发布出去（等于「下架」没生效）。
+    const goodRows = ((await client.from("goods").select("*").order("display_order")).data || [])
+      .filter((g) => g.status !== "off_shelf");
+    // 即使一条商品都没有也要覆盖 out.goods —— 否则 base.goods.items 里的
+    // 旧骨架会留下来，「全部下架」反而看起来没生效。
+    // goods_block 是商品页「海报 / 通贩」两张卡的文案与按钮，
+    // 后台在「周边商品」页底部编辑，优先级高于骨架里的旧值。
+    out.goods = Object.assign({}, base.goods, blobs.goods_block || {}, {
+      // 首页只渲染这些商品，数组顺序即展示顺序
+      homeIds,
+      items: goodRows.map((g) => {
+        const item = {
+          // id 必须带上：首页要靠它把 homeIds 映射成具体商品
+          id: g.id,
+          badge: g.badge,
+          badgeStyle: g.badge_style,
+          name: g.name,
+          desc: g.description,
+          image: g.image,
+          imageAlt: g.image_alt,
+          tags: g.tags || [],
+          alt: g.alt_label,
+          price: g.price,
+          unit: g.unit,
+          free: !!g.is_free,
+          // 静态站同样要能区分售罄；下架的已经在上面的 filter 里去掉了
+          status: g.status || "on_sale",
+        };
+        // freeLabel 只在非空时出现，跟原 content.json 的写法保持一致
+        if (g.free_label) item.freeLabel = g.free_label;
+        return item;
+      }),
+    });
+    stats.push(["商品", goodRows.length]);
 
     // ── 参展活动（countdown 是库外字段）──
     const eventRow = (await client.from("events").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle()).data;

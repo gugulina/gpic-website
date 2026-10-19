@@ -595,28 +595,51 @@ if ('IntersectionObserver' in window) {
         }
       }
 
-      // 更新商品
+      // 更新商品（只渲染后台「首页展示商品」里选中的，按选定顺序）
       if (data.goods && data.goods.length) {
         var goodsGrid = document.querySelector('.goods-grid');
+        var goodsSection = document.getElementById('goods');
         if (goodsGrid) {
-          goodsGrid.innerHTML = data.goods.slice(0, 4).map(function(g) {
-            var badgeClass = g.badge_style === 'red' ? 'badge-red' : g.badge_style === 'gold' ? 'badge-gold' : 'badge-green';
-            var tagsHtml = (g.tags || []).map(function(t) {
-              return '<span' + (t.key ? ' class="is-key"' : '') + '>' + esc(t.text) + '</span>';
+          var byId = {};
+          data.goods.forEach(function(g) { byId[g.id] = g; });
+
+          // homeGoods 是管理员选定的 id 数组，顺序即展示顺序：
+          //   · 数组存在（哪怕是空数组）→ 严格照办，没选中的不上首页
+          //   · 字段缺失（老数据 / 旧版接口）→ 退回「前 4 个」，维持老行为
+          var picked;
+          if (Array.isArray(data.homeGoods)) {
+            picked = data.homeGoods.map(function(id) { return byId[id]; }).filter(Boolean);
+          } else {
+            picked = data.goods.slice(0, 4);
+          }
+
+          if (!picked.length) {
+            // 一件都没选（或选中的全被下架/删除）→ 整段隐藏，别留一个空框
+            if (goodsSection) goodsSection.style.display = 'none';
+          } else {
+            if (goodsSection) goodsSection.style.display = '';
+            goodsGrid.innerHTML = picked.map(function(g) {
+              var badgeClass = g.badge_style === 'red' ? 'badge-red' : g.badge_style === 'gold' ? 'badge-gold' : 'badge-green';
+              var soldOut = g.status === 'sold_out';
+              var tagsHtml = (g.tags || []).map(function(t) {
+                return '<span' + (t.key ? ' class="is-key"' : '') + '>' + esc(t.text) + '</span>';
+              }).join('');
+              var priceText = g.is_free ? esc(g.free_label || '免费') : '¥' + esc(g.price) + '<em> ' + esc(g.unit) + '</em>';
+              return '<article class="goods-card' + (soldOut ? ' is-soldout' : '') + '">' +
+                '<div class="goods-media"><img src="' + esc(g.image) + '" alt="' + esc(g.image_alt) + '" loading="lazy"></div>' +
+                '<div class="goods-body">' +
+                '<span class="badge ' + badgeClass + '">' + esc(g.badge) + '</span>' +
+                (soldOut ? '<span class="badge badge-gray">售罄</span>' : '') +
+                '<h3>' + esc(g.name) + '</h3>' +
+                '<p>' + esc(g.description) + '</p>' +
+                '<div class="goods-tags">' + tagsHtml + '</div>' +
+                (soldOut ? '<div class="goods-soldout">已售罄 · 补货中</div>' : '') +
+                '<div class="goods-foot">' +
+                '<span class="goods-alt">' + esc(g.alt_label) + '</span>' +
+                '<span class="goods-price">' + priceText + '</span>' +
+                '</div></div></article>';
             }).join('');
-            var priceText = g.is_free ? esc(g.free_label || '免费') : '¥' + esc(g.price) + '<em> ' + esc(g.unit) + '</em>';
-            return '<article class="goods-card">' +
-              '<div class="goods-media"><img src="' + esc(g.image) + '" alt="' + esc(g.image_alt) + '" loading="lazy"></div>' +
-              '<div class="goods-body">' +
-              '<span class="badge ' + badgeClass + '">' + esc(g.badge) + '</span>' +
-              '<h3>' + esc(g.name) + '</h3>' +
-              '<p>' + esc(g.description) + '</p>' +
-              '<div class="goods-tags">' + tagsHtml + '</div>' +
-              '<div class="goods-foot">' +
-              '<span class="goods-alt">' + esc(g.alt_label) + '</span>' +
-              '<span class="goods-price">' + priceText + '</span>' +
-              '</div></div></article>';
-          }).join('');
+          }
         }
       }
 
