@@ -31,7 +31,7 @@
  *   node sync-public.mjs
  *   node sync-public.mjs --dry-run    # 只做到第 2 步，不提交不推送
  */
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -65,6 +65,46 @@ function capture(cmd, args, opts = {}) {
   const r = spawnSync(cmd, args, { encoding: "utf8", ...opts });
   if (r.status !== 0) return null;
   return (r.stdout || "").trim();
+}
+
+// ── 找 git ──
+// 这台机器没装 Git for Windows，只有 WorkBuddy 自带的 PortableGit，
+// 而 PortableGit 不在系统 PATH 里。双击 bat 时 cmd 的 PATH 很短，
+// 'git' 直接是「找不到命令」，spawnSync 返回 status=null，
+// 表现出来却像是「这个目录不是 git 仓库」—— 2026-10-19 真踩过。
+function findGit() {
+  const home = process.env.USERPROFILE || "";
+
+  // ① WorkBuddy 自带 PortableGit：版本号会变，扫目录而不是写死
+  const pgRoot = join(home, ".workbuddy", "binaries", "PortableGit", "versions");
+  if (existsSync(pgRoot)) {
+    try {
+      for (const v of readdirSync(pgRoot)) {
+        const p = join(pgRoot, v, "cmd", "git.exe");
+        if (existsSync(p)) return p;
+      }
+    } catch {
+      /* 读不了就当没有 */
+    }
+  }
+
+  // ② 常见的 Git for Windows 安装位置
+  const fixed = [
+    "C://Program Files//Git//cmd//git.exe",
+    "C://Program Files (x86)//Git//cmd//git.exe",
+    join(home, "AppData", "Local", "Programs", "Git", "cmd", "git.exe"),
+  ];
+  for (const p of fixed) if (existsSync(p)) return p;
+
+  // ③ 最后才信 PATH
+  const which = capture("where", ["git"]);
+  if (which) {
+    for (const line of which.split(/\r?\n/)) {
+      const p = line.trim();
+      if (p && existsSync(p)) return p;
+    }
+  }
+  return null;
 }
 
 // ── 找 Python 3：优先 WorkBuddy 自带的，跳过 Microsoft Store 的占位存根 ──
@@ -149,7 +189,17 @@ if (DRY) {
 // ── [3/3] 提交并推送 ──
 step("[3/3] 提交并推送到 GitHub");
 
-if (!capture("git", ["rev-parse", "--git-dir"], { cwd: ROOT })) {
+const GITBIN = findGit();
+if (!GITBIN) {
+  die("找不到 git 命令。", [
+    "第 3 步要用 git 提交并推送，但当前环境里找不到 git.exe。",
+    "",
+    "这台机器没有安装 Git for Windows；WorkBuddy 自带的 PortableGit 也没找到。",
+    "装一个 Git 之后重新双击本脚本即可（自带的 PortableGit 会被自动识别）。",
+  ]);
+}
+
+if (!capture(GITBIN, ["rev-parse", "--git-dir"], { cwd: ROOT })) {
   die("这个目录不是 git 仓库，无法推送。", [
     "请在完整的项目文件夹里运行本脚本",
     "（即包含 .git、官网/、.github/ 的那一层）。",
@@ -159,7 +209,7 @@ if (!capture("git", ["rev-parse", "--git-dir"], { cwd: ROOT })) {
 const GIT = { cwd: ROOT };
 const PATHS = ["官网/data/content.json", "官网/web", "官网/web-standalone"];
 
-const add = spawnSync("git", ["add", "--", ...PATHS], { ...GIT, encoding: "utf8" });
+const add = spawnSync(GITBIN, ["add", "--", ...PATHS], { ...GIT, encoding: "utf8" });
 if (add.status !== 0) {
   die("git add 失败。", [
     "检查是否有别的程序锁住了文件，或磁盘权限异常。",
@@ -168,17 +218,17 @@ if (add.status !== 0) {
 }
 
 // 有没有东西待提交？git diff --cached --quiet 无差异时返回 0
-const hasStaged = spawnSync("git", ["diff", "--cached", "--quiet"], GIT).status !== 0;
+const hasStaged = spawnSync(GITBIN, ["diff", "--cached", "--quiet"], GIT).status !== 0;
 
 if (!hasStaged) {
   // 内容没变，但上一次可能「提交成功、推送失败」—— 把欠的提交补推上去
-  const aheadRaw = capture("git", ["rev-list", "--count", "origin/main..HEAD"], GIT);
+  const aheadRaw = capture(GITBIN, ["rev-list", "--count", "origin/main..HEAD"], GIT);
   const ahead = Number(aheadRaw);
   if (ahead > 0) {
     say("");
     say("  发现 " + ahead + " 条已提交但还没推送的记录，补推一次…");
     say("");
-    if (!run("git", ["push", "origin", "main"], GIT)) {
+    if (!run(GITBIN, ["push", "origin", "main"], GIT)) {
       die("补推失败。", [
         "本地提交是安全的，没有丢；只是还没上网。",
         "检查网络 / 代理 / GitHub 凭据后再跑一次。",
@@ -205,11 +255,11 @@ if (!hasStaged) {
 // 统计这次动了几个文件，写进 commit message
 // core.quotepath=false：否则中文路径会被转义成 \345\256\230\347\275\221/...
 // 这种八进制串，打印出来完全看不懂
-const changedFiles = (capture("git", ["-c", "core.quotepath=false", "diff", "--cached", "--name-only"], GIT) || "")
+const changedFiles = (capture(GITBIN, ["-c", "core.quotepath=false", "diff", "--cached", "--name-only"], GIT) || "")
   .split(/\r?\n/).filter(Boolean);
 
 const msg = "内容同步：后台改动上线（" + changedFiles.length + " 个文件）";
-const commit = spawnSync("git", ["commit", "-m", msg], { ...GIT, encoding: "utf8" });
+const commit = spawnSync(GITBIN, ["commit", "-m", msg], { ...GIT, encoding: "utf8" });
 if (commit.status !== 0) {
   const err = String(commit.stderr || "").trim();
   die("git commit 失败。", [
@@ -228,7 +278,7 @@ for (const f of changedFiles.slice(0, 12)) say("      " + f);
 if (changedFiles.length > 12) say("      … 另有 " + (changedFiles.length - 12) + " 个");
 say("");
 
-if (!run("git", ["push", "origin", "main"], GIT)) {
+if (!run(GITBIN, ["push", "origin", "main"], GIT)) {
   die("本地提交成功，但推送到 GitHub 失败。", [
     "本地改动已经安全提交，不会丢；只是还没上网。",
     "检查网络 / 代理 / GitHub 凭据后，重新双击本脚本即可重试",
