@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "updatedAt": "2026-10-19T01:04:34.645Z",
+  "updatedAt": "2026-10-19T01:17:27.909Z",
   "site": {
     "name": "幻电投企划",
     "nameEn": "Gensokyo Power Investment Corporation",
@@ -449,28 +449,6 @@
         "free": false
       },
       {
-        "badge": "摊位特典",
-        "badgeStyle": "green",
-        "name": "幻电投形象大使 永江衣玖 明信片",
-        "desc": "已加入贩售制品，全套12元",
-        "image": "assets/images/goods-postcard.webp",
-        "imageAlt": "明信片系列 幻电投形象大使永江衣玖明信片",
-        "tags": [
-          {
-            "text": "3款",
-            "key": true
-          },
-          {
-            "text": "明信片",
-            "key": false
-          }
-        ],
-        "alt": "",
-        "price": "5",
-        "unit": "/张",
-        "free": false
-      },
-      {
         "badge": "警示类",
         "badgeStyle": "red",
         "name": "符卡级安全用电警示贴",
@@ -618,6 +596,28 @@
         "alt": "每件",
         "price": "10",
         "unit": "/ 个",
+        "free": false
+      },
+      {
+        "badge": "明信片",
+        "badgeStyle": "green",
+        "name": "明信片系列 幻电投形象风景明信片",
+        "desc": "已加入贩售制品，全套12元",
+        "image": "assets/images/goods-postcard.webp",
+        "imageAlt": "明信片系列 幻电投形象风景明信片",
+        "tags": [
+          {
+            "text": "3款",
+            "key": true
+          },
+          {
+            "text": "明信片",
+            "key": false
+          }
+        ],
+        "alt": "",
+        "price": "5",
+        "unit": "/张",
         "free": false
       }
     ]
