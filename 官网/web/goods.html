@@ -74,8 +74,8 @@
           <p>当心爆炸、高压危险、当心触电、当心辐射……把现场规程贴在手边。</p>
           <div class="goods-tags"><span class="is-key">6 张 / 套</span><span>警示标识</span></div>
           <div class="goods-foot">
-            <span class="goods-alt">整套 6 张 ¥10</span>
-            <span class="goods-price">¥2<em> / 张</em></span>
+            <span class="goods-alt">一套 6 张 ¥15</span>
+            <span class="goods-price">¥3<em> / 张</em></span>
           </div>
         </div>
       </article>
@@ -130,8 +130,8 @@
           <p>把 GPIC 别在包上，企业形象随身展示。</p>
           <div class="goods-tags"><span class="is-key">2 款</span><span>马口铁</span></div>
           <div class="goods-foot">
-            <span class="goods-alt">一对 ¥5</span>
-            <span class="goods-price">¥3<em> / 件</em></span>
+            <span class="goods-alt">一对 ¥8</span>
+            <span class="goods-price">¥5<em> / 件</em></span>
           </div>
         </div>
       </article>
@@ -184,7 +184,11 @@
       <div class="goods-tool-card">
         <h3 id="posterTitle">商品目录海报</h3>
         <p id="posterDesc">查看完整商品目录海报，含各款商品实物图与规格。</p>
-        <a id="posterLink" class="btn btn-outline" href="assets/images/goods-poster.webp" target="_blank" rel="noopener">查看海报 →</a>
+        <div class="poster-actions">
+          <a id="posterLink" class="btn btn-outline" href="assets/images/goods-poster-1.webp" target="_blank" rel="noopener">查看海报（上）→</a>
+          <!-- 第二页：后台填了「海报图片（第二页）」才显示，否则一直是隐藏的 -->
+          <a id="posterLink2" class="btn btn-outline" target="_blank" rel="noopener" style="display:none">查看海报（下）→</a>
+        </div>
       </div>
       <div class="goods-tool-card">
         <h3 id="buyTitle">线上通贩</h3>
@@ -299,6 +303,7 @@ document.addEventListener('click', function (e) {
     setText('posterTitle', b.posterTitle);
     setText('posterDesc', b.posterDesc);
     setLink('posterLink', b.poster, b.posterLabel);
+    setLink('posterLink2', b.poster2, b.posterLabel2);
     setText('buyTitle', b.buyTitle);
     setText('buyDesc', b.buyDesc);
     setLink('buyLink', b.buyHref, b.buyLabel);

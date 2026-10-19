@@ -282,8 +282,10 @@ const GOODS_BLOCK_FIELDS = [
   // [字段名, 最大长度]
   ["posterTitle", 60],
   ["posterDesc", 300],
-  ["poster", 300],
+  ["poster", 300],          // 第一页
   ["posterLabel", 60],
+  ["poster2", 300],         // 第二页（留空 = 前台不显示第二个按钮）
+  ["posterLabel2", 60],
   ["buyTitle", 60],
   ["buyDesc", 300],
   ["buyHref", 500],
@@ -314,6 +316,9 @@ async function saveGoodsBlock({ supabase, body }) {
   const poster = safeUrl(payload.poster);
   if (poster === null) return { error: "invalid_poster" };
   payload.poster = poster;
+  const poster2 = safeUrl(payload.poster2);
+  if (poster2 === null) return { error: "invalid_poster" };
+  payload.poster2 = poster2;
 
   const { error } = await supabase.from("site_settings")
     .upsert({ key: GOODS_BLOCK_KEY, value: JSON.stringify(payload), updated_at: now() });
@@ -564,7 +569,10 @@ async function uploadImage({ request }) {
     return {
       ok: true,
       path: `assets/images/${safeName}`,
-      url: `/storage/v1/object/public/${path}`,
+      // 以前这里是 /storage/v1/object/public/images/xxx —— Supabase 的桶地址，
+      // 换成本地存储后这个路径根本不存在（访问必 404）。现在给真正能用
+      // 的静态地址，前端拿 path 拼相对路径、拿 url 直接 <img src>。
+      url: `/assets/images/${safeName}`,
       size: buf.byteLength,
       type: file.type,
     };

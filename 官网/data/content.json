@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "updatedAt": "2026-10-19T02:56:01.641Z",
+  "updatedAt": "2026-10-19T03:17:16.450Z",
   "site": {
     "name": "幻电投企划",
     "nameEn": "Gensokyo Power Investment Corporation",
@@ -449,14 +449,14 @@
     "title": "周边产品",
     "subtitle": "幻电投文化传媒部首批商品 · 图片与售价均取自官方商品目录",
     "note": "以上售价与规格以官方商品目录为准；展会现场售价可能略有调整。\n摊位特典明信片不在线上单独销售，请在展会现场购任意商品后领取。",
-    "poster": "assets/images/goods-poster.webp",
-    "posterLabel": "查看海报 →",
+    "poster": "assets/images/goods-poster-1.webp",
+    "posterLabel": "查看海报（上）→",
     "items": [
       {
         "badge": "证件类",
         "badgeStyle": "green",
         "name": "幻想乡电网职务证明书",
-        "desc": "七款设计，把你的电网身份正式归档。",
+        "desc": "6 元/张，7 张套装 40 元。七款设计，把你的电网身份正式归档。",
         "image": "assets/images/goods-proof.webp",
         "imageAlt": "幻想乡电网职务证明书，共 7 款",
         "tags": [
@@ -478,7 +478,7 @@
         "badge": "警示类",
         "badgeStyle": "red",
         "name": "符卡级安全用电警示贴",
-        "desc": "当心爆炸、高压危险、当心触电、当心辐射……把现场规程贴在手边。",
+        "desc": "3 元/张，15 元/套 6 张。当心爆炸、高压危险、当心触电、当心辐射……把现场规程贴在手边。",
         "image": "assets/images/goods-warning.webp",
         "imageAlt": "符卡级安全用电警示贴，含当心爆炸、高压危险等图案",
         "tags": [
@@ -492,7 +492,7 @@
           }
         ],
         "alt": "整套 6 张 ¥10",
-        "price": "2",
+        "price": "3",
         "unit": "/ 张",
         "free": false
       },
@@ -562,7 +562,7 @@
         "badge": "徽章类",
         "badgeStyle": "green",
         "name": "幻电投企业形象徽章",
-        "desc": "把 GPIC 别在包上，企业形象随身展示。",
+        "desc": "5 元/件，8 元/对。把 GPIC 别在包上，企业形象随身展示。",
         "image": "assets/images/goods-badge.webp",
         "imageAlt": "幻电投企业形象徽章，共 2 款",
         "tags": [
@@ -576,7 +576,7 @@
           }
         ],
         "alt": "一对 ¥5",
-        "price": "3",
+        "price": "5",
         "unit": "/ 件",
         "free": false
       },
@@ -628,7 +628,7 @@
         "badge": "明信片",
         "badgeStyle": "green",
         "name": "明信片系列 幻电投形象风景明信片",
-        "desc": "已加入贩售制品，全套12元",
+        "desc": "6 元/张，15 元/套三张。幻电投形象风景明信片，已加入贩售制品。",
         "image": "assets/images/goods-postcard.webp",
         "imageAlt": "明信片系列 幻电投形象风景明信片",
         "tags": [
@@ -642,8 +642,30 @@
           }
         ],
         "alt": "",
-        "price": "5",
-        "unit": "/张",
+        "price": "6",
+        "unit": "/ 张",
+        "free": false
+      },
+      {
+        "badge": "透卡",
+        "badgeStyle": "green",
+        "name": "「玄武涧的运维日常」透卡",
+        "desc": "8 元/张。玄武涧变电站运维主题，透明卡片。",
+        "image": "assets/images/goods-transcard.webp",
+        "imageAlt": "「玄武涧的运维日常」透卡",
+        "tags": [
+          {
+            "text": "1款",
+            "key": true
+          },
+          {
+            "text": "透卡",
+            "key": false
+          }
+        ],
+        "alt": "",
+        "price": "8",
+        "unit": "/ 张",
         "free": false
       }
     ],
@@ -651,8 +673,10 @@
     "posterDesc": "查看完整商品目录海报，含各款商品实物图与规格。",
     "buyTitle": "线上通贩",
     "buyDesc": "闲鱼搜索「幻电投市场部」即可购买。本站不收款、不下单。",
-    "buyHref": "https://www.goofish.com/personal?spm=a21ybx.item.itemHeader.1.410e3da61Cv74g&userId=4151830427",
-    "buyLabel": "前往闲鱼购买"
+    "buyHref": "https://www.goofish.com/personal?userId=4151830427",
+    "buyLabel": "前往闲鱼购买",
+    "poster2": "assets/images/goods-poster-2.webp",
+    "posterLabel2": "查看海报（下）→"
   },
   "works": {
     "title": "作品展示",

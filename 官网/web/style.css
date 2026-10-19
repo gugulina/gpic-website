@@ -340,6 +340,9 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .goods-tool-card h3 { font-size: 18px; color: var(--brand-deep); margin-bottom: 12px; }
 .goods-tool-card p { color: var(--text-2); font-size: 14px; margin-bottom: 20px; }
+/* 海报可能有两页：两个按钮横向排，窄屏自动换行 */
+.poster-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.poster-actions .btn { flex: 0 1 auto; }
 .goods-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-lg); overflow: hidden;

@@ -197,11 +197,14 @@
           ok: true,
           items: goods.map(mapGood),
           // 商品页底部两张卡（海报 / 通贩）的文案与按钮
+          // 注意：这里是手写映射，后台加字段必须同步加一行，否则静态站看不到
           block: content.goods ? {
             posterTitle: content.goods.posterTitle || '',
             posterDesc: content.goods.posterDesc || '',
             poster: content.goods.poster || '',
             posterLabel: content.goods.posterLabel || '',
+            poster2: content.goods.poster2 || '',
+            posterLabel2: content.goods.posterLabel2 || '',
             buyTitle: content.goods.buyTitle || '',
             buyDesc: content.goods.buyDesc || '',
             buyHref: content.goods.buyHref || '',

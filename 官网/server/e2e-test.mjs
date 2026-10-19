@@ -43,6 +43,10 @@ const API = `${BASE}/functions/v1/app`;
 const USERNAME = opt("username", "admin");
 const PASSWORD = opt("password", process.env.GPIC_ADMIN_PASSWORD || "test123456");
 
+// 内容类断言不写死数字：商品和公告会随运营增减，写死就会频繁假红
+// （2026-10-19 新增透卡商品 + 参展记录公告，一次红掉三条）。
+const SEED = JSON.parse(readFileSync(join(ROOT, "data", "content.json"), "utf8"));
+
 // ── 测试框架（够用就行，不引依赖）────────────────────────────────
 let passed = 0;
 const failures = [];
@@ -100,7 +104,7 @@ check("all.hero 单行对象", !!all.hero && all.hero.title?.length > 0);
 check("all.hero.actions 是数组", Array.isArray(all.hero?.actions) && all.hero.actions.length > 0);
 check("all.notices 是数组且不含 body", Array.isArray(all.notices) && !("body" in (all.notices[0] || {})));
 check("all.brands 有序", Array.isArray(all.brands) && all.brands.length === 5);
-check("all.goods 有序", Array.isArray(all.goods) && all.goods.length === 9);
+check("all.goods 有序", Array.isArray(all.goods) && all.goods.length === SEED.goods.items.length, `${all.goods?.length} vs 内容文件 ${SEED.goods.items.length}`);
 check("all.event 单行对象", !!all.event && all.event.booth?.length > 0);
 check("all.social 是数组", Array.isArray(all.social) && all.social.length === 6);
 check("all.about 单行对象", !!all.about && all.about.title?.length > 0);
@@ -113,10 +117,11 @@ check("all.recruit 结构与 seed 一致", all.recruit?.jobs?.length === 4 &&
 
 const notices = await api("notices");
 check("notices 带 body", notices.ok === true && Array.isArray(notices.items) && "body" in notices.items[0]);
-check("notices 有 5 篇", notices.items.length === 5);
+check("notices 篇数与内容文件一致", notices.items.length === SEED.notices.items.length, `${notices.items.length} vs ${SEED.notices.items.length}`);
 check("notices 按日期倒序", notices.items[0].date >= notices.items[notices.items.length - 1].date, `${notices.items[0].date} → ${notices.items[notices.items.length - 1].date}`);
 const blockTotal = notices.items.reduce((s, n) => s + (Array.isArray(n.body) ? n.body.length : 0), 0);
-check("notices 的 blocks 已还原为数组", blockTotal === 42, `共 ${blockTotal} 个区块`);
+const seedBlocks = SEED.notices.items.reduce((s, n) => s + (Array.isArray(n.body) ? n.body.length : 0), 0);
+check("notices 的 blocks 已还原为数组", blockTotal === seedBlocks, `共 ${blockTotal} 个区块，内容文件 ${seedBlocks}`);
 
 const one = await api("notice", { query: "&id=2026-09-20-a" });
 check("notice 单篇详情", one.ok === true && one.id === "2026-09-20-a");
@@ -294,7 +299,7 @@ if (existsSync(srcImage)) {
   check("upload_image → ok", up.ok === true, JSON.stringify(up));
   uploadedPath = up.path;
   check("返回 path 形如 assets/images/up-*.webp", /^assets\/images\/up-[\d-]+-[0-9a-f]{4}\.webp$/.test(up.path || ""), `path=${up.path}`);
-  check("返回 url 指向 /storage/v1/...", typeof up.url === "string" && up.url.startsWith("/storage/v1/object/public/images/"), `url=${up.url}`);
+  check("返回 url 是可访问的静态地址", typeof up.url === "string" && up.url === "/" + up.path, `url=${up.url}`);
 
   const onDisk = join(ROOT, "web", up.path || "___none___");
   check("文件确实落到 web/assets/images/", existsSync(onDisk), onDisk);
@@ -304,6 +309,8 @@ if (existsSync(srcImage)) {
 
   const staticFetch = await fetch(`${BASE}/${up.path}`);
   check("上传后的图片可被静态访问", staticFetch.status === 200 && staticFetch.headers.get("content-type") === "image/webp", `HTTP ${staticFetch.status} ${staticFetch.headers.get("content-type")}`);
+  const urlFetch = await fetch(`${BASE}${up.url}`);
+  check("handler 给的 url 也能访问", urlFetch.status === 200, `HTTP ${urlFetch.status}`);
 
   // 删除（图片管理里的删除按钮）：删完静态访问应 404，list_images 不再列出
   if (up.ok && up.path) {
@@ -317,8 +324,6 @@ if (existsSync(srcImage)) {
     check("delete_image 拒绝路径穿越", traversal.error === "invalid_id", JSON.stringify(traversal));
   }
 
-  const altFetch = await fetch(`${BASE}${up.url}`);
-  check("handler 给的 url 也能访问", altFetch.status === 200, `HTTP ${altFetch.status}`);
 
   const badType = new FormData();
   badType.append("file", new File([Buffer.from("not an image")], "evil.txt", { type: "text/plain" }));

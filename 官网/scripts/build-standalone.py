@@ -105,7 +105,11 @@ def hide_admin_entry(name: str) -> str:
 
 
 def copy_images() -> str:
-    src = ROOT / "assets" / "images"
+    # 源必须是 web/assets/images —— 那是后台上传的落点，也是四页里
+    # 「assets/images/xxx」相对路径在 web/ 下真正解析到的位置。
+    # 曾经这里读的是 官网/assets/images（旧静态站的目录），结果后台传的图
+    # 永远进不了静态站：目录里看着有，线上却没有。（2026-10-19 修）
+    src = SRC_WEB / "assets" / "images"
     dst = OUT / "assets" / "images"
     dst.mkdir(parents=True, exist_ok=True)
     n = 0
