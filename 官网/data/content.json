@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "updatedAt": "2026-10-19T01:27:24.817Z",
+  "updatedAt": "2026-10-19T01:40:55.770Z",
   "site": {
     "name": "幻电投企划",
     "nameEn": "Gensokyo Power Investment Corporation",
@@ -690,10 +690,10 @@
       {
         "label": "闲鱼 · 幻电投市场部",
         "href": "https://www.goofish.com/personal?spm=a21ybx.item.itemHeader.1.410e3da61Cv74g&userId=4151830427",
-        "sub": "淘口令 CZ007"
+        "sub": "网店页面"
       }
     ],
-    "note": "※ 关注闲鱼「幻电投市场部」，第一时间获取上新与参展信息　※ 展会现场购买请至幻电投摊位，特典明信片现场领取"
+    "note": "※ 关注闲鱼「幻电投市场部」，第一时间获取上新与参展信息　※ 展会现场购买请至幻电投摊位，具体摊位请查看通告"
   },
   "recruit": {
     "badge": "幻电投〔2026〕人字第 02 号",
