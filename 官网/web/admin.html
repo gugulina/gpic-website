@@ -1952,6 +1952,11 @@ async function doUpdateUser() {
         username_exists: '这个用户名已经有人用了',
         invalid_username: '用户名只能含英文、数字、下划线，2-32 位',
         cannot_modify_organizer: '不能修改其他主催的账号',
+        // 后端进程没重启时，新接口在旧进程里根本不存在，只会回 unknown_action。
+        // 这个码不解释清楚，看到的人只会以为是代码写错了
+        unknown_action: '后台服务还停在旧版本，没有这个接口。重开一次「启动自持站.bat」再试',
+        login_required: '登录已过期，请重新登录',
+        session_invalid: '登录已过期，请重新登录',
         user_not_found: '这个账号已经不存在了',
       };
       msg.textContent = msgs[data.error] || data.error;
