@@ -16,9 +16,14 @@
 //    storage.list(bucket, { limit, offset })                → Promise<{name,size,updated_at}[]>
 //
 //  存储位置映射：
-//    对象路径 images/<uuid>.webp  →  web/assets/uploads/<uuid>.webp
-//    （handler 上传后返回给前端的 path 是 "assets/uploads/<uuid>.webp"，
+//    对象路径 images/<name>.webp  →  web/assets/images/<name>.webp
+//    （handler 上传后返回给前端的 path 是 "assets/images/<name>.webp"，
 //      正好是 web/ 下的相对路径，前端 <img src> 直接能用，所以落盘也必须在这）
+//
+//  2026-10-19 调整：原来落在 web/assets/uploads/，与站点正式图片目录
+//  web/assets/images/ 分家，导致「后台传的图」和「站点用的图」是两套东西，
+//  商品要引用还得手动搬。现在统一进 assets/images/ —— 上传即进正式图库，
+//  「图片管理」列出的是整个图库（含原有 31 张），而不是只有上传的几张。
 //
 //  ⚠️ 只有 node: 内置模块，零 npm 依赖。
 // ═══════════════════════════════════════════════════════════════════
@@ -29,10 +34,10 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// functions/ 的上一级就是站点根，上传目录落在 web/ 里
+// functions/ 的上一级就是站点根，图库落在 web/assets/images 里
 const WEB_ROOT = join(__dirname, "..", "web");
-const UPLOAD_DIR = join(WEB_ROOT, "assets", "uploads");
-const PUBLIC_PREFIX = "assets/uploads";
+const IMAGE_DIR = join(WEB_ROOT, "assets", "images");
+const PUBLIC_PREFIX = "assets/images";
 
 // 单个对象名只允许这些字符，杜绝 ../ 之类的路径穿越
 const OBJECT_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
@@ -44,7 +49,7 @@ function assertSafeName(name) {
   return name;
 }
 
-// images/<uuid>.webp → <uuid>.webp（bucket 段丢掉，只取最后一段）
+// images/<name>.webp → <name>.webp（bucket 段丢掉，只取最后一段）
 function objectNameFromPath(path) {
   const segments = String(path).split("/").filter(Boolean);
   if (segments.length === 0) throw new Error("empty object path");
@@ -52,7 +57,7 @@ function objectNameFromPath(path) {
 }
 
 async function ensureDir() {
-  await mkdir(UPLOAD_DIR, { recursive: true });
+  await mkdir(IMAGE_DIR, { recursive: true });
 }
 
 export const storage = {
@@ -65,7 +70,7 @@ export const storage = {
   async upload(path, data, options = {}) {
     await ensureDir();
     const name = objectNameFromPath(path);
-    const target = join(UPLOAD_DIR, name);
+    const target = join(IMAGE_DIR, name);
 
     const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
     await writeFile(target, bytes);
@@ -89,13 +94,13 @@ export const storage = {
     const limit = Number.isFinite(options.limit) ? Number(options.limit) : 100;
     const offset = Number.isFinite(options.offset) ? Math.max(0, Number(options.offset)) : 0;
 
-    const entries = await readdir(UPLOAD_DIR, { withFileTypes: true });
+    const entries = await readdir(IMAGE_DIR, { withFileTypes: true });
     const files = [];
     for (const entry of entries) {
       if (!entry.isFile()) continue;
       if (entry.name.startsWith(".")) continue; // 跳过 .gitkeep 之类
       if (!OBJECT_NAME_RE.test(entry.name)) continue;
-      const info = await stat(join(UPLOAD_DIR, entry.name));
+      const info = await stat(join(IMAGE_DIR, entry.name));
       files.push({
         name: entry.name,
         size: info.size,
@@ -107,15 +112,15 @@ export const storage = {
     return files.slice(offset, offset + limit);
   },
 
-  /** 删除一个对象（handler 目前没用到，留给后台清理用） */
+  /** 删除一个对象（后台「图片管理」里的删除按钮） */
   async remove(path) {
     const name = objectNameFromPath(path);
-    await rm(join(UPLOAD_DIR, name), { force: true });
+    await rm(join(IMAGE_DIR, name), { force: true });
     return { path };
   },
 };
 
 // 便于测试与换目录时复用
-export const paths = { WEB_ROOT, UPLOAD_DIR, PUBLIC_PREFIX };
+export const paths = { WEB_ROOT, IMAGE_DIR, PUBLIC_PREFIX };
 
 export default storage;

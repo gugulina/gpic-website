@@ -5,7 +5,7 @@
 //  这个文件负责把「一个静态目录 + 一个 handler」缝成一个能跑的动态站：
 //
 //    GET  /                       → web/index.html（以及其余静态资源）
-//    GET  /assets/uploads/x.webp  → 用户上传的图片
+//    GET  /assets/images/x.webp   → 站点图片（含后台上传的）
 //    *    /functions/v1/app       → functions/handler.mjs 的 19 个 action
 //
 //  它替掉的，正好是 Qoder 平台注入的那两层：
@@ -202,8 +202,8 @@ async function serveStatic(res, pathname, { headOnly = false } = {}) {
 
 const { client, close } = openDatabase(DB_FILE);
 
-// 上传目录先建出来，免得首张图上传前 list_images 报错
-await mkdir(storagePaths.UPLOAD_DIR, { recursive: true });
+// 图库目录先建出来，免得首张图上传前 list_images 报错
+await mkdir(storagePaths.IMAGE_DIR, { recursive: true });
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "127.0.0.1"}`);
@@ -223,7 +223,7 @@ const server = createServer(async (req, res) => {
     // ── 上传对象的公共访问路径（handler 返回的 url 字段指到这里）──
     const objectMatch = pathname.match(/^\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
     if (objectMatch) {
-      await serveStatic(res, `/assets/uploads/${objectMatch[2]}`, { headOnly });
+      await serveStatic(res, `/assets/images/${objectMatch[2]}`, { headOnly });
       return;
     }
 
@@ -255,7 +255,7 @@ server.listen(PORT, HOST, () => {
   console.log(`  后端接口    ${base}${API_PATH}?action=all`);
   console.log("  ─────────────────────────────────────────────");
   console.log(`  数据库      ${DB_FILE}`);
-  console.log(`  上传目录    ${storagePaths.UPLOAD_DIR}`);
+  console.log(`  图库目录    ${storagePaths.IMAGE_DIR}`);
   console.log("");
   console.log("  首次使用请先跑：node server/seed.mjs");
   console.log("  停止服务：Ctrl+C");

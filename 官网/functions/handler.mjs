@@ -136,6 +136,7 @@ async function getAll({ supabase }) {
     about: aboutR.data || null,
     shop: blobs.shop || null,
     recruit: blobs.recruit || null,
+    goodsBlock: blobs.goods_block || null,
   };
 }
 
@@ -166,11 +167,21 @@ async function getBrands({ supabase }) {
 }
 
 async function getGoods({ supabase }) {
-  const { data, error } = await supabase.from("goods")
-    .select("id,badge,badge_style,name,description,image,image_alt,tags,alt_label,price,unit,is_free,free_label")
-    .order("display_order");
-  if (error || !Array.isArray(data)) return { error: "database_request_failed" };
-  return { ok: true, items: data };
+  // 商品页不只有卡片列表：底部「商品目录海报」「线上通贩」两张卡里的按钮
+  // 也是内容（海报路径、购买链接）。这些都存在 site_settings 的 goods_block
+  // 里，和 items 一起返回，前端一次请求就能把整页填满。
+  const [listR, blockR] = await Promise.all([
+    supabase.from("goods")
+      .select("id,badge,badge_style,name,description,image,image_alt,tags,alt_label,price,unit,is_free,free_label")
+      .order("display_order"),
+    supabase.from("site_settings").select("value").eq("key", GOODS_BLOCK_KEY).maybeSingle(),
+  ]);
+  if (listR.error || !Array.isArray(listR.data)) return { error: "database_request_failed" };
+  return {
+    ok: true,
+    items: listR.data,
+    block: parseJsonObject(blockR.data && blockR.data.value) || null,
+  };
 }
 
 async function getEvents({ supabase }) {
@@ -215,7 +226,9 @@ async function getSettings({ supabase }) {
 // 把一整个对象存成一条 JSON，零迁移。
 const SHOP_KEY = "shop";
 const RECRUIT_KEY = "recruit";
-const BLOB_KEYS = new Set([SHOP_KEY, RECRUIT_KEY]);
+// 商品页「海报 / 通贩」两张卡的文案与按钮，整块 JSON 存在 site_settings 里
+const GOODS_BLOCK_KEY = "goods_block";
+const BLOB_KEYS = new Set([SHOP_KEY, RECRUIT_KEY, GOODS_BLOCK_KEY]);
 
 function parseJsonObject(value) {
   if (typeof value !== "string" || !value) return null;
@@ -255,6 +268,55 @@ async function saveShop({ supabase, body }) {
   });
   const { error } = await supabase.from("site_settings")
     .upsert({ key: SHOP_KEY, value: payload, updated_at: now() });
+  if (error) return { error: "database_request_failed" };
+  return { ok: true };
+}
+
+// ─── 商品页工具区（goods_block）──────────────────────────────────
+// 商品页底部那两张卡：「商品目录海报」和「线上通贩」。
+// 它们的标题、说明、按钮文字、按钮链接、页脚备注原本全是写死在 goods.html 里的，
+// 后台改不了 —— 用户 2026-10-19 反馈「两个按钮没有编辑权限」就是指这个。
+// 现在整块做成 JSON 存 site_settings，导出时合进 content.json 的 goods 对象。
+
+const GOODS_BLOCK_FIELDS = [
+  // [字段名, 最大长度]
+  ["posterTitle", 60],
+  ["posterDesc", 300],
+  ["poster", 300],
+  ["posterLabel", 60],
+  ["buyTitle", 60],
+  ["buyDesc", 300],
+  ["buyHref", 500],
+  ["buyLabel", 60],
+  ["note", 600],
+];
+
+// 只放行 http(s) / 站内绝对路径 / 站内相对路径，挡掉 javascript: 之类的注入
+function safeUrl(value) {
+  const v = String(value || "").trim();
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v)) return v;
+  if (v.startsWith("/") && !v.startsWith("//")) return v;
+  if (/^(assets|\.\.?)\//.test(v)) return v;
+  return null; // 不合法
+}
+
+async function saveGoodsBlock({ supabase, body }) {
+  if (!body || typeof body !== "object") return { error: "invalid_body" };
+  const payload = {};
+  for (const [key, max] of GOODS_BLOCK_FIELDS) {
+    const raw = typeof body[key] === "string" ? body[key] : "";
+    payload[key] = raw.slice(0, max);
+  }
+  const href = safeUrl(payload.buyHref);
+  if (href === null) return { error: "invalid_href" };
+  payload.buyHref = href;
+  const poster = safeUrl(payload.poster);
+  if (poster === null) return { error: "invalid_poster" };
+  payload.poster = poster;
+
+  const { error } = await supabase.from("site_settings")
+    .upsert({ key: GOODS_BLOCK_KEY, value: JSON.stringify(payload), updated_at: now() });
   if (error) return { error: "database_request_failed" };
   return { ok: true };
 }
@@ -459,6 +521,28 @@ async function saveAbout({ supabase, body }) {
 
 // ─── Image upload ───
 
+// 文件名格式：up-20261019-105530-a3f1.webp
+//   · up- 前缀把"后台上传的图"和站点原有的语义名（goods-*.webp、brand-*.webp）区分开
+//   · 时间戳让文件管理器里按名排序 = 按上传时间排序
+//   · 4 位随机后缀防同秒覆盖
+//   · 全程 ASCII，避免中文文件名进 URL 时还得 encodeURIComponent
+const EXT_BY_TYPE = new Map([
+  ["image/jpeg", "jpg"],
+  ["image/png", "png"],
+  ["image/webp", "webp"],
+  ["image/gif", "gif"],
+]);
+
+function uploadName(contentType) {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`
+    + `-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  const rand = Array.from(crypto.getRandomValues(new Uint8Array(2)))
+    .map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `up-${stamp}-${rand}.${EXT_BY_TYPE.get(contentType)}`;
+}
+
 async function uploadImage({ request }) {
   const storage = await getStorage();
   if (!storage || !storage.storage) return { error: "storage_unavailable" };
@@ -470,13 +554,20 @@ async function uploadImage({ request }) {
   if (!file || typeof file.name !== "string") return { error: "missing_file" };
   if (file.size > MAX_IMAGE) return { error: "file_too_large" };
   if (!ALLOWED_TYPES.has(file.type)) return { error: "unsupported_type" };
-  const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
-  const safeName = `${crypto.randomUUID()}.${ext}`;
+  // 扩展名按 MIME 定，不信客户端文件名 —— 前端已把图转成 WebP 再传，
+  // 所以正常路径下这里必然是 .webp。图片统一进 assets/images/。
+  const safeName = uploadName(file.type);
   const path = `${IMAGE_BUCKET}/${safeName}`;
   const buf = new Uint8Array(await file.arrayBuffer());
   try {
     await storage.storage.upload(path, buf, { contentType: file.type });
-    return { ok: true, path: `assets/uploads/${safeName}`, url: `/storage/v1/object/public/${path}` };
+    return {
+      ok: true,
+      path: `assets/images/${safeName}`,
+      url: `/storage/v1/object/public/${path}`,
+      size: buf.byteLength,
+      type: file.type,
+    };
   } catch {
     return { error: "upload_failed" };
   }
@@ -486,14 +577,41 @@ async function listImages() {
   const storage = await getStorage();
   if (!storage || !storage.storage) return { error: "storage_unavailable" };
   try {
-    const files = await storage.storage.list(IMAGE_BUCKET, { limit: 100, offset: 0 });
-    const items = (Array.isArray(files) ? files : []).map(f => ({
-      name: typeof f === "string" ? f : f.name,
-      path: `assets/uploads/${typeof f === "string" ? f : f.name}`,
-    }));
+    // 现在列的是整个 assets/images/ 图库（含站点原有的语义名图片），
+    // 不再只是"上传过的那几张"，所以上限放宽到 500。
+    const files = await storage.storage.list(IMAGE_BUCKET, { limit: 500, offset: 0 });
+    const items = (Array.isArray(files) ? files : []).map(f => {
+      const name = typeof f === "string" ? f : f.name;
+      return {
+        name,
+        path: `assets/images/${name}`,
+        size: typeof f === "string" ? 0 : (f.size || 0),
+        updated_at: typeof f === "string" ? "" : (f.updated_at || ""),
+      };
+    });
     return { ok: true, items };
   } catch {
     return { error: "list_failed" };
+  }
+}
+
+async function deleteImage({ id }) {
+  const storage = await getStorage();
+  if (!storage || !storage.storage) return { error: "storage_unavailable" };
+  if (typeof storage.storage.remove !== "function") return { error: "delete_unsupported" };
+  // 前端传的是 "assets/images/xxx.webp" 或裸文件名，两种都收；
+  // 带 .. / 反斜杠的一律拒（storage 自己也会挡，这里先挡一道让报错更清楚）
+  const rawInput = String(id || "");
+  if (rawInput.includes("..") || rawInput.includes("\\")) return { error: "invalid_id" };
+  const name = rawInput.split("/").pop() || "";
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(name) || name.includes("..")) {
+    return { error: "invalid_id" };
+  }
+  try {
+    await storage.storage.remove(`${IMAGE_BUCKET}/${name}`);
+    return { ok: true, deleted: name };
+  } catch {
+    return { error: "delete_failed" };
   }
 }
 
@@ -632,8 +750,10 @@ const postActions = {
   save_social: saveSocial,
   save_about: saveAbout,
   save_shop: saveShop,
+  save_goods_block: saveGoodsBlock,
   save_recruit: saveRecruit,
   upload_image: uploadImage,
+  delete_image: deleteImage,
   login: doLogin,
   logout: doLogout,
   change_password: doChangePassword,
@@ -646,7 +766,8 @@ const postActions = {
 const authRequired = new Set([
   "save_settings", "save_hero", "save_notice", "delete_notice",
   "save_brand", "delete_brand", "save_good", "delete_good",
-  "save_event", "save_social", "save_about", "save_shop", "save_recruit", "upload_image",
+  "save_event", "save_social", "save_about", "save_shop", "save_goods_block",
+  "save_recruit", "upload_image", "delete_image",
   "logout", "change_password", "list_users", "create_user", "delete_user",
 ]);
 
@@ -693,7 +814,7 @@ export async function handleRequest({ request, supabase }) {
         if (result.error) return json({ error: result.error }, result.error === "file_too_large" ? 413 : result.error === "unsupported_type" ? 400 : 503);
         return json(result);
       }
-      if (action === "delete_notice" || action === "delete_brand" || action === "delete_good") {
+      if (action === "delete_notice" || action === "delete_brand" || action === "delete_good" || action === "delete_image") {
         id = url.searchParams.get("id") || "";
         const result = await handler({ supabase, id });
         if (result.error) return json({ error: result.error }, result.error === "invalid_id" ? 400 : 503);

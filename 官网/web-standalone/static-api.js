@@ -193,7 +193,22 @@
         return { ok: true, items: brands.map(mapBrand) };
 
       case 'goods':
-        return { ok: true, items: goods.map(mapGood) };
+        return {
+          ok: true,
+          items: goods.map(mapGood),
+          // 商品页底部两张卡（海报 / 通贩）的文案与按钮
+          block: content.goods ? {
+            posterTitle: content.goods.posterTitle || '',
+            posterDesc: content.goods.posterDesc || '',
+            poster: content.goods.poster || '',
+            posterLabel: content.goods.posterLabel || '',
+            buyTitle: content.goods.buyTitle || '',
+            buyDesc: content.goods.buyDesc || '',
+            buyHref: content.goods.buyHref || '',
+            buyLabel: content.goods.buyLabel || '',
+            note: content.goods.note || ''
+          } : null
+        };
 
       case 'events':
         return { ok: true, items: content.event ? [mapEvent(content.event)] : [] };

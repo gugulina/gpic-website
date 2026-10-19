@@ -180,21 +180,21 @@
       </article>
     </div>
 
-    <!-- 商品目录海报 & 通贩 -->
-    <div style="margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <!-- 商品目录海报 & 通贩 · 字段可在后台「周边商品」页底部编辑 -->
+    <div id="goodsTools" style="margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
       <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-sm);">
-        <h3 style="font-size: 18px; color: var(--brand-deep); margin-bottom: 12px;">商品目录海报</h3>
-        <p style="color: var(--text-2); font-size: 14px; margin-bottom: 20px;">查看完整商品目录海报，含各款商品实物图与规格。</p>
-        <a class="btn btn-outline" href="assets/images/goods-poster.webp" target="_blank" rel="noopener">查看海报 →</a>
+        <h3 id="posterTitle" style="font-size: 18px; color: var(--brand-deep); margin-bottom: 12px;">商品目录海报</h3>
+        <p id="posterDesc" style="color: var(--text-2); font-size: 14px; margin-bottom: 20px;">查看完整商品目录海报，含各款商品实物图与规格。</p>
+        <a id="posterLink" class="btn btn-outline" href="assets/images/goods-poster.webp" target="_blank" rel="noopener">查看海报 →</a>
       </div>
       <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 32px; box-shadow: var(--shadow-sm);">
-        <h3 style="font-size: 18px; color: var(--brand-deep); margin-bottom: 12px;">线上通贩</h3>
-        <p style="color: var(--text-2); font-size: 14px; margin-bottom: 20px;">闲鱼搜索「幻电投市场部」即可购买。本站不收款、不下单。</p>
-        <a class="btn btn-primary" href="https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM" target="_blank" rel="noopener">前往闲鱼购买</a>
+        <h3 id="buyTitle" style="font-size: 18px; color: var(--brand-deep); margin-bottom: 12px;">线上通贩</h3>
+        <p id="buyDesc" style="color: var(--text-2); font-size: 14px; margin-bottom: 20px;">闲鱼搜索「幻电投市场部」即可购买。本站不收款、不下单。</p>
+        <a id="buyLink" class="btn btn-primary" href="https://www.goofish.com/personal?userId=4151830427" target="_blank" rel="noopener">前往闲鱼购买</a>
       </div>
     </div>
 
-    <p style="margin-top: 32px; font-size: 13px; color: var(--text-2); text-align: center;">
+    <p id="goodsNote" style="margin-top: 32px; font-size: 13px; color: var(--text-2); text-align: center;">
       以上售价与规格以官方商品目录为准；展会现场售价可能略有调整。<br>
       摊位特典明信片不在线上单独销售，请在展会现场购任意商品后领取。
     </p>
@@ -277,9 +277,43 @@ document.addEventListener('click', function (e) {
   var API = '/functions/v1/app';
   function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+  // 底部「海报 / 通贩」两张卡：标题、说明、按钮文字与链接全部来自
+  // content.json 的 goods 块，后台「周边商品」页底部可编辑。
+  // 拿不到 block 时保留 HTML 里的静态兜底值，页面不会空掉。
+  function applyBlock(b) {
+    if (!b) return;
+    function setText(id, v) {
+      if (typeof v !== 'string' || !v) return;
+      var el = document.getElementById(id);
+      if (el) el.textContent = v;
+    }
+    function setLink(id, href, label) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (typeof href === 'string') {
+        if (!href) { el.style.display = 'none'; return; }  // 链接清空 = 藏掉按钮
+        el.href = href;
+        el.style.display = '';
+      }
+      if (typeof label === 'string' && label) el.textContent = label;
+    }
+    setText('posterTitle', b.posterTitle);
+    setText('posterDesc', b.posterDesc);
+    setLink('posterLink', b.poster, b.posterLabel);
+    setText('buyTitle', b.buyTitle);
+    setText('buyDesc', b.buyDesc);
+    setLink('buyLink', b.buyHref, b.buyLabel);
+    if (typeof b.note === 'string' && b.note) {
+      var note = document.getElementById('goodsNote');
+      // 备注允许多行，换行转 <br>（先转义再加标签）
+      if (note) note.innerHTML = esc(b.note).split('\n').join('<br>');
+    }
+  }
+
   fetch(API + '?action=goods')
     .then(function(r) { return r.json(); })
     .then(function(data) {
+      applyBlock(data.block);
       if (!data.ok || !data.items || !data.items.length) return;
       var grid = document.querySelector('.goods-grid');
       if (!grid) return;

@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "updatedAt": "2026-10-19T01:40:55.770Z",
+  "updatedAt": "2026-10-19T02:04:32.450Z",
   "site": {
     "name": "幻电投企划",
     "nameEn": "Gensokyo Power Investment Corporation",
@@ -203,7 +203,7 @@
           },
           {
             "kind": "p",
-            "text": "首批共 **7 款** 商品，覆盖证件、警示、标识、插画、挂件与徽章六大类："
+            "text": "首批共 7 款 商品，覆盖证件、警示、标识、插画、挂件与徽章六大类："
           },
           {
             "kind": "ul",
@@ -422,9 +422,9 @@
   "goods": {
     "title": "周边产品",
     "subtitle": "幻电投文化传媒部首批商品 · 图片与售价均取自官方商品目录",
-    "note": "以上售价与规格以官方商品目录为准；展会现场售价可能略有调整。",
+    "note": "以上售价与规格以官方商品目录为准；展会现场售价可能略有调整。\n摊位特典明信片不在线上单独销售，请在展会现场购任意商品后领取。",
     "poster": "assets/images/goods-poster.webp",
-    "posterLabel": "查看完整商品目录海报 →",
+    "posterLabel": "查看海报 →",
     "items": [
       {
         "badge": "证件类",
@@ -620,7 +620,13 @@
         "unit": "/张",
         "free": false
       }
-    ]
+    ],
+    "posterTitle": "商品目录海报",
+    "posterDesc": "查看完整商品目录海报，含各款商品实物图与规格。",
+    "buyTitle": "线上通贩",
+    "buyDesc": "闲鱼搜索「幻电投市场部」即可购买。本站不收款、不下单。",
+    "buyHref": "https://www.goofish.com/personal?spm=a21ybx.item.itemHeader.1.410e3da61Cv74g&userId=4151830427",
+    "buyLabel": "前往闲鱼购买"
   },
   "works": {
     "title": "作品展示",

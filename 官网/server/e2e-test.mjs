@@ -249,6 +249,20 @@ const createdGood = goodBack.items.find((g) => g.id === rGood.id);
 check("save_good 读回 tags 为数组", Array.isArray(createdGood?.tags) && createdGood.tags.length === 1, `tags=${JSON.stringify(createdGood?.tags)}`);
 check("save_good 读回 is_free 为布尔", createdGood?.is_free === false, `is_free=${createdGood?.is_free} (${typeof createdGood?.is_free})`);
 
+// 商品页工具区（海报 / 通贩 两张卡的文案与按钮）—— 2026-10-19 新增
+const blockSave = await api("save_goods_block", { method: "POST", auth: true, body: {
+  posterTitle: "海报卡", posterDesc: "d1", poster: "assets/images/goods-poster.webp", posterLabel: "看海报",
+  buyTitle: "通贩卡", buyDesc: "d2", buyHref: "https://example.com/buy", buyLabel: "去买", note: "第一行\n第二行",
+} });
+check("save_goods_block", blockSave.ok === true, JSON.stringify(blockSave));
+const goodsWithBlock = await api("goods");
+check("goods 接口带回 block", goodsWithBlock.block?.buyLabel === "去买" && goodsWithBlock.block?.note.includes("\n"), JSON.stringify(goodsWithBlock.block));
+const allWithBlock = await api("all");
+check("all 接口带回 goodsBlock", allWithBlock.goodsBlock?.posterLabel === "看海报", JSON.stringify(allWithBlock.goodsBlock));
+const badHref = await api("save_goods_block", { method: "POST", auth: true, body: { buyHref: "javascript:alert(1)" } });
+check("save_goods_block 挡住 javascript: 链接", badHref.error === "invalid_href", JSON.stringify(badHref));
+
+
 const rEvent = await api("save_event", { method: "POST", auth: true, body: { badge: "测试展", title: "测试展会", subtitle: "sub", booth: "A01", debut: "首发", date_start: "2099-05-01", date_end: "2099-05-02", link_label: "详情", link_href: "https://example.com", visual: "", visual_alt: "" } });
 check("save_event", rEvent.ok === true, `id=${rEvent.id}`);
 const eventsBack = await api("events");
@@ -279,17 +293,29 @@ if (existsSync(srcImage)) {
   const up = await upRes.json();
   check("upload_image → ok", up.ok === true, JSON.stringify(up));
   uploadedPath = up.path;
-  check("返回 path 形如 assets/uploads/*.webp", /^assets\/uploads\/.+\.webp$/.test(up.path || ""), `path=${up.path}`);
+  check("返回 path 形如 assets/images/up-*.webp", /^assets\/images\/up-[\d-]+-[0-9a-f]{4}\.webp$/.test(up.path || ""), `path=${up.path}`);
   check("返回 url 指向 /storage/v1/...", typeof up.url === "string" && up.url.startsWith("/storage/v1/object/public/images/"), `url=${up.url}`);
 
   const onDisk = join(ROOT, "web", up.path || "___none___");
-  check("文件确实落到 web/assets/uploads/", existsSync(onDisk), onDisk);
+  check("文件确实落到 web/assets/images/", existsSync(onDisk), onDisk);
 
   const imgList = await api("list_images");
   check("list_images 能列出新文件", (imgList.items || []).some((i) => i.path === up.path), `共 ${(imgList.items || []).length} 个`);
 
   const staticFetch = await fetch(`${BASE}/${up.path}`);
   check("上传后的图片可被静态访问", staticFetch.status === 200 && staticFetch.headers.get("content-type") === "image/webp", `HTTP ${staticFetch.status} ${staticFetch.headers.get("content-type")}`);
+
+  // 删除（图片管理里的删除按钮）：删完静态访问应 404，list_images 不再列出
+  if (up.ok && up.path) {
+    const delRes = await api("delete_image", { method: "POST", auth: true, query: `&id=${encodeURIComponent(up.path.split("/").pop())}` });
+    check("delete_image", delRes.ok === true, JSON.stringify(delRes));
+    const afterDel = await fetch(`${BASE}/${up.path}`);
+    check("删除后静态访问 404", afterDel.status === 404, `HTTP ${afterDel.status}`);
+    const listAfterDel = await api("list_images");
+    check("删除后 list_images 不再列出", !(listAfterDel.items || []).some((i) => i.path === up.path));
+    const traversal = await api("delete_image", { method: "POST", auth: true, query: "&id=..%2F..%2Fserver%2Fdata%2Fgpic.sqlite" });
+    check("delete_image 拒绝路径穿越", traversal.error === "invalid_id", JSON.stringify(traversal));
+  }
 
   const altFetch = await fetch(`${BASE}${up.url}`);
   check("handler 给的 url 也能访问", altFetch.status === 200, `HTTP ${altFetch.status}`);

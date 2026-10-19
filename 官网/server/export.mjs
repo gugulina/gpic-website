@@ -82,9 +82,9 @@ async function main() {
     // ── 站点设置（shop / recruit 以 JSON 存在同一个表里，拆出来单独放）──
     const settingRows = (await client.from("site_settings").select("key,value")).data || [];
     const site = {};
-    const blobs = { shop: base.shop || null, recruit: base.recruit || null };
+    const blobs = { shop: base.shop || null, recruit: base.recruit || null, goods_block: null };
     for (const row of settingRows) {
-      if (row.key === "shop" || row.key === "recruit") {
+      if (row.key === "shop" || row.key === "recruit" || row.key === "goods_block") {
         try {
           blobs[row.key] = JSON.parse(row.value);
         } catch {
@@ -169,7 +169,9 @@ async function main() {
     // ── 周边商品 ──
     const goodRows = (await client.from("goods").select("*").order("display_order")).data || [];
     if (goodRows.length) {
-      out.goods = Object.assign({}, base.goods, {
+      // goods_block 是商品页「海报 / 通贩」两张卡的文案与按钮，
+      // 后台在「周边商品」页底部编辑，优先级高于骨架里的旧值。
+      out.goods = Object.assign({}, base.goods, blobs.goods_block || {}, {
         items: goodRows.map((g) => {
           const item = {
             badge: g.badge,
