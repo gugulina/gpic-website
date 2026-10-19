@@ -203,7 +203,9 @@ if (!hasStaged) {
 }
 
 // 统计这次动了几个文件，写进 commit message
-const changedFiles = (capture("git", ["diff", "--cached", "--name-only"], GIT) || "")
+// core.quotepath=false：否则中文路径会被转义成 \345\256\230\347\275\221/...
+// 这种八进制串，打印出来完全看不懂
+const changedFiles = (capture("git", ["-c", "core.quotepath=false", "diff", "--cached", "--name-only"], GIT) || "")
   .split(/\r?\n/).filter(Boolean);
 
 const msg = "内容同步：后台改动上线（" + changedFiles.length + " 个文件）";
