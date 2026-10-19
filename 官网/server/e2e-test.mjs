@@ -673,6 +673,38 @@ check("主催可改自己（权限对主催无意义）", orgSelf.ok === true, J
 const delPerm = await api("delete_user", { method: "POST", auth: true, session: orgSid, query: `&id=${pl.user.id}` });
 check("删除测试账号", delPerm.ok === true, JSON.stringify(delPerm));
 
+// ── L. 登录限流 ─────────────────────────────────────────────────────
+// 站要能交给别人远程用，就得挡住暴破。这里故意用不存在的用户名，
+// 免得把真实账号锁 15 分钟、影响后面重跑。
+section("L. 登录限流");
+
+const BRUTE = "e2e_brute_target";
+const bruteResults = [];
+for (let i = 0; i < 5; i++) {
+  const r = await api("login", { method: "POST", body: { username: BRUTE, password: "nope_" + i } });
+  bruteResults.push(r.__status);
+}
+check("前 5 次失败都是 401（还没到上限）",
+  bruteResults.every((s) => s === 401), JSON.stringify(bruteResults));
+
+const sixth = await api("login", { method: "POST", body: { username: BRUTE, password: "nope_6" } });
+check("第 6 次被限流", sixth.error === "too_many_attempts", JSON.stringify(sixth).slice(0, 90));
+check("限流返回 429", sixth.__status === 429, `HTTP ${sixth.__status}`);
+check("带出 retry_after 秒数", typeof sixth.retry_after === "number" && sixth.retry_after > 0,
+  "retry_after=" + sixth.retry_after);
+
+// 锁定后即使密码对了也进不去——否则限流等于没做
+const lockedRight = await api("login", { method: "POST", body: { username: BRUTE, password: "whatever" } });
+check("锁定期间一律拒绝", lockedRight.error === "too_many_attempts", JSON.stringify(lockedRight).slice(0, 80));
+
+// 按用户名分桶：换个名字试，不该被牵连
+const otherBucket = await api("login", { method: "POST", body: { username: "e2e_other_bucket", password: "x" } });
+check("换用户名独立计数", otherBucket.error === "invalid_credentials", JSON.stringify(otherBucket).slice(0, 80));
+
+// 正常账号不受影响（成功登录会清零自己的桶）
+const stillOk = await api("login", { method: "POST", body: { username: USERNAME, password: PASSWORD } });
+check("正常账号仍可登录", stillOk.ok === true, JSON.stringify(stillOk).slice(0, 80));
+
 // ── 汇总 ───────────────────────────────────────────────────────────
 console.log("");
 console.log("  ═══════════════════════════════════════════════════════");

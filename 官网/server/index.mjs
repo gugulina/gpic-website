@@ -18,6 +18,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 import { createServer } from "node:http";
+import { networkInterfaces } from "node:os";
 import { readFileSync } from "node:fs";
 import { readFile, stat, mkdir } from "node:fs/promises";
 import { join, extname, dirname, normalize, resolve, sep } from "node:path";
@@ -107,13 +108,23 @@ function readBody(req) {
 }
 
 // ── API 分支 ────────────────────────────────────────────────────────
+// 真实来源 IP：登录限流按 IP 分桶，这个值必须由服务端写入。
+// 客户端自己带同名头一律丢弃，否则换个头就能绕过限流。
+function clientIpOf(req) {
+  const raw = (req.socket && req.socket.remoteAddress) ||
+    (req.connection && req.connection.remoteAddress) || "";
+  return String(raw).replace(/^::ffff:/, "") || "?";
+}
+
 function toWebRequest(req, url, body) {
   const headers = new Headers();
   for (const [key, value] of Object.entries(req.headers)) {
     if (value === undefined) continue;
+    if (key.toLowerCase() === "x-gpic-client-ip") continue;
     if (Array.isArray(value)) headers.set(key, value.join(", "));
     else headers.set(key, value);
   }
+  headers.set("x-gpic-client-ip", clientIpOf(req));
   const method = req.method || "GET";
   const init = { method, headers };
   if (body && body.length > 0 && method !== "GET" && method !== "HEAD") init.body = body;
@@ -262,8 +273,23 @@ const server = createServer(async (req, res) => {
   }
 });
 
+// 监听 0.0.0.0 时，127.0.0.1 这个地址对远程的人是死路，得把真实网卡地址列出来
+function lanAddresses() {
+  const out = [];
+  let ifaces = {};
+  try { ifaces = networkInterfaces() || {}; } catch { return out; }
+  for (const [name, list] of Object.entries(ifaces)) {
+    for (const ni of list || []) {
+      if (ni.family !== "IPv4" || ni.internal) continue;
+      out.push({ name, address: ni.address });
+    }
+  }
+  return out;
+}
+
 server.listen(PORT, HOST, () => {
-  const base = `http://${HOST}:${PORT}`;
+  const exposed = HOST === "0.0.0.0" || HOST === "::";
+  const base = `http://${exposed ? "127.0.0.1" : HOST}:${PORT}`;
   console.log("");
   console.log("  幻想乡电力投资集团 官网 · 自持动态站已启动");
   if (SITE_VERSION) {
@@ -281,7 +307,22 @@ server.listen(PORT, HOST, () => {
   console.log(`  数据库      ${DB_FILE}`);
   console.log(`  图库目录    ${storagePaths.IMAGE_DIR}`);
   console.log("");
-  console.log("  首次使用请先跑：node server/seed.mjs");
+  if (exposed) {
+    const addrs = lanAddresses();
+    if (addrs.length) {
+      console.log("  已对外开放，别人用下面这些地址访问（不是 127.0.0.1）：");
+      for (const a of addrs) {
+        // 100.64/10 是运营商级 NAT 段，Tailscale 之类虚拟局域网就落在这里
+        const isVpn = /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(a.address);
+        console.log(`    http://${a.address}:${PORT}/admin.html   [${a.name}]${isVpn ? "  虚拟局域网" : ""}`);
+      }
+    } else {
+      console.log("  已对外开放，但没找到可用网卡地址（可能没连网络）");
+    }
+    console.log("");
+    console.log("  提示：Windows 防火墙第一次会弹窗，要允许「专用网络」访问");
+    console.log("  这个模式下同网络的人都能连，不用时请关掉窗口");
+  }
   console.log("  停止服务：Ctrl+C");
   console.log("");
 });

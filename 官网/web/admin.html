@@ -469,13 +469,23 @@ async function doLogin() {
       body: JSON.stringify({ username: u, password: p }),
     });
     const data = await res.json();
-    if (data.error) { errEl.textContent = data.error === 'invalid_credentials' ? '用户名或密码错误' : data.error; return; }
+    if (data.error) {
+      if (data.error === 'invalid_credentials') { errEl.textContent = '用户名或密码错误'; return; }
+      // 连续输错会被临时锁定，得把「还有多久」说清楚，否则用户只会一直重试
+      if (data.error === 'too_many_attempts') {
+        const mins = Math.max(1, Math.ceil((data.retry_after || 0) / 60));
+        errEl.textContent = '失败次数太多，已临时锁定，请 ' + mins + ' 分钟后再试';
+        return;
+      }
+      errEl.textContent = data.error;
+      return;
+    }
     currentUser = data.user;
     sessionStorage.setItem('gpic_user', JSON.stringify(data.user));
     if (data.session_id) sessionStorage.setItem('gpic_session_id', data.session_id);
     applyRoleUI();
     showAdmin();
-  } catch { errEl.textContent = '连不上后台服务。请确认「启动自持站.bat」的窗口还开着，并从 http://127.0.0.1:4321/admin.html 访问'; }
+  } catch { errEl.textContent = '连不上后台服务。请确认运行服务的窗口还开着；从别的设备访问就检查地址和网络是否通。'; }
 }
 
 async function doLogout() {

@@ -834,16 +834,89 @@ async function deleteImage({ id }) {
 
 // ─── Auth endpoints ───
 
-async function doLogin({ supabase, body }) {
+// ─── 登录失败限流 ──────────────────────────────────────────────────
+// 站要能交给别人远程用，就必须挡住"拿个用户名无限试密码"。
+// 存在进程内存里：单进程自持站够用，重启即清空——目的不是审计，是让暴破变慢。
+// 按「用户名 + 来源 IP」分桶：同一个人换用户名试、或换台机器试，都会各自计数。
+const LOGIN_MAX_FAILS = 5;              // 窗口内允许的失败次数
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 计数窗口 15 分钟
+const LOGIN_LOCK_MS = 15 * 60 * 1000;   // 达上限后锁定 15 分钟
+const loginFails = new Map();           // key -> { count, firstAt, lockedUntil }
+
+function clientIpOf(request) {
+  try {
+    return String(request.headers.get("x-gpic-client-ip") || "?");
+  } catch {
+    return "?";
+  }
+}
+
+function loginBucket(username, ip) {
+  return String(username || "").trim().toLowerCase() + "@" + (ip || "?");
+}
+
+// 返回剩余锁定秒数；0 表示可以继续尝试
+function loginLockRemaining(key) {
+  const rec = loginFails.get(key);
+  if (!rec) return 0;
+  const nowMs = Date.now();
+  if (rec.lockedUntil) {
+    if (rec.lockedUntil > nowMs) return Math.ceil((rec.lockedUntil - nowMs) / 1000);
+    loginFails.delete(key);
+    return 0;
+  }
+  if (nowMs - rec.firstAt > LOGIN_WINDOW_MS) {
+    loginFails.delete(key);
+    return 0;
+  }
+  return 0;
+}
+
+function recordLoginFail(key) {
+  const nowMs = Date.now();
+  let rec = loginFails.get(key);
+  if (!rec || nowMs - rec.firstAt > LOGIN_WINDOW_MS) {
+    rec = { count: 0, firstAt: nowMs, lockedUntil: 0 };
+  }
+  rec.count += 1;
+  if (rec.count >= LOGIN_MAX_FAILS) rec.lockedUntil = nowMs + LOGIN_LOCK_MS;
+  loginFails.set(key, rec);
+  // Map 不能无界增长：超量时顺手清掉已过期的桶
+  if (loginFails.size > 500) {
+    for (const [k, v] of loginFails) {
+      const expiresAt = v.lockedUntil || v.firstAt + LOGIN_WINDOW_MS;
+      if (expiresAt < nowMs) loginFails.delete(k);
+    }
+  }
+}
+
+function clearLoginFails(key) {
+  loginFails.delete(key);
+}
+
+async function doLogin({ supabase, body, request }) {
   if (!body || typeof body.username !== "string" || typeof body.password !== "string") {
     return { error: "invalid_body" };
+  }
+  const bucket = loginBucket(body.username, clientIpOf(request));
+  const lockedFor = loginLockRemaining(bucket);
+  if (lockedFor > 0) {
+    return { error: "too_many_attempts", retry_after: lockedFor };
   }
   const { data: user } = await supabase.from("users")
     .select("id, username, password_hash, password_salt, role, perms")
     .eq("username", body.username).maybeSingle();
-  if (!user) return { error: "invalid_credentials" };
+  // 用户名不存在也照记失败次数：否则「有没有这个号」能被试出来
+  if (!user) {
+    recordLoginFail(bucket);
+    return { error: "invalid_credentials" };
+  }
   const ok = await verifyPassword(body.password, user.password_salt, user.password_hash);
-  if (!ok) return { error: "invalid_credentials" };
+  if (!ok) {
+    recordLoginFail(bucket);
+    return { error: "invalid_credentials" };
+  }
+  clearLoginFails(bucket);
   const sessionId = crypto.randomUUID();
   const t = now();
   const expiresAt = new Date(Date.now() + SESSION_EXPIRY_HOURS * 3600 * 1000).toISOString();
@@ -1203,8 +1276,12 @@ export async function handleRequest({ request, supabase }) {
       if (action === "login") {
         body = await readJson(request);
         if (!body) return json({ error: "invalid_body" }, 400);
-        const result = await handler({ supabase, body });
-        if (result.error) return json({ error: result.error }, result.error === "invalid_credentials" ? 401 : 400);
+        const result = await handler({ supabase, body, request });
+        if (result.error) {
+          // 429 而不是 400：前端要能区分「密码错了」和「被锁了、等会儿再来」
+          if (result.error === "too_many_attempts") return json(result, 429);
+          return json({ error: result.error }, result.error === "invalid_credentials" ? 401 : 400);
+        }
         const headers = { "cache-control": "no-store", "set-cookie": sessionCookie(result.session_id) };
         return new Response(JSON.stringify(result), { status: 200, headers });
       }
@@ -1248,8 +1325,14 @@ export async function handleRequest({ request, supabase }) {
       }
       body = await readJson(request);
       if (!body) return json({ error: "invalid_body" }, 400);
-      const result = await handler({ supabase, body });
-      if (result.error) return json({ error: result.error }, result.error.startsWith("invalid") || result.error.startsWith("too_many") || result.error === "username_exists" || result.error === "password_too_short" ? 400 : 503);
+      const result = await handler({ supabase, body, request });
+      if (result.error) {
+        // 限流是 429 不是 400：前端要能区分「填错了」和「被锁了，等会儿再来」
+        const status = result.error === "too_many_attempts" ? 429
+          : (result.error.startsWith("invalid") || result.error === "username_exists" || result.error === "password_too_short" ? 400 : 503);
+        // 整个 result 发回去，retry_after 得让前端拿到
+        return json(result, status);
+      }
       return json(result);
     } catch {
       return json({ error: "database_request_failed" }, 503);
