@@ -1,0 +1,18 @@
+# ═══════════════════════════════════════════════════════════════════
+#  行尾锁定
+#
+#  为什么不靠 core.autocrlf：它只在 git 检出时转换。用编辑器、脚本或
+#  AI 工具直接写文件，行尾会变回 LF，下次双击就坏。这里显式锁死。
+# ═══════════════════════════════════════════════════════════════════
+
+# Windows 批处理必须是 CRLF。
+# LF-only 会让 cmd 的分块读取错位，吞掉每条命令开头的几个字符，
+# 报「'cho' 不是内部或外部命令」（echo 丢了 e）。
+# 2026-10-19 踩过，修复见提交 64819fe。
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 导出脚本按 CRLF 写 content.json（见 server/export.mjs 末尾），
+# 工作区若被转成 LF，每次「同步到公网」都会产生整文件 diff。
+官网/data/content.json text eol=crlf
+官网/web-standalone/data/content.json text eol=crlf
