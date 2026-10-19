@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "updatedAt": "2026-10-19T03:36:27.093Z",
+  "updatedAt": "2026-10-19T04:56:14.145Z",
   "site": {
     "name": "幻电投企划",
     "nameEn": "Gensokyo Power Investment Corporation",
@@ -566,7 +566,7 @@
         "price": "5",
         "unit": "/ 件",
         "free": false,
-        "status": "on_sale"
+        "status": "sold_out"
       },
       {
         "id": "10000000-0000-4000-8000-000000000006",
@@ -638,7 +638,7 @@
         "price": "10",
         "unit": "/ 个",
         "free": false,
-        "status": "on_sale"
+        "status": "sold_out"
       },
       {
         "id": "10000000-0000-4000-8000-000000000007",
