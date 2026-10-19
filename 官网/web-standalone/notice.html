@@ -125,7 +125,7 @@
         <h4>社交矩阵</h4>
         <ul>
           <li>QQ 群 <em class="sc-sub">1046278135</em> <button type="button" class="sc-copy" data-copy="1046278135">复制</button></li>
-          <li><a href="https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM" target="_blank" rel="noopener">闲鱼 <em class="sc-sub">幻电投市场部</em></a></li>
+          <li><a href="https://www.goofish.com/personal?userId=4151830427" target="_blank" rel="noopener">闲鱼 <em class="sc-sub">幻电投市场部</em></a></li>
         </ul>
       </div>
       <div>
@@ -178,12 +178,17 @@ var notices = {};
 
 function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
+// 正文里的 **…** 转 <strong>。先 escape 再替换，顺序不能反：
+// 反了的话用户写进来的 <script> 会被当成标签执行。
+// 与「关于我们」（index.html）、招募页（recruitment.html）同一约定。
+function md(s) { return esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); }
+
 function renderBlock(b) {
-  if (b.kind === 'h') return '<h3>' + esc(b.text) + '</h3>';
-  if (b.kind === 'ul') return '<ul>' + (b.items||[]).map(function(t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
-  if (b.kind === 'quote') return '<blockquote>' + esc(b.text) + '</blockquote>';
-  if (b.kind === 'sign') return '<p class="nd-sign">' + esc(b.text) + '</p>';
-  return '<p>' + esc(b.text) + '</p>';
+  if (b.kind === 'h') return '<h3>' + md(b.text) + '</h3>';
+  if (b.kind === 'ul') return '<ul>' + (b.items||[]).map(function(t) { return '<li>' + md(t) + '</li>'; }).join('') + '</ul>';
+  if (b.kind === 'quote') return '<blockquote>' + md(b.text) + '</blockquote>';
+  if (b.kind === 'sign') return '<p class="nd-sign">' + md(b.text) + '</p>';
+  return '<p>' + md(b.text) + '</p>';
 }
 
 function renderNoticeList(items) {

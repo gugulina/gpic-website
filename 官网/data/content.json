@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "updatedAt": "2026-10-19T02:04:32.450Z",
+  "updatedAt": "2026-10-19T02:16:45.867Z",
   "site": {
     "name": "幻电投企划",
     "nameEn": "Gensokyo Power Investment Corporation",
@@ -695,7 +695,7 @@
     "links": [
       {
         "label": "闲鱼 · 幻电投市场部",
-        "href": "https://www.goofish.com/personal?spm=a21ybx.item.itemHeader.1.410e3da61Cv74g&userId=4151830427",
+        "href": "https://www.goofish.com/personal?userId=4151830427",
         "sub": "网店页面"
       }
     ],
@@ -798,7 +798,7 @@
     },
     {
       "label": "闲鱼",
-      "href": "https://m.tb.cn/h.8sNhvfF?tk=iu4DTjnBcbM",
+      "href": "https://www.goofish.com/personal?userId=4151830427",
       "sub": "幻电投市场部"
     },
     {
